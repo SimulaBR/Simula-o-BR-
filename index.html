@@ -389,9 +389,10 @@ async function buildModel(json,bin,base){
  const acc=i=>{const a=json.accessors[i],bv=json.bufferViews[a.bufferView],T=CT[a.componentType],n=NC[a.type],off=(bv.byteOffset||0)+(a.byteOffset||0);return new T(bin.slice(off,off+a.count*n*T.BYTES_PER_ELEMENT))};
  let tex=null;const pm=json.materials&&json.materials[0]&&json.materials[0].pbrMetallicRoughness,ti=pm&&pm.baseColorTexture;
  if(ti){const im=json.images[json.textures[ti.index].source],bv=im.uri?null:json.bufferViews[im.bufferView],off=bv?bv.byteOffset||0:0;
-  const url=im.uri?base+im.uri:URL.createObjectURL(new Blob([bin.slice(off,off+bv.byteLength)],{type:im.mimeType||'image/png'}));
-  const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('imagem'));i.src=url});
-  tex=new THREE.Texture(img);tex.flipY=false;tex.anisotropy=4;tex.needsUpdate=true}
+  try{const blob=im.uri?await (await fetch(base+im.uri)).blob():new Blob([bin.slice(off,off+bv.byteLength)],{type:im.mimeType||'image/png'});
+   const url=URL.createObjectURL(blob);
+   const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('imagem'));i.src=url});
+   tex=new THREE.Texture(img);tex.flipY=false;tex.anisotropy=4;tex.needsUpdate=true}catch(e){G.texErr=e.message}}
  const nodes=(json.nodes||[]).filter(n=>n.mesh!==undefined).map(n=>{const pr=json.meshes[n.mesh].primitives[0],g=new THREE.BufferGeometry(),at=pr.attributes;
   g.setAttribute('position',new THREE.BufferAttribute(acc(at.POSITION),3));if(at.NORMAL!==undefined)g.setAttribute('normal',new THREE.BufferAttribute(acc(at.NORMAL),3));if(at.TEXCOORD_0!==undefined)g.setAttribute('uv',new THREE.BufferAttribute(acc(at.TEXCOORD_0),2));
   if(pr.indices!==undefined)g.setIndex(new THREE.BufferAttribute(acc(pr.indices),1));if(at.NORMAL===undefined)g.computeVertexNormals();
@@ -426,9 +427,9 @@ function useModel(v,glb){if(!v.glbRoot)return;const set=glb?v.setGLB:v.setProc,o
  Object.assign(v,{wheels:set.wheels,front:set.front,doors:set.doors,wb:set.wb,glows:set.glows,halos:set.halos,seat:set.seat});if(v.cock)v.cock.position.set(0,glb?-.55:0,glb?-.1:0)}
 G.model=(()=>{try{return localStorage.getItem('rb_model')||'glb'}catch(e){return 'glb'}})();
 function loadBusModel(){if(BUSMODEL){for(const v of [BUS,...AI.map(a=>a.v)])applyGLB(v,BUSMODEL);syncModelBtn();return}
- fetch('onibus.glb').then(r=>{if(!r.ok)throw new Error('não encontrado');return r.arrayBuffer()}).then(parseGLB)
- .catch(()=>fetch('onibus.json').then(r=>{if(!r.ok)throw new Error('não encontrado');return r.json()}).then(j=>parseGLTF(j,''))).then(M=>{BUSMODEL=M;if(G.model==='glb')for(const v of [BUS,...AI.map(a=>a.v)])applyGLB(v,M);syncModelBtn()})
- .catch(e=>{G.modelErr=e.message;syncModelBtn()})}
+ fetch('onibus.glb').then(r=>{if(!r.ok)throw new Error('não encontrado');return r.arrayBuffer()}).then(parseGLB).then(M=>{if(!M.nodes.length)throw new Error('vazio');return M})
+ .catch(()=>fetch('onibus.json').then(r=>{if(!r.ok)throw new Error('não encontrado');return r.json()}).then(j=>parseGLTF(j,'')).catch(e=>{throw new Error(location.protocol==='file:'?'abra pelo GitHub Pages, não direto do arquivo':(e.message||'falha'))})).then(M=>{BUSMODEL=M;if(G.model==='glb')for(const v of [BUS,...AI.map(a=>a.v)])applyGLB(v,M);syncModelBtn()})
+ .catch(e=>{G.modelErr=e.message||String(e);syncModelBtn();toast('Não consegui carregar o ônibus 3D: '+G.modelErr,4000)})}
 function syncModelBtn(){const b=$('oModel');if(b)b.textContent='Ônibus: '+(G.model==='glb'?(BUSMODEL?'modelo 3D':G.modelErr?'modelo 3D (onibus.glb não encontrado)':'modelo 3D (carregando…)'):'simples')}
 
 /* pessoas */
