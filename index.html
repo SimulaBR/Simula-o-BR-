@@ -125,6 +125,8 @@ button{font-family:Rajdhani,"Arial Narrow",Arial,sans-serif}
   <div class="pg">
     <button data-a="enter" id="pEnter">Sair</button><button data-a="doors">Portas</button><button data-a="trunk">Bagageiro</button>
     <button data-a="hitch">Engatar</button><button data-a="act">Abastecer</button><button data-a="wiper">Limpador</button>
+    <button data-a="garage" class="w" style="background:#1a2027;color:var(--ink);border-color:var(--line)">Garagem: trocar de veículo</button>
+    <div id="gar" style="display:none;grid-column:span 3;gap:6px;grid-template-columns:1fr 1fr"><button data-a="gTruck">Caminhão</button><button data-a="gBus">Ônibus</button></div>
     <button data-a="menu" class="w">Trabalhos e ajustes</button>
   </div>
   <div class="m"><span>Comb.</span><div class="bar"><i id="bF"></i></div></div>
@@ -156,7 +158,7 @@ button{font-family:Rajdhani,"Arial Narrow",Arial,sans-serif}
   <h2>Rota Brasil</h2>
   <p class="lead">Simulador de caminhão e ônibus. Pegue fretes no depósito, faça linhas saindo da rodoviária, desça do veículo, abra portas e bagageiro, abasteça e cuide da manutenção. O dia vira noite e às vezes chove.</p>
   <h4>Como jogar</h4><div class="keys" id="keys2"></div>
-  <div class="row" style="margin-top:16px"><span class="note">Versão de teste 0.3 · seu dinheiro fica salvo neste navegador</span><button class="btn pri" id="play">Jogar</button></div>
+  <div class="row" style="margin-top:16px"><span class="note">Versão de teste 0.4 · seu dinheiro fica salvo neste navegador</span><button class="btn pri" id="play">Jogar</button></div>
 </div></div>
 <div id="rot">Gire o celular para jogar na horizontal ↻</div>
 
@@ -285,6 +287,13 @@ function busStop(n,ax,R,P,s){// ax 'h': estrada horizontal z=R, posição x=P
  solid(st.shx,st.shz,ax==='h'?2.5:1,ax==='h'?1:2.5,true);STOPS.push(st)}
 busStop('Jardim América','h',120,-160,1);busStop('Centro','v',0,-170,-1);busStop('Universidade','h',-120,160,1);busStop('Hospital','v',-240,40,1);busStop('Shopping','h',240,60,-1);
 
+/* ---------- brilho das luzes ---------- */
+const GLOWT=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.22,'rgba(255,255,255,.6)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
+function haloMats(){const m=c=>new THREE.SpriteMaterial({map:GLOWT,color:c,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending});return{head:m(0xfff0c8),tail:m(0xff2414),il:m(0xffa200),ir:m(0xffa200)}}
+function halo(arr,p,mat,x,y,z,s){const sp=new THREE.Sprite(mat);sp.position.set(x,y,z);sp.scale.set(s,s,s);sp.visible=false;p.add(sp);arr.push(sp);return sp}
+function lampHalos(arr,p,hm,L){for(const [k,x,y,z,s] of L)halo(arr,p,hm[k],x,y,z,s)}
+const IN_BACK=new THREE.MeshLambertMaterial({color:0x3a3f47,side:THREE.BackSide});
+
 /* ---------- veículos ---------- */
 const WHEELG=new THREE.CylinderGeometry(1,1,1,14);WHEELG.rotateZ(Math.PI/2);
 const TIRE=mat(0x1b1b1d),RIM=mat(0xbfc3c7),SPOKE=mat(0x6b7075);
@@ -296,7 +305,7 @@ function wheel(o,p,x,y,z,r,w,front){const piv=new THREE.Group();piv.position.set
 function door(o,p,px,py,pz,axis,ang,grp,build){const piv=new THREE.Group();piv.position.set(px,py,pz);p.add(piv);build(piv);const d={piv,axis,ang,grp,cur:0,tgt:0};o.doors.push(d);return d}
 function makeVehicle(type,color,ai){
  const g=new THREE.Group();scene.add(g);
- const v={type,g,ai,x:0,z:0,h:0,speed:0,vx:0,vz:0,steer:0,dir:1,gear:1,rpm:750,spin:0,fuel:100,eng:100,tires:100,brakes:100,body:100,lights:0,on:false,sel:'D',indL:false,indR:false,hb:false,doors:[],wheels:[],front:[],trailer:null,thr:0,brk:0};
+ const v={halos:[],hm:haloMats(),type,g,ai,x:0,z:0,h:0,speed:0,vx:0,vz:0,steer:0,dir:1,gear:1,rpm:750,spin:0,fuel:100,eng:100,tires:100,brakes:100,body:100,lights:0,on:false,sel:'D',indL:false,indR:false,hb:false,doors:[],wheels:[],front:[],trailer:null,thr:0,brk:0};
  v.mHead=new THREE.MeshLambertMaterial({color:0xfff4d6,emissive:0xfff0c0,emissiveIntensity:0});
  v.mBrake=new THREE.MeshLambertMaterial({color:0x7a1010,emissive:0xff2a1a,emissiveIntensity:0});
  v.mIL=new THREE.MeshLambertMaterial({color:0x8a5a10,emissive:0xffa000,emissiveIntensity:0});
@@ -317,9 +326,11 @@ function makeVehicle(type,color,ai){
   door(v,g,-1.295,1.8,5.75,'y',1.4,'main',p=>{box(.05,2.3,1.15,body,0,0,-.575,p);box(.06,1.1,.9,GLASS,0,.45,-.575,p,false)});
   for(const zc of [-3.4,-1]){box(.03,.55,2.2,HOLE,-1.27,.92,zc,g,false);door(v,g,-1.3,1.2,zc,'z',-1.3,'lug',p=>box(.05,.55,2.25,mat(0xcfd3d6),0,-.275,0,p))}
   for(const x of [1.12,-1.12]){wheel(v,g,x,.52,3.9,.52,.36,true);wheel(v,g,x,.52,-3.1,.52,.36,false)}
+  lampHalos(v.halos,g,v.hm,[['head',.85,1.05,6.16,1.3],['head',-.85,1.05,6.16,1.3],['tail',1,1.35,-6.16,1],['tail',-1,1.35,-6.16,1],['il',1.12,1.3,6.15,.7],['il',1.12,1.8,-6.15,.7],['ir',-1.12,1.3,6.15,.7],['ir',-1.12,1.8,-6.15,.7]]);
   v.procParts=g.children.slice();
-  box(2.3,.5,.55,DARK,0,1.95,5.55,g,false);
-  v.sw=new THREE.Mesh(new THREE.TorusGeometry(.24,.035,8,20),DARK);const sp=new THREE.Group();sp.position.set(.72,2.25,5.25);sp.rotation.x=-.5;sp.add(v.sw);g.add(sp);
+  v.cock=new THREE.Group();g.add(v.cock);
+  box(2.3,.5,.55,DARK,0,1.95,5.55,v.cock,false);
+  v.sw=new THREE.Mesh(new THREE.TorusGeometry(.24,.035,8,20),DARK);const sp=new THREE.Group();sp.position.set(.72,2.25,5.25);sp.rotation.x=-.5;sp.add(v.sw);v.cock.add(sp);
  }else{
   Object.assign(v,{name:'caminhão',hw:1.27,hl:3.55,cz:.1,wb:4.25,maxSteer:.65,accel:3,maxSpeed:25,brakeF:7,gears:[4,7,10,14,18,25],redline:2400,seat:[.6,2.85,2.3],exit:[2.4,2.3],camD:11,camH:4.5,top:4.2});
   box(1.3,.35,7,DARK,0,.95,0,g);
@@ -333,6 +344,8 @@ function makeVehicle(type,color,ai){
   for(const s of [1,-1]){box(.03,1.9,1.5,HOLE,s*1.255,2.25,2.45,g,false);door(v,g,s*1.265,2.25,3.2,'y',-s*1.2,'main',p=>{box(.05,1.9,1.5,body,0,0,-.75,p);box(.06,.7,1.2,GLASS,0,.5,-.75,p,false)})}
   for(const x of [1.08,-1.08]){wheel(v,g,x,.5,2.45,.5,.34,true);wheel(v,g,x,.5,-1.25,.5,.42,false);wheel(v,g,x,.5,-2.5,.5,.42,false)}
   box(2.2,.4,.4,DARK,0,2.2,3.25,g,false);
+  box(2.4,.06,2.3,mat(0x3a3f47),0,3.44,2.25,g,false);box(2.4,2.3,.06,mat(0x3a3f47),0,2.3,1.08,g,false);
+  lampHalos(v.halos,g,v.hm,[['head',.9,1.25,3.74,1.1],['head',-.9,1.25,3.74,1.1],['tail',.99,1,-3.6,.8],['tail',-.99,1,-3.6,.8],['il',1.15,1.5,3.62,.6],['il',1.15,1.3,-3.6,.6],['ir',-1.15,1.5,3.62,.6],['ir',-1.15,1.3,-3.6,.6]]);
   v.sw=new THREE.Mesh(new THREE.TorusGeometry(.22,.035,8,20),DARK);const sp=new THREE.Group();sp.position.set(.6,2.5,2.95);sp.rotation.x=-.5;sp.add(v.sw);g.add(sp);
  }
  if(!ai){const fz=type==='bus'?6.1:3.7,hy=type==='bus'?1.05:1.25;
@@ -341,7 +354,7 @@ function makeVehicle(type,color,ai){
 const TR=[];
 function makeTrailer(color){
  const g=new THREE.Group();scene.add(g);
- const t={g,x:0,z:0,h:0,ax:0,az:0,hw:1.3,hl:6.25,cz:-5.25,L:10.2,attached:null,loaded:true,empty:false,doors:[],wheels:[],front:[],spin:0,speed:0,steer:0,dieT:-1};
+ const t={halos:[],hm:haloMats(),g,x:0,z:0,h:0,ax:0,az:0,hw:1.3,hl:6.25,cz:-5.25,L:10.2,attached:null,loaded:true,empty:false,doors:[],wheels:[],front:[],spin:0,speed:0,steer:0,dieT:-1};
  t.mBrake=new THREE.MeshLambertMaterial({color:0x7a1010,emissive:0xff2a1a,emissiveIntensity:0});
  box(2.55,3,12.5,mat(color),0,2.65,-5.25,g);box(2.57,.25,12.52,mat(0xf2f2f2),0,1.35,-5.25,g,false);
  sign('ROTA LOG',6,1.1,1.285,3,-5.25,Math.PI/2,null,'#ffffff',g);sign('ROTA LOG',6,1.1,-1.285,3,-5.25,-Math.PI/2,null,'#ffffff',g);
@@ -350,6 +363,7 @@ function makeTrailer(color){
  door(t,g,1.275,2.65,-11.52,'y',-1.6,'rear',p=>box(1.27,2.95,.05,mat(0xd9dcdf),-.635,0,0,p));
  door(t,g,-1.275,2.65,-11.52,'y',1.6,'rear',p=>box(1.27,2.95,.05,mat(0xd9dcdf),.635,0,0,p));
  for(const x of [1.05,-1.05])box(.3,.22,.06,t.mBrake,x,1.05,-11.56,g,false);
+ lampHalos(t.halos,g,t.hm,[['tail',1.05,1.05,-11.66,.9],['tail',-1.05,1.05,-11.66,.9],['il',1.2,1.35,-11.66,.6],['ir',-1.2,1.35,-11.66,.6]]);
  for(const x of [1.1,-1.1]){wheel(t,g,x,.5,-9.6,.5,.42,false);wheel(t,g,x,.5,-10.8,.5,.42,false)}
  t.legs=[box(.14,1,.14,DARK,.9,.55,-2.2,g),box(.14,1,.14,DARK,-.9,.55,-2.2,g)];
  TR.push(t);return t}
@@ -385,7 +399,7 @@ async function buildModel(json,bin,base){
  return{nodes,tex}}
 function applyGLB(v,M){if(!v.glbRoot){
   const mat=new THREE.MeshLambertMaterial({map:M.tex,color:M.tex?0xffffff:0xe8e8e8});const root=new THREE.Group();v.g.add(root);v.glbRoot=root;
-  const G2={wheels:[],front:[],doors:[],wb:6.33};
+  const G2={wheels:[],front:[],doors:[],wb:6.33,seat:[.6,2.02,4.7]};
   for(const n of M.nodes){const piv=new THREE.Group();piv.position.fromArray(n.t);root.add(piv);const sp=new THREE.Group();piv.add(sp);const m=new THREE.Mesh(n.g,mat);m.castShadow=true;m.receiveShadow=true;sp.add(m);
    if(n.name.startsWith('roda')){G2.wheels.push(sp);if(n.name.includes('dianteira'))G2.front.push(piv)}
    else if(n.name.startsWith('porta'))G2.doors.push({piv,axis:'y',ang:1.25,grp:'main',cur:0,tgt:0});
@@ -393,11 +407,23 @@ function applyGLB(v,M){if(!v.glbRoot){
   const lamp=(m,w,h,x,y,z)=>{const e=new THREE.Mesh(BOX1,m);e.scale.set(w,h,.06);e.position.set(x,y,z);root.add(e);return e};
   G2.glows=[lamp(v.mHead,.45,.16,.8,.85,6.04),lamp(v.mHead,.45,.16,-.8,.85,6.04),lamp(v.mBrake,.14,.7,1.12,1.6,-6.04),lamp(v.mBrake,.14,.7,-1.12,1.6,-6.04),
    lamp(v.mIL,.14,.12,1.1,1.1,6.02),lamp(v.mIL,.14,.12,1.12,1.1,-6.05),lamp(v.mIR,.14,.12,-1.1,1.1,6.02),lamp(v.mIR,.14,.12,-1.12,1.1,-6.05)];
-  v.setGLB=G2;v.setProc={wheels:v.wheels,front:v.front,doors:v.doors,wb:v.wb,glows:null}}
+  G2.halos=[];lampHalos(G2.halos,root,v.hm,[['head',.8,.85,6.14,1.3],['head',-.8,.85,6.14,1.3],['tail',1.12,1.6,-6.14,1.1],['tail',-1.12,1.6,-6.14,1.1],['il',1.1,1.1,6.12,.7],['il',1.12,1.1,-6.15,.7],['ir',-1.1,1.1,6.12,.7],['ir',-1.12,1.1,-6.15,.7]]);
+  const bx=(w,h,d,x,y,z,m)=>{const e=new THREE.Mesh(BOX1,m);e.scale.set(w,h,d);e.position.set(x,y,z);root.add(e);return e};
+  const FL=mat(0x4a4f57),WALL=mat(0x3a3f47);
+  bx(.75,2,.84,-.79,1.4,5.2,IN_BACK);bx(.3,.28,.8,-.99,.54,5.2,FL);bx(.3,.56,.8,-.7,.68,5.2,FL);
+  {const r=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1.6,6),mat(0xe0c341));r.position.set(-.48,1.5,4.86);root.add(r)}
+  bx(2.15,.98,3.95,-.075,.91,1.175,IN_BACK);
+  [[-.7,.62,.25,.4,.5,.55,0xb03a2e],[-.2,.58,1.6,.5,.32,.6,0x2c6fb0],[.3,.6,.6,.45,.36,.7,0x3f6b33],[-.55,.56,2.6,.55,.28,.4,0x6b4a2e],[.5,.62,2.2,.4,.4,.55,0x8e5cc4]].forEach(b=>bx(b[3],b[4],b[5],b[0],.42+b[4]/2,b[2],mat(b[6])));
+  bx(2.3,.06,10.3,0,1.45,-.4,FL);bx(2.36,.06,10.8,0,2.95,-.2,WALL);
+  for(const sx of [1,-1])bx(.04,.55,10.2,sx*1.16,1.72,-.5,WALL);
+  {const sg=new THREE.BoxGeometry(.95,.9,.55),si=new THREE.InstancedMesh(sg,mat(0x23415f),20),o3=new THREE.Object3D();let k=0;
+   for(let r=0;r<10;r++)for(const sx of [.62,-.62]){o3.position.set(sx,1.95,3.3-r*.92);o3.updateMatrix();si.setMatrixAt(k++,o3.matrix)}root.add(si)}
+  v.setGLB=G2;v.setProc={wheels:v.wheels,front:v.front,doors:v.doors,wb:v.wb,glows:null,halos:v.halos,seat:v.seat}}
  useModel(v,true)}
 function useModel(v,glb){if(!v.glbRoot)return;const set=glb?v.setGLB:v.setProc,old=glb?v.setProc:v.setGLB;
  set.doors.forEach(d=>{const o=old.doors.filter(x=>x.grp===d.grp)[0];if(o){d.tgt=o.tgt;d.cur=o.cur}});
- v.glbRoot.visible=glb;v.procParts.forEach(c=>c.visible=!glb);Object.assign(v,{wheels:set.wheels,front:set.front,doors:set.doors,wb:set.wb,glows:set.glows})}
+ v.glbRoot.visible=glb;v.procParts.forEach(c=>c.visible=!glb);for(const s of old.halos)s.visible=false;
+ Object.assign(v,{wheels:set.wheels,front:set.front,doors:set.doors,wb:set.wb,glows:set.glows,halos:set.halos,seat:set.seat});if(v.cock)v.cock.position.set(0,glb?-.55:0,glb?-.1:0)}
 G.model=(()=>{try{return localStorage.getItem('rb_model')||'glb'}catch(e){return 'glb'}})();
 function loadBusModel(){if(BUSMODEL){for(const v of [BUS,...AI.map(a=>a.v)])applyGLB(v,BUSMODEL);syncModelBtn();return}
  fetch('onibus.glb').then(r=>{if(!r.ok)throw new Error('não encontrado');return r.arrayBuffer()}).then(parseGLB)
@@ -519,6 +545,8 @@ function walk(dt,I){const mv=TOUCH&&Math.abs(T.jy)>.12?-T.jy:((K.KeyW||K.ArrowUp
 const exitPt=v=>toW(v,v.exit[0],v.exit[1]);
 function nearVeh(r=3.6){let best=null,bd=r;for(const v of PV){const d=dist(P,exitPt(v));if(d<bd){bd=d;best=v}}return best}
 function nearTrunk(){if(dist(P,toW(BUS,-2.1,-2.2))<3.6)return{o:BUS,g:'lug',n:'bagageiro'};for(const t of TR){if(dist(P,toW(t,0,-12.6))<3.6)return{o:t,g:'rear',n:'portas da carreta'}}return null}
+function switchTo(v){if(G.mode==='drive'){const c=G.active;if(c===v){toast('Você já está no '+v.name);return}if(Math.abs(c.speed)>.8){toast('Pare o veículo antes de trocar');return}c.hb=true;c.speed=0;c.vx=c.vz=0;G.horn=false}
+ G.mode='drive';G.active=v;v.hb=false;P.g.visible=false;document.body.classList.remove('walk');CAM.yaw=CAM.pitch=0;$('gar').style.display='none';$('panel').classList.remove('on');$('bPanel').classList.remove('on');toast('Você está no '+v.name+(v.on?'':' · ligue o motor'),1800)}
 function enterVeh(v){G.mode='drive';G.active=v;document.body.classList.remove('walk');if(!v.on)setTimeout(()=>{if(G.active===v&&!v.on)toast('Ligue o motor '+key('I','⏻'),1800)},1300);v.hb=false;P.g.visible=false;if(v.type==='truck'){const d=v.doors[0];d.tgt=1;setTimeout(()=>{d.tgt=0},800)}toast('Você entrou no '+v.name,1200)}
 function exitVeh(){const v=G.active;if(Math.abs(v.speed)>.8){toast('Pare o veículo para sair');return}
  let p=exitPt(v);if(blockedP(p.x,p.z))p=toW(v,-v.exit[0],v.exit[1]);if(blockedP(p.x,p.z)){toast('Sem espaço para descer aqui');return}
@@ -529,7 +557,7 @@ function exitVeh(){const v=G.active;if(Math.abs(v.speed)>.8){toast('Pare o veíc
 function toggleDoors(o,grp){if(o.attached!==undefined?Math.abs(o.speed)>1.5:Math.abs(o.speed)>1.5){toast('Pare o veículo primeiro');return}
  const ds=o.doors.filter(d=>d.grp===grp);const open=!ds.some(d=>d.tgt);ds.forEach(d=>d.tgt=open?1:0);blip(open?520:380,.07)}
 function hitch(v){if(v.trailer){if(Math.abs(v.speed)>.5){toast('Pare para soltar a carreta');return}
-  const t=v.trailer;t.attached=null;v.trailer=null;t.speed=0;t.legs.forEach(l=>l.visible=true);blip(300,.1);toast('Carreta solta');if(t.empty)t.dieT=4;return}
+  const t=v.trailer;t.attached=null;v.trailer=null;for(const k in t.hm)t.hm[k].opacity=0;t.speed=0;t.legs.forEach(l=>l.visible=true);blip(300,.1);toast('Carreta solta');if(t.empty)t.dieT=4;return}
  const f=fwd(v.h),hp={x:v.x-f.x*1.6,z:v.z-f.z*1.6};let best=null,bd=3.2;
  for(const t of TR){if(t.attached)continue;const d=dist(hp,t);if(d<bd&&Math.abs(angN(t.h-v.h))<.6){bd=d;best=t}}
  if(!best){const any=TR.filter(t=>!t.attached).map(t=>dist(hp,t)).sort((a,b)=>a-b)[0];toast(any!==undefined&&any<12?`Dê ré até o pino da carreta (faltam ${any.toFixed(1)} m)`:'Nenhuma carreta atrás do caminhão');return}
@@ -553,11 +581,14 @@ function act(a,down){
  case 'hitch':v&&v.type==='truck'?hitch(v):toast('Entre no caminhão para engatar');break;
  case 'act':doAction();break;
  case 'lights':if(v){v.lights=(v.lights+1)%3;blip(700,.04);toast(['Farol desligado','Farol baixo','Farol alto'][v.lights],900)}break;
+ case 'garage':{const g=$('gar');g.style.display=g.style.display==='grid'?'none':'grid'}break;
+ case 'gTruck':switchTo(TRUCK);break;
+ case 'gBus':switchTo(BUS);break;
  case 'ign':if(v){if(v.on){v.on=false;blip(180,.12);toast('Motor desligado',900)}else if(v.fuel<=0)toast('Sem combustível! Chame o guincho no menu');else if(v.eng<=0)toast('Motor quebrado! Chame o guincho no menu');else{v.on=true;blip(90,.35,.1);setTimeout(()=>blip(140,.2,.08),250);toast('Motor ligado',900)}}break;
  case 'panel':$('panel').classList.toggle('on');$('bPanel').classList.toggle('on',$('panel').classList.contains('on'));break;
  case 'indL':if(v){v.indL=!v.indL;v.indR=false;blip(1200,.03)}break;
  case 'indR':if(v){v.indR=!v.indR;v.indL=false;blip(1200,.03)}break;
- case 'cam':G.cam=(G.cam+1)%3;toast(['Câmera externa','Câmera da cabine','Câmera alta'][G.cam],900);break;
+ case 'cam':G.cam=(G.cam+1)%3;CAM.yaw=CAM.pitch=0;CAM.zoom=1;toast(['Câmera externa','Câmera da cabine','Câmera alta'][G.cam],900);break;
  case 'wiper':G.wiper=!G.wiper;toast(G.wiper?'Limpador ligado':'Limpador desligado',900);break;
  case 'gear':setAuto(!G.auto);break;
  case 'up':case 'down':if(v)shift(v,a==='up'?1:-1);break;
@@ -687,22 +718,37 @@ function env(dt,F){G.time=(G.time+dt/60)%24;G.wNext-=dt/60;if(G.wNext<=0){G.rain
 
 /* ---------- câmera ---------- */
 const camLook=new THREE.Vector3(),camWant=new THREE.Vector3();
-function camUpdate(dt){let o,dd,hh,top;
+const CAM={yaw:0,pitch:0,zoom:1,idle:9,pts:new Map(),pd:0};
+function camUpdate(dt){let o,dd,hh,top;CAM.idle+=dt;
+ if(CAM.idle>2.5&&!CAM.pts.size){const k=1-Math.exp(-dt*2.2);CAM.yaw=angN(CAM.yaw)*(1-k);CAM.pitch*=1-k}
+ const baseF=innerWidth<innerHeight?75:60,ck=G.mode==='drive'&&G.cam===1;const wf=ck?clamp(baseF/CAM.zoom,30,85):baseF;if(Math.abs(camera.fov-wf)>.01){camera.fov=wf;camera.updateProjectionMatrix()}
  if(G.mode==='drive'){const v=G.active;o=v;dd=v.camD+(v.trailer?8:0);hh=v.camH+(v.trailer?2.5:0);top=v.top;
-  if(G.cam===1){const s=toW(v,v.seat[0],v.seat[2]),l=toW(v,v.seat[0],v.seat[2]+12);camera.position.set(s.x,v.seat[1],s.z);camera.lookAt(l.x,v.seat[1]-.7,l.z);shake(dt);return}
+  if(ck){const s=toW(v,v.seat[0],v.seat[2]),f=fwd(v.h+clamp(CAM.yaw,-2.8,2.8)),py=clamp(CAM.pitch,-.8,.8);camera.position.set(s.x,v.seat[1],s.z);camera.lookAt(s.x+f.x*10,v.seat[1]-.7-py*9,s.z+f.z*10);shake(dt);return}
   if(G.cam===2){dd*=1.7;hh*=3}}
  else{o=P;dd=5.2;hh=2.6;top=1.8}
- const f=fwd(o.h);camWant.set(o.x-f.x*dd,hh+(G.mode==='drive'?0:.4),o.z-f.z*dd);
- if(camera.position.distanceTo(camWant)>80)camera.position.copy(camWant);else camera.position.lerp(camWant,1-Math.exp(-dt*4.5));
- camLook.set(o.x+f.x*4,top*.55,o.z+f.z*4);camera.lookAt(camLook);shake(dt)}
+ const D=Math.hypot(dd,hh)*CAM.zoom,el=clamp(Math.atan2(hh,dd)+CAM.pitch,.03,1.45),f=fwd(o.h+CAM.yaw),fo=fwd(o.h),ahead=4*Math.min(1,CAM.zoom);
+ camWant.set(o.x-f.x*Math.cos(el)*D,Math.max(.4,Math.sin(el)*D+(G.mode==='drive'?0:.4)),o.z-f.z*Math.cos(el)*D);
+ if(camera.position.distanceTo(camWant)>80)camera.position.copy(camWant);else camera.position.lerp(camWant,1-Math.exp(-dt*(CAM.pts.size?16:4.5)));
+ camLook.set(o.x+fo.x*ahead,top*.55,o.z+fo.z*ahead);camera.lookAt(camLook);shake(dt)}
+{const cv=renderer.domElement,pd=()=>{const a=[...CAM.pts.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)};
+ cv.addEventListener('pointerdown',e=>{initAudio();CAM.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});try{cv.setPointerCapture(e.pointerId)}catch(_){}CAM.idle=0;if(CAM.pts.size===2)CAM.pd=pd()});
+ cv.addEventListener('pointermove',e=>{const p=CAM.pts.get(e.pointerId);if(!p)return;CAM.idle=0;
+  if(CAM.pts.size===1){CAM.yaw-=(e.clientX-p.x)*.008;CAM.pitch=clamp(CAM.pitch+(e.clientY-p.y)*.005,-.9,1.2)}
+  p.x=e.clientX;p.y=e.clientY;if(CAM.pts.size===2){const d=pd();if(CAM.pd>0&&d>0)CAM.zoom=clamp(CAM.zoom*CAM.pd/d,.3,2.4);CAM.pd=d}});
+ const pe=e=>{CAM.pts.delete(e.pointerId);CAM.pd=CAM.pts.size===2?pd():0};cv.addEventListener('pointerup',pe);cv.addEventListener('pointercancel',pe);
+ cv.addEventListener('wheel',e=>{e.preventDefault();CAM.idle=0;CAM.zoom=clamp(CAM.zoom*(e.deltaY>0?1.1:.9),.3,2.4)},{passive:false})}
 function shake(dt){if(G.shake>.01){camera.position.x+=(Math.random()-.5)*G.shake*.6;camera.position.y+=(Math.random()-.5)*G.shake*.4;G.shake*=Math.exp(-dt*6)}}
 
 /* ---------- sincronizar ---------- */
 function sync(o,dt){o.g.position.set(o.x,0,o.z);o.g.rotation.y=o.h;
  for(const d of o.doors){d.cur+=(d.tgt-d.cur)*Math.min(1,dt*3.5);d.piv.rotation[d.axis]=d.cur*d.ang}
+ for(const s of o.halos)s.visible=s.material.opacity>.01;
  o.spin+=(o.speed||0)*dt/.5;for(const w of o.wheels)w.rotation.x=o.spin;for(const f of o.front)f.rotation.y=o.steer||0;
  if(o.mHead){o.mHead.emissiveIntensity=o.lights?1:0;o.mBrake.emissiveIntensity=o.brk?1:(o.lights?.35:0);o.mIL.emissiveIntensity=o.indL&&G.blink?1:0;o.mIR.emissiveIntensity=o.indR&&G.blink?1:0;
   if(o.glows)for(const e of o.glows)e.visible=e.material.emissiveIntensity>0;
+  {const hm=o.hm;hm.head.opacity=o.lights?(o.lights===2?1:.7):0;hm.tail.opacity=o.brk?1:(o.lights?.38:0);hm.il.opacity=o.indL&&G.blink?.95:0;hm.ir.opacity=o.indR&&G.blink?.95:0;
+   for(const s of o.halos)if(s.material===hm.head)s.scale.setScalar(o.lights===2?1.9:1.3);
+   if(o.trailer){const th=o.trailer.hm;th.tail.opacity=hm.tail.opacity;th.il.opacity=hm.il.opacity;th.ir.opacity=hm.ir.opacity}}
   if(o.spots)for(const s of o.spots){s.intensity=o.lights===2?3.4:o.lights?2.2:0;s.distance=o.lights===2?150:85;s.angle=o.lights===2?.36:.48}if(o.sw)o.sw.rotation.z=-o.steer*4}
  if(o.mBrake&&o.trailer)o.trailer.mBrake.emissiveIntensity=o.mBrake.emissiveIntensity}
 
