@@ -141,6 +141,7 @@ button{font-family:Rajdhani,"Arial Narrow",Arial,sans-serif}
   <h4>Ajustes</h4>
   <div class="opts">
     <button class="btn" id="oSteer">Direção: volante</button>
+    <button class="btn" id="oModel">Ônibus: modelo 3D</button>
     <button class="btn" id="oGear">Câmbio: automático</button>
     <button class="btn" id="oRain">Chuva: desligada</button>
     <button class="btn" id="oTime">Avançar 3 horas</button>
@@ -155,7 +156,7 @@ button{font-family:Rajdhani,"Arial Narrow",Arial,sans-serif}
   <h2>Rota Brasil</h2>
   <p class="lead">Simulador de caminhão e ônibus. Pegue fretes no depósito, faça linhas saindo da rodoviária, desça do veículo, abra portas e bagageiro, abasteça e cuide da manutenção. O dia vira noite e às vezes chove.</p>
   <h4>Como jogar</h4><div class="keys" id="keys2"></div>
-  <div class="row" style="margin-top:16px"><span class="note">Versão de teste 0.2 · seu dinheiro fica salvo neste navegador</span><button class="btn pri" id="play">Jogar</button></div>
+  <div class="row" style="margin-top:16px"><span class="note">Versão de teste 0.3 · seu dinheiro fica salvo neste navegador</span><button class="btn pri" id="play">Jogar</button></div>
 </div></div>
 <div id="rot">Gire o celular para jogar na horizontal ↻</div>
 
@@ -316,6 +317,7 @@ function makeVehicle(type,color,ai){
   door(v,g,-1.295,1.8,5.75,'y',1.4,'main',p=>{box(.05,2.3,1.15,body,0,0,-.575,p);box(.06,1.1,.9,GLASS,0,.45,-.575,p,false)});
   for(const zc of [-3.4,-1]){box(.03,.55,2.2,HOLE,-1.27,.92,zc,g,false);door(v,g,-1.3,1.2,zc,'z',-1.3,'lug',p=>box(.05,.55,2.25,mat(0xcfd3d6),0,-.275,0,p))}
   for(const x of [1.12,-1.12]){wheel(v,g,x,.52,3.9,.52,.36,true);wheel(v,g,x,.52,-3.1,.52,.36,false)}
+  v.procParts=g.children.slice();
   box(2.3,.5,.55,DARK,0,1.95,5.55,g,false);
   v.sw=new THREE.Mesh(new THREE.TorusGeometry(.24,.035,8,20),DARK);const sp=new THREE.Group();sp.position.set(.72,2.25,5.25);sp.rotation.x=-.5;sp.add(v.sw);g.add(sp);
  }else{
@@ -359,6 +361,49 @@ const BUS=makeVehicle('bus',0xf2f2ee);Object.assign(BUS,{x:100,z:-40,h:Math.PI,h
 const PV=[TRUCK,BUS];
 if(saved.v){try{PV.forEach((v,i)=>{const s=saved.v[i];if(s)['fuel','eng','tires','brakes','body'].forEach(k=>{if(typeof s[k]==='number')v[k]=s[k]})})}catch(e){}}
 G.active=TRUCK;
+
+/* modelo GLB do ônibus */
+let BUSMODEL=null;
+async function parseGLB(ab){const dv=new DataView(ab);if(dv.getUint32(0,true)!==0x46546C67)throw new Error('O arquivo não é um GLB');
+ let o=12,json=null,bin=null;while(o+8<=ab.byteLength){const len=dv.getUint32(o,true),type=dv.getUint32(o+4,true),ch=ab.slice(o+8,o+8+len);if(type===0x4E4F534A)json=JSON.parse(new TextDecoder().decode(ch));else if(type===0x004E4942)bin=ch;o+=8+len}
+ if(!json||!bin)throw new Error('GLB incompleto');return buildModel(json,bin,'')}
+async function parseGLTF(json,base){const u=json.buffers[0].uri;let bin;
+ if(u.startsWith('data:')){const s=atob(u.slice(u.indexOf(',')+1)),a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i);bin=a.buffer}else bin=await (await fetch(base+u)).arrayBuffer();
+ return buildModel(json,bin,base)}
+async function buildModel(json,bin,base){
+ const CT={5126:Float32Array,5125:Uint32Array,5123:Uint16Array,5121:Uint8Array},NC={SCALAR:1,VEC2:2,VEC3:3,VEC4:4};
+ const acc=i=>{const a=json.accessors[i],bv=json.bufferViews[a.bufferView],T=CT[a.componentType],n=NC[a.type],off=(bv.byteOffset||0)+(a.byteOffset||0);return new T(bin.slice(off,off+a.count*n*T.BYTES_PER_ELEMENT))};
+ let tex=null;const pm=json.materials&&json.materials[0]&&json.materials[0].pbrMetallicRoughness,ti=pm&&pm.baseColorTexture;
+ if(ti){const im=json.images[json.textures[ti.index].source],bv=im.uri?null:json.bufferViews[im.bufferView],off=bv?bv.byteOffset||0:0;
+  const url=im.uri?base+im.uri:URL.createObjectURL(new Blob([bin.slice(off,off+bv.byteLength)],{type:im.mimeType||'image/png'}));
+  const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('imagem'));i.src=url});
+  tex=new THREE.Texture(img);tex.flipY=false;tex.anisotropy=4;tex.needsUpdate=true}
+ const nodes=(json.nodes||[]).filter(n=>n.mesh!==undefined).map(n=>{const pr=json.meshes[n.mesh].primitives[0],g=new THREE.BufferGeometry(),at=pr.attributes;
+  g.setAttribute('position',new THREE.BufferAttribute(acc(at.POSITION),3));if(at.NORMAL!==undefined)g.setAttribute('normal',new THREE.BufferAttribute(acc(at.NORMAL),3));if(at.TEXCOORD_0!==undefined)g.setAttribute('uv',new THREE.BufferAttribute(acc(at.TEXCOORD_0),2));
+  if(pr.indices!==undefined)g.setIndex(new THREE.BufferAttribute(acc(pr.indices),1));if(at.NORMAL===undefined)g.computeVertexNormals();
+  return{name:n.name||'',g,t:n.translation||[0,0,0]}});
+ return{nodes,tex}}
+function applyGLB(v,M){if(!v.glbRoot){
+  const mat=new THREE.MeshLambertMaterial({map:M.tex,color:M.tex?0xffffff:0xe8e8e8});const root=new THREE.Group();v.g.add(root);v.glbRoot=root;
+  const G2={wheels:[],front:[],doors:[],wb:6.33};
+  for(const n of M.nodes){const piv=new THREE.Group();piv.position.fromArray(n.t);root.add(piv);const sp=new THREE.Group();piv.add(sp);const m=new THREE.Mesh(n.g,mat);m.castShadow=true;m.receiveShadow=true;sp.add(m);
+   if(n.name.startsWith('roda')){G2.wheels.push(sp);if(n.name.includes('dianteira'))G2.front.push(piv)}
+   else if(n.name.startsWith('porta'))G2.doors.push({piv,axis:'y',ang:1.25,grp:'main',cur:0,tgt:0});
+   else if(n.name.startsWith('bagageiro'))G2.doors.push({piv,axis:'z',ang:-1.25,grp:'lug',cur:0,tgt:0})}
+  const lamp=(m,w,h,x,y,z)=>{const e=new THREE.Mesh(BOX1,m);e.scale.set(w,h,.06);e.position.set(x,y,z);root.add(e);return e};
+  G2.glows=[lamp(v.mHead,.45,.16,.8,.85,6.04),lamp(v.mHead,.45,.16,-.8,.85,6.04),lamp(v.mBrake,.14,.7,1.12,1.6,-6.04),lamp(v.mBrake,.14,.7,-1.12,1.6,-6.04),
+   lamp(v.mIL,.14,.12,1.1,1.1,6.02),lamp(v.mIL,.14,.12,1.12,1.1,-6.05),lamp(v.mIR,.14,.12,-1.1,1.1,6.02),lamp(v.mIR,.14,.12,-1.12,1.1,-6.05)];
+  v.setGLB=G2;v.setProc={wheels:v.wheels,front:v.front,doors:v.doors,wb:v.wb,glows:null}}
+ useModel(v,true)}
+function useModel(v,glb){if(!v.glbRoot)return;const set=glb?v.setGLB:v.setProc,old=glb?v.setProc:v.setGLB;
+ set.doors.forEach(d=>{const o=old.doors.filter(x=>x.grp===d.grp)[0];if(o){d.tgt=o.tgt;d.cur=o.cur}});
+ v.glbRoot.visible=glb;v.procParts.forEach(c=>c.visible=!glb);Object.assign(v,{wheels:set.wheels,front:set.front,doors:set.doors,wb:set.wb,glows:set.glows})}
+G.model=(()=>{try{return localStorage.getItem('rb_model')||'glb'}catch(e){return 'glb'}})();
+function loadBusModel(){if(BUSMODEL){for(const v of [BUS,...AI.map(a=>a.v)])applyGLB(v,BUSMODEL);syncModelBtn();return}
+ fetch('onibus.glb').then(r=>{if(!r.ok)throw new Error('não encontrado');return r.arrayBuffer()}).then(parseGLB)
+ .catch(()=>fetch('onibus.json').then(r=>{if(!r.ok)throw new Error('não encontrado');return r.json()}).then(j=>parseGLTF(j,''))).then(M=>{BUSMODEL=M;if(G.model==='glb')for(const v of [BUS,...AI.map(a=>a.v)])applyGLB(v,M);syncModelBtn()})
+ .catch(e=>{G.modelErr=e.message;syncModelBtn()})}
+function syncModelBtn(){const b=$('oModel');if(b)b.textContent='Ônibus: '+(G.model==='glb'?(BUSMODEL?'modelo 3D':G.modelErr?'modelo 3D (onibus.glb não encontrado)':'modelo 3D (carregando…)'):'simples')}
 
 /* pessoas */
 const PG={b:new THREE.BoxGeometry(.46,.62,.28),h:new THREE.SphereGeometry(.15,10,8),l:new THREE.BoxGeometry(.16,.78,.18)};PG.l.translate(0,-.39,0);
@@ -529,7 +574,7 @@ const AI=[];const AICOL=[0x2f7d4f,0xb03a2e,0x3a5fb0,0x7b4fa0,0xd08a1e];
 const inPath=b=>{const x=BAYX[b];return[[x+16,-3.5],[x+2,-16],[x,-50],[x,-88]]};
 const outPath=b=>{const x=BAYX[b],s=x<60?1:-1,lz=s>0?3.5:-3.5;return[[x,-50,-1],[x+s*14,-66],[x+s*28,-52],[x+s*28,-20],[x+s*38,lz],[s>0?230:-110,lz]]};
 function spawnAI(bay,parked){const v=makeVehicle('bus',AICOL[(Math.random()*AICOL.length)|0],true);const a={v,bay,state:'in',i:0,spd:0,timer:0,stuck:0,park:0};bays[bay]='ai';
- if(parked){Object.assign(v,bayPose(bay));a.state='park';a.timer=15+Math.random()*40;a.park=3}else{a.path=inPath(bay);v.x=230;v.z=-3.5;v.h=-Math.PI/2;a.spd=7}AI.push(a)}
+ if(parked){if(BUSMODEL&&G.model==='glb')applyGLB(v,BUSMODEL);Object.assign(v,bayPose(bay));a.state='park';a.timer=15+Math.random()*40;a.park=3}else{if(BUSMODEL&&G.model==='glb')applyGLB(v,BUSMODEL);a.path=inPath(bay);v.x=230;v.z=-3.5;v.h=-Math.PI/2;a.spd=7}AI.push(a)}
 function killAI(a){scene.remove(a.v.g);const i=AI.indexOf(a);if(i>=0)AI.splice(i,1);if(bays[a.bay]==='ai')bays[a.bay]=null}
 function aiUpdate(dt){
  G.aiT-=dt;if(G.aiT<=0){G.aiT=9+Math.random()*14;const free=[0,1,2,3,4].filter(i=>!bays[i]);const pf=G.mode==='drive'?G.active:P;
@@ -657,6 +702,7 @@ function sync(o,dt){o.g.position.set(o.x,0,o.z);o.g.rotation.y=o.h;
  for(const d of o.doors){d.cur+=(d.tgt-d.cur)*Math.min(1,dt*3.5);d.piv.rotation[d.axis]=d.cur*d.ang}
  o.spin+=(o.speed||0)*dt/.5;for(const w of o.wheels)w.rotation.x=o.spin;for(const f of o.front)f.rotation.y=o.steer||0;
  if(o.mHead){o.mHead.emissiveIntensity=o.lights?1:0;o.mBrake.emissiveIntensity=o.brk?1:(o.lights?.35:0);o.mIL.emissiveIntensity=o.indL&&G.blink?1:0;o.mIR.emissiveIntensity=o.indR&&G.blink?1:0;
+  if(o.glows)for(const e of o.glows)e.visible=e.material.emissiveIntensity>0;
   if(o.spots)for(const s of o.spots){s.intensity=o.lights===2?3.4:o.lights?2.2:0;s.distance=o.lights===2?150:85;s.angle=o.lights===2?.36:.48}if(o.sw)o.sw.rotation.z=-o.steer*4}
  if(o.mBrake&&o.trailer)o.trailer.mBrake.emissiveIntensity=o.mBrake.emissiveIntensity}
 
@@ -695,6 +741,8 @@ for(const id of ['keys','keys2'])$(id).innerHTML=KEYS.map(k=>`<div><kbd>${k[0]}<
 function toggleMenu(f){G.menu=f===undefined?!G.menu:f;if(G.menu){$('panel').classList.remove('on');$('bPanel').classList.remove('on')}$('menu').classList.toggle('on',G.menu);if(G.menu){renderJobs();T.acc=T.brk=0}}
 $('mclose').onclick=()=>toggleMenu(false);
 $('oSteer').textContent='Direção: '+(G.steer==='wheel'?'volante':'setas');
+$('oModel').onclick=()=>{G.model=G.model==='glb'?'simple':'glb';try{localStorage.setItem('rb_model',G.model)}catch(e){}
+ if(G.model==='glb'){G.modelErr=null;loadBusModel()}else for(const v of [BUS,...AI.map(a=>a.v)])useModel(v,false);syncModelBtn()};
 $('oSteer').onclick=()=>{G.steer=G.steer==='wheel'?'arrows':'wheel';document.body.classList.toggle('arr',G.steer==='arrows');$('oSteer').textContent='Direção: '+(G.steer==='wheel'?'volante':'setas');try{localStorage.setItem('rb_steer',G.steer)}catch(e){}};
 function syncRainBtn(){$('oRain').textContent='Chuva: '+(G.rainT?'ligada':'desligada')}
 $('oRain').onclick=()=>{G.rainT=G.rainT?0:1;G.wNext=4;syncRainBtn()};
@@ -756,7 +804,7 @@ function audio(){if(!AC)return;const t=AC.currentTime;
  hornG.gain.setTargetAtTime(G.horn?.08:0,t,.02);rainG.gain.setTargetAtTime(G.rain*.1*(G.mode==='drive'&&G.cam===1?1.5:1),t,.3)}
 
 /* ---------- loop ---------- */
-spawnAI(0,true);spawnAI(2,true);genJobs();
+spawnAI(0,true);spawnAI(2,true);genJobs();syncModelBtn();if(G.model==='glb')loadBusModel();
 let last=performance.now(),last0=last;const wrim=$('wrim');
 function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/1000);last=now;if(G.menu||!G.started)dt=0;
  G.blink=(now%800)<400;G.warnT-=dt;
