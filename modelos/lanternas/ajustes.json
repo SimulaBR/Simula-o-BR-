@@ -219,5 +219,49 @@
     }
    }
   ]
+ },
+ "urbano": {
+  "des": "urbano_led_l",
+  "x": 1.11,
+  "z": -6.24,
+  "y": 0.89,
+  "h": 0.82,
+  "w": 0.4,
+  "ang": 33,
+  "esp": true,
+  "ver": 1
+ },
+ "rodoviario_2e": {
+  "des": "leds_x",
+  "x": 1.24,
+  "z": -6.8,
+  "y": 0.98,
+  "h": 1.28,
+  "w": 0.46,
+  "ang": 30,
+  "esp": true,
+  "ver": 1
+ },
+ "rodoviario_3e": {
+  "des": "leds_x",
+  "x": 1.28,
+  "z": -7.12,
+  "y": 1.09,
+  "h": 1.16,
+  "w": 0.31,
+  "ang": 30,
+  "esp": true,
+  "ver": 1
+ },
+ "rodoviario_4e": {
+  "des": "rod_vertical_a",
+  "x": 0.99,
+  "z": -7.28,
+  "y": 0.96,
+  "h": 0.8,
+  "w": 0.5,
+  "ang": 30,
+  "esp": true,
+  "ver": 1
  }
 }
