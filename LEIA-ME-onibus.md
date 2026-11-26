@@ -60,3 +60,8 @@ Arquivos: `modelos/onibus/<ônibus>_branco.jpg` (lataria branca) e `modelos/onib
 Em ☰ → Trabalhos e ajustes → Ajustes, o botão **📲 Instalar no celular** coloca o SimulaBr na tela inicial como app (tela cheia, deitado).
 No iPhone: Safari → Compartilhar → "Adicionar à Tela de Início". Arquivos: `manifest.webmanifest`, `sw.js` e a pasta `icones/`.
 Os ônibus e sons ficam guardados no aparelho: da segunda vez o jogo abre mais rápido. Quando um ônibus é atualizado, a versão nova aparece na abertura seguinte.
+
+## Carrocerias padrão (desde 26/11)
+A frota agora são 4 carrocerias brancas, feitas a partir dos modelos de alta qualidade do Meshy com a redução nova (forma preservada):
+urbano.glb (Urbano), rodoviario_2e.glb, rodoviario_3e.glb e rodoviario_4e.glb. Cada uma tem o seu modelo de pintura em modelos/onibus/skins/.
+Os arquivos antigos (rodoviario_01…09, urbano_07/08/10 e os _branco.jpg) não são mais usados: pode apagar do repositório.
