@@ -37,3 +37,9 @@ Se você ajustou alguma lanterna pela aba Lanternas do Fator RP, esse ajuste fic
 ```sql
 select modelo, cfg from lanternas_onibus;
 ```
+
+## Painel de ajuste das lanternas
+1. Abra o jogo com `?ajuste` no fim do endereço (ex.: `.../Simula-o-BR-/?ajuste`). Aparece o botão **🚌 Lanternas**.
+2. Escolha o ônibus, a peça e o lado, e ajuste com − e +. Os botões Lanterna / Freio / Alerta / Ré acendem para testar.
+3. **💾 Salvar** guarda neste aparelho. Faça todos os ônibus que quiser.
+4. **⬇ Exportar** baixa o `lanternas-ajustes.json` com todos os ajustes. Suba esse arquivo na raiz do repositório: o robô coloca em `modelos/lanternas/ajustes.json` e aí vale para todos os jogadores.
