@@ -414,7 +414,7 @@ async function buildModel(json,bin,base){
   mats.push(new THREE.MeshLambertMaterial(o))}
  if(!mats.length)mats.push(new THREE.MeshLambertMaterial({color:0xe8e8e8}));
  const gm={};const nodes=(json.nodes||[]).filter(n=>n.mesh!==undefined).map(n=>({name:n.name||'',t:n.translation||[0,0,0],prims:gm[n.mesh]||(gm[n.mesh]=json.meshes[n.mesh].primitives.map(pr=>{const g=new THREE.BufferGeometry(),at=pr.attributes;
-  g.setAttribute('position',new THREE.BufferAttribute(acc(at.POSITION),3));if(at.NORMAL!==undefined)g.setAttribute('normal',new THREE.BufferAttribute(acc(at.NORMAL),3));if(at.TEXCOORD_0!==undefined)g.setAttribute('uv',new THREE.BufferAttribute(acc(at.TEXCOORD_0),2));
+  g.setAttribute('position',new THREE.BufferAttribute(acc(at.POSITION),3));if(at.NORMAL!==undefined)g.setAttribute('normal',new THREE.BufferAttribute(acc(at.NORMAL),3));if(at.TEXCOORD_0!==undefined)g.setAttribute('uv',new THREE.BufferAttribute(acc(at.TEXCOORD_0),2));if(at.TEXCOORD_1!==undefined)g.setAttribute('skinuv',new THREE.BufferAttribute(acc(at.TEXCOORD_1),2));
   if(pr.indices!==undefined)g.setIndex(new THREE.BufferAttribute(acc(pr.indices),1));if(at.NORMAL===undefined)g.computeVertexNormals();return{g,mi:pr.material||0}}))}));
  return{nodes,mats}}
 const PROF={
@@ -422,7 +422,7 @@ const PROF={
   lamps:{head:[[.8,.85,6.04],[-.8,.85,6.04]],tail:[[1.12,1.6,-6.04],[-1.12,1.6,-6.04]],il:[[1.1,1.1,6.02],[1.12,1.1,-6.05]],ir:[[-1.1,1.1,6.02],[-1.12,1.1,-6.05]]}},
  urban:{wb:4.83,seat:[.6,2.15,4.3],cockOff:[0,-.45,-.75],hl:5.28,hw:1.18,exit:[-2.2,4.07],door:[-1.7,4.07],hasLug:false,interior:'urban',hubs:true,
   lamps:{head:[[.82,.92,5.24],[-.82,.92,5.24]],tail:[[.98,1.35,-5.26],[-.98,1.35,-5.26]],il:[[1,1.26,5.16],[1.05,1.65,-5.26]],ir:[[-1,1.26,5.16],[-1.05,1.65,-5.26]]}}};
-const PKEYS=['wheels','front','doors','wb','glows','halos','seat','cockOff','hl','hw','cz','exit','door','hasLug','lant','dentro','name','accel','maxSpeed','brakeF','gears','redline','maxSteer','top','camD','camH'];
+const PKEYS=['wheels','front','doors','wb','glows','halos','seat','cockOff','hl','hw','cz','exit','door','hasLug','lant','dentro','corpo','name','accel','maxSpeed','brakeF','gears','redline','maxSteer','top','camD','camH'];
 function interior(root,kind){const add=(geo,m,x,y,z,rx)=>{const e=new THREE.Mesh(geo,m);e.position.set(x,y,z);if(rx)e.rotation.x=rx;root.add(e);return e};
  const bx=(w,h,d,x,y,z,m,rx)=>{const e=add(BOX1,m,x,y,z,rx);e.scale.set(w,h,d);return e};
  const FL=mat(0x4a4f57),WALL=mat(0x3a3f47),CEIL=mat(0xd8d6d0),YEL=mat(0xe0c341),GRY=mat(0x8d9398),RED=mat(0xc8312e);
@@ -531,8 +531,10 @@ function applyGLB(v,M,def){const PR={...def.prof};
   lampHalos(G2.halos,root,v.hm,[[k,p[0],p[1],p[2]+Math.sign(p[2])*.1,SZ[k][2]]])}
  {const lc=lantCfg(def);if(lc){try{G2.lant=montarLant(root,lc,def.id)}catch(e){console.warn('lanterna',e)}}}
  const ig=new THREE.Group();ig.position.z=PR.intZ||0;root.add(ig);interior(ig,PR.interior);
- v.setGLB=G2;if(!v.setProc){v.setProc={glows:null,cockOff:[0,0,0],lant:null,dentro:null};for(const k of PKEYS)if(v.setProc[k]===undefined)v.setProc[k]=v[k]}
- useModel(v,true)}
+ v.setGLB=G2;if(!v.setProc){v.setProc={glows:null,cockOff:[0,0,0],lant:null,dentro:null,corpo:null};for(const k of PKEYS)if(v.setProc[k]===undefined)v.setProc[k]=v[k]}
+ {const cs=[];root.traverse(o=>{if(o.isMesh&&o.geometry.attributes.skinuv)cs.push(o)});
+  if(cs.length){const base=cs[0].material,U={skinMap:{value:TEX1},uSkin:{value:0},uVidro:{value:1}},mat=matCorpo(base,U);for(const o of cs)o.material=mat;G2.corpo={mat,orig:base.map,U}}else G2.corpo=null}
+ useModel(v,true);aplicarPintura(v)}
 function useModel(v,glb){if(!v.glbRoot)return;const set=glb?v.setGLB:v.setProc,old=glb?v.setProc:v.setGLB;
  set.doors.forEach(d=>{const o=old.doors.filter(x=>x.grp===d.grp)[0];if(o){d.tgt=o.tgt;d.cur=o.cur}});
  v.glbRoot.visible=glb;v.procParts.forEach(c=>c.visible=!glb);for(const s of old.halos)s.visible=false;
@@ -565,9 +567,57 @@ function renderBusSel(){const el=$('busSel');if(!el)return;el.innerHTML='';
   for(const b of FROTA.filter(x=>x.tipo===t)){const on=G.busSel[t]===b.id,bt=document.createElement('button');bt.className='job'+(on?' sel':'');
    const vel=Math.round(b.fis.maxSpeed*3.6);
    bt.innerHTML=`<span>${b.nome}<small>${b.desc} · ${String(b.comp).replace('.',',')} m · ${b.peso} t · até ${vel} km/h</small></span><b>${G.carregando===b.id?'…':on?'✓':''}</b>`;
-   bt.onclick=()=>escolherOnibus(b.id);el.appendChild(bt)}}}
+   bt.onclick=()=>escolherOnibus(b.id);el.appendChild(bt)}}
+ const pd=document.createElement('div');pd.innerHTML=htmlPintura();el.appendChild(pd);
+ pd.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const k=b.dataset.p;if(k==='carregar')carregarSkin();else escolherPintura(k)})}
 function syncModelBtn(){const b=$('oModel');if(!b)return;const ok=MODELS[G.busSel.coach]&&MODELS[G.busSel.urban];
  b.textContent='Ônibus: '+(G.model==='glb'?(ok?'modelo 3D':G.modelErr?'modelo 3D (erro: '+G.modelErr+')':'modelo 3D (carregando…)'):'simples')}
+/* ---------- pintura dos ônibus da frota: original, branco ou skin do jogador; vidros com reflexo ---------- */
+const TEX1=(()=>{const t=new THREE.DataTexture(new Uint8Array([255,255,255,0]),1,1,THREE.RGBAFormat);t.needsUpdate=true;return t})();
+function matCorpo(base,U){const m=base.clone();
+ m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,U);
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec2 skinuv;varying vec2 vSk;varying vec3 vSkN;varying vec3 vSkV;')
+   .replace('#include <project_vertex>','#include <project_vertex>\nvSk=skinuv;vec4 skW=modelMatrix*vec4(transformed,1.0);vSkV=cameraPosition-skW.xyz;vSkN=mat3(modelMatrix)*objectNormal;');
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D skinMap;uniform float uSkin;uniform float uVidro;varying vec2 vSk;varying vec3 vSkN;varying vec3 vSkV;')
+   .replace('#include <map_fragment>','#include <map_fragment>\nfloat skLum=dot(diffuseColor.rgb,vec3(.299,.587,.114));float skVid=uVidro*(1.0-smoothstep(.06,.17,skLum));\n'+
+    'if(uSkin>.5){vec4 sk=texture2D(skinMap,vSk);diffuseColor.rgb=mix(diffuseColor.rgb,min(diffuseColor.rgb*sk.rgb*1.12,vec3(1.0)),sk.a*(1.0-skVid));}')
+   .replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );',
+    '{vec3 n=normalize(vSkN);if(!gl_FrontFacing)n=-n;vec3 vv=normalize(vSkV);float fr=pow(1.0-clamp(dot(n,vv),0.,1.),3.0);vec3 r=reflect(-vv,n);'+
+    'vec3 ceu=mix(vec3(.16,.18,.2),vec3(.55,.66,.8),clamp(r.y*.6+.5,0.,1.));float br=pow(clamp(dot(r,normalize(vec3(-.4,.8,.3))),0.,1.),48.);'+
+    'float lz=clamp(dot(vLightFront,vec3(.333))*1.6,.12,1.);outgoingLight=mix(outgoingLight,outgoingLight*.55,skVid)+skVid*lz*(ceu*(.08+.5*fr)+vec3(br*.9));}\n'+
+    'gl_FragColor = vec4( outgoingLight, diffuseColor.a );')};
+ m.customProgramCacheKey=()=>'corpoSB1';return m}
+/* skins guardadas no aparelho (IndexedDB: a imagem é grande demais para o localStorage) */
+const IDB={p:null,abrir(){return this.p||(this.p=new Promise((res,rej)=>{const r=indexedDB.open('simulabr',1);r.onupgradeneeded=()=>r.result.createObjectStore('skins');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))},
+ async get(k){const db=await this.abrir();return new Promise((res,rej)=>{const q=db.transaction('skins').objectStore('skins').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})},
+ async set(k,v){const db=await this.abrir();return new Promise((res,rej)=>{const t=db.transaction('skins','readwrite');t.objectStore('skins').put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})}};
+G.pintura=(()=>{try{return JSON.parse(localStorage.getItem('sb_pintura')||'{}')||{}}catch(e){return{}}})();
+const salvarPintura=()=>{try{localStorage.setItem('sb_pintura',JSON.stringify(G.pintura))}catch(e){}};
+const TEXB={},SKINT={};
+function texBranca(id){return TEXB[id]||(TEXB[id]=new Promise((res,rej)=>new THREE.TextureLoader().load(PASTA_ONIBUS+id+'_branco.jpg',t=>{t.flipY=false;t.anisotropy=4;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;res(t)},undefined,()=>{delete TEXB[id];rej(new Error(id+'_branco.jpg'))})))}
+function texDeBlob(blob){return new Promise((res,rej)=>{const u=URL.createObjectURL(blob),im=new Image();im.onload=()=>{const t=new THREE.Texture(im);t.flipY=false;t.anisotropy=4;t.needsUpdate=true;res(t)};im.onerror=()=>rej(new Error('imagem da skin'));im.src=u})}
+async function skinTex(id){if(SKINT[id])return SKINT[id];const b=await IDB.get(id);if(!b)return null;return SKINT[id]=await texDeBlob(b)}
+async function aplicarPintura(v){if(!v||!v.corpo||!v.busId)return;const id=v.busId,modo=v===BUS||v===BUS2?(G.pintura[id]||'original'):'original',C=v.corpo;
+ try{if(modo==='original'){C.mat.map=C.orig;C.U.uSkin.value=0}
+  else{const tb=await texBranca(id);if(v.busId!==id)return;C.mat.map=tb;
+   if(modo==='skin'){const st=await skinTex(id);C.U.skinMap.value=st||TEX1;C.U.uSkin.value=st?1:0}else C.U.uSkin.value=0}
+  C.mat.needsUpdate=true}catch(e){toast('Não consegui carregar a pintura: '+(e.message||e),4000)}}
+function escolherPintura(modo){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo){toast('Entre num ônibus da frota para pintar');return}
+ G.pintura[v.busId]=modo;salvarPintura();aplicarPintura(v);renderBusSel()}
+function carregarSkin(){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo){toast('Entre num ônibus da frota para pintar');return}
+ const id=v.busId,inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+ inp.onchange=()=>{const f=inp.files&&inp.files[0];if(!f)return;toast('Carregando a skin…',1500);
+  const u=URL.createObjectURL(f),im=new Image();
+  im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=2048;c.getContext('2d').drawImage(im,0,0,2048,2048);URL.revokeObjectURL(u);
+   c.toBlob(async b=>{try{await IDB.set(id,b);delete SKINT[id];G.pintura[id]='skin';salvarPintura();await aplicarPintura(v);renderBusSel();toast('Skin aplicada no '+busDef(id).nome,2500)}
+    catch(e){toast('Não consegui salvar a skin: '+(e.message||e),4000)}},'image/png')};
+  im.onerror=()=>toast('Esse arquivo não é uma imagem que o navegador abre',3500);im.src=u};
+ inp.click()}
+function htmlPintura(){const v=G.mode==='drive'?G.active:null;
+ if(!v||!v.corpo)return '<div class="bsT">Pintura</div><p class="note" style="margin:4px 0">Entre num ônibus da frota (Rodoviário 01 a 09 ou Urbano 07, 08, 10) para pintar.</p>';
+ const id=v.busId,m=G.pintura[id]||'original',b=(k,t)=>`<button class="btn${m===k?' pri':''}" data-p="${k}" style="${m===k?'font-size:14px;min-height:40px;padding:0 14px':''}">${t}</button>`;
+ return `<div class="bsT">Pintura do ${busDef(id).nome}</div><div class="opts">${b('original','Original')}${b('branco','Branco')}${b('skin','Minha skin')}</div>
+  <div class="opts" style="margin-top:6px"><a class="btn" style="display:inline-flex;align-items:center;text-decoration:none" href="${PASTA_ONIBUS}skins/modelo_${id}.jpg" download="modelo_${id}.jpg">⬇ Baixar modelo de pintura</a><button class="btn" data-p="carregar">📷 Carregar skin</button></div>`}
 /* ---------- ajustes das lanternas: arquivo do repositório (vale para todos) + o que foi salvo neste aparelho ---------- */
 const LNOME={leds_x:'LEDs em X',rod_vertical_a:'Vertical A',rod_vertical_b:'Vertical B',rod_vertical_c:'Vertical C',rod_fina:'Fina alta',urbano_3leds:'Carcaça + 3 LEDs',
  moldura_redondas:'Moldura das redondas',redonda_ambar:'Redonda âmbar (seta)',redonda_vermelha:'Redonda vermelha (lanterna)',redonda_branca:'Redonda branca (ré)',
@@ -994,7 +1044,7 @@ document.body.classList.toggle('arr',G.steer==='arrows');
 const KEYS=TOUCH?[['Volante','gire para virar'],['Centro','buzina'],['◀ ▶','setas'],['Farol','baixo, alto, desliga'],['▲ ▼','marchas: D, N e R (ré)'],['⏻','liga/desliga o motor'],['P','freio de mão'],['ACEL. / FREIO','pedais'],['☰','atalhos: portas, bagageiro, engatar, trabalhos'],['Botões no meio','ações do momento (abastecer, abrir porta…)'],['Joystick','andar a pé']]
  :[['W / S','acelerar / frear'],['A / D','virar'],['R / Q','marcha acima / abaixo (D, N, R)'],['I','liga/desliga o motor'],['Espaço','freio de mão'],['E','entrar/sair'],['F','portas'],['T','bagageiro / portas da carreta'],['J','engatar/soltar carreta'],['G','abastecer / consertar'],['L','farol: baixo, alto, desliga'],['Z / X','setas'],['H','buzina'],['C','câmera'],['P','limpador'],['M','câmbio auto/manual'],['O','atalhos'],['B','trabalhos e ajustes'],['Shift','correr a pé']];
 for(const id of ['keys','keys2'])$(id).innerHTML=KEYS.map(k=>`<div><kbd>${k[0]}</kbd>${k[1]}</div>`).join('');
-function toggleMenu(f){G.menu=f===undefined?!G.menu:f;if(G.menu){$('panel').classList.remove('on');$('bPanel').classList.remove('on')}$('menu').classList.toggle('on',G.menu);if(G.menu){renderJobs();T.acc=T.brk=0}}
+function toggleMenu(f){G.menu=f===undefined?!G.menu:f;if(G.menu){$('panel').classList.remove('on');$('bPanel').classList.remove('on')}$('menu').classList.toggle('on',G.menu);if(G.menu){renderJobs();renderBusSel();T.acc=T.brk=0}}
 $('mclose').onclick=()=>toggleMenu(false);
 $('oSteer').textContent='Direção: '+(G.steer==='wheel'?'volante':'setas');
 $('oModel').onclick=()=>{G.model=G.model==='glb'?'simple':'glb';try{localStorage.setItem('rb_model',G.model)}catch(e){}

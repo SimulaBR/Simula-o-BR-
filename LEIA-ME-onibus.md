@@ -43,3 +43,15 @@ select modelo, cfg from lanternas_onibus;
 2. Escolha o ônibus, a peça e o lado, e ajuste com − e +. Os botões Lanterna / Freio / Alerta / Ré acendem para testar.
 3. **💾 Salvar** guarda neste aparelho. Faça todos os ônibus que quiser.
 4. **⬇ Exportar** baixa o `lanternas-ajustes.json` com todos os ajustes. Suba esse arquivo na raiz do repositório: o robô coloca em `modelos/lanternas/ajustes.json` e aí vale para todos os jogadores.
+
+## Pintura e skins (ônibus da frota)
+Na Garagem (☰ → Garagem → Escolher modelo de ônibus), com você dentro de um ônibus da frota:
+- **Original**: a pintura do Fator RP.
+- **Branco**: o ônibus todo branco.
+- **Minha skin**: a imagem que você carregou.
+- **⬇ Baixar modelo de pintura**: baixa `modelo_<ônibus>.jpg` (2048 × 2048) com a lataria aberta: lado esquerdo, lado direito, frente, traseira e teto.
+- **📷 Carregar skin**: escolha a imagem pintada. Ela fica salva neste aparelho (cada ônibus tem a sua).
+
+Os vidros continuam escuros (com reflexo) mesmo se a skin pintar por cima deles. Partes transparentes de um PNG mostram o ônibus branco.
+
+Arquivos: `modelos/onibus/<ônibus>_branco.jpg` (lataria branca) e `modelos/onibus/skins/modelo_<ônibus>.jpg` (modelo de pintura).
