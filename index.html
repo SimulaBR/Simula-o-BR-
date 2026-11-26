@@ -2,6 +2,14 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
+<link rel="icon" href="icones/icone-192.png">
+<meta name="theme-color" content="#0b0d10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SimulaBr">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Rota Brasil</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -132,7 +140,7 @@ body.aj #ajLantBtn,body.aj #pedrow,body.aj #wheel{visibility:hidden}
     <button data-a="enter" id="pEnter">Sair</button><button data-a="doors">Portas</button><button data-a="trunk">Bagageiro</button>
     <button data-a="hitch">Engatar</button><button data-a="act">Abastecer</button><button data-a="wiper">Limpador</button>
     <button data-a="garage" class="w" style="background:#1a2027;color:var(--ink);border-color:var(--line)">Garagem: trocar de veículo</button>
-    <div id="gar" style="display:none;grid-column:span 3;gap:6px;grid-template-columns:1fr 1fr 1fr"><button data-a="gTruck">Caminhão</button><button data-a="gBus">Rodoviário</button><button data-a="gBus2">Urbano</button><button data-a="busSel" style="grid-column:span 3">Escolher modelo de ônibus</button></div>
+    <div id="gar" style="display:none;grid-column:span 3;gap:6px;grid-template-columns:1fr 1fr 1fr"><button data-a="gTruck">Caminhão</button><button data-a="gBus">Rodoviário</button><button data-a="gBus2">Urbano</button><button data-a="busSel" style="grid-column:span 2">Escolher modelo de ônibus</button><button data-a="pintura">🎨 Pintura</button></div>
     <button data-a="menu" class="w">Trabalhos e ajustes</button>
   </div>
   <div class="m"><span>Comb.</span><div class="bar"><i id="bF"></i></div></div>
@@ -155,6 +163,7 @@ body.aj #ajLantBtn,body.aj #pedrow,body.aj #wheel{visibility:hidden}
     <button class="btn" id="oRain">Chuva: desligada</button>
     <button class="btn" id="oTime">Avançar 3 horas</button>
     <button class="btn" id="oSound">Som: ligado</button>
+    <button class="btn" id="oInstall" style="display:none">📲 Instalar no celular</button>
     <button class="btn" id="oTow">Chamar guincho (R$ 300)</button>
     <button class="btn" id="oCancel">Cancelar trabalho</button>
   </div>
@@ -568,8 +577,8 @@ function renderBusSel(){const el=$('busSel');if(!el)return;el.innerHTML='';
    const vel=Math.round(b.fis.maxSpeed*3.6);
    bt.innerHTML=`<span>${b.nome}<small>${b.desc} · ${String(b.comp).replace('.',',')} m · ${b.peso} t · até ${vel} km/h</small></span><b>${G.carregando===b.id?'…':on?'✓':''}</b>`;
    bt.onclick=()=>escolherOnibus(b.id);el.appendChild(bt)}}
- const pd=document.createElement('div');pd.innerHTML=htmlPintura();el.appendChild(pd);
- pd.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const k=b.dataset.p;if(k==='carregar')carregarSkin();else escolherPintura(k)})}
+ const pd=document.createElement('div');pd.id='pinturaSec';pd.innerHTML=htmlPintura();el.insertBefore(pd,el.firstChild);
+ pd.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const k=b.dataset.p;if(k==='carregar')carregarSkin();else if(k==='modelo')baixarModelo();else escolherPintura(k)})}
 function syncModelBtn(){const b=$('oModel');if(!b)return;const ok=MODELS[G.busSel.coach]&&MODELS[G.busSel.urban];
  b.textContent='Ônibus: '+(G.model==='glb'?(ok?'modelo 3D':G.modelErr?'modelo 3D (erro: '+G.modelErr+')':'modelo 3D (carregando…)'):'simples')}
 /* ---------- pintura dos ônibus da frota: original, branco ou skin do jogador; vidros com reflexo ---------- */
@@ -613,11 +622,16 @@ function carregarSkin(){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo){
     catch(e){toast('Não consegui salvar a skin: '+(e.message||e),4000)}},'image/png')};
   im.onerror=()=>toast('Esse arquivo não é uma imagem que o navegador abre',3500);im.src=u};
  inp.click()}
+function baixarModelo(){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo)return;const id=v.busId,nome='modelo_'+id+'.jpg';toast('Baixando o modelo de pintura…',1500);
+ fetch(PASTA_ONIBUS+'skins/'+nome).then(r=>{if(!r.ok)throw new Error(nome);return r.blob()}).then(b=>{const f=new File([b],nome,{type:'image/jpeg'});
+  if(TOUCH&&navigator.canShare&&navigator.canShare({files:[f]}))return navigator.share({files:[f],title:nome}).catch(()=>{});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nome;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast('Salvo em Downloads: '+nome,3500)})
+ .catch(e=>toast('Não consegui baixar o modelo: '+(e.message||e),4000))}
 function htmlPintura(){const v=G.mode==='drive'?G.active:null;
  if(!v||!v.corpo)return '<div class="bsT">Pintura</div><p class="note" style="margin:4px 0">Entre num ônibus da frota (Rodoviário 01 a 09 ou Urbano 07, 08, 10) para pintar.</p>';
  const id=v.busId,m=G.pintura[id]||'original',b=(k,t)=>`<button class="btn${m===k?' pri':''}" data-p="${k}" style="${m===k?'font-size:14px;min-height:40px;padding:0 14px':''}">${t}</button>`;
  return `<div class="bsT">Pintura do ${busDef(id).nome}</div><div class="opts">${b('original','Original')}${b('branco','Branco')}${b('skin','Minha skin')}</div>
-  <div class="opts" style="margin-top:6px"><a class="btn" style="display:inline-flex;align-items:center;text-decoration:none" href="${PASTA_ONIBUS}skins/modelo_${id}.jpg" download="modelo_${id}.jpg">⬇ Baixar modelo de pintura</a><button class="btn" data-p="carregar">📷 Carregar skin</button></div>`}
+  <div class="opts" style="margin-top:6px"><button class="btn" data-p="modelo">⬇ Baixar modelo de pintura</button><button class="btn" data-p="carregar">📷 Carregar skin</button></div>`}
 /* ---------- ajustes das lanternas: arquivo do repositório (vale para todos) + o que foi salvo neste aparelho ---------- */
 const LNOME={leds_x:'LEDs em X',rod_vertical_a:'Vertical A',rod_vertical_b:'Vertical B',rod_vertical_c:'Vertical C',rod_fina:'Fina alta',urbano_3leds:'Carcaça + 3 LEDs',
  moldura_redondas:'Moldura das redondas',redonda_ambar:'Redonda âmbar (seta)',redonda_vermelha:'Redonda vermelha (lanterna)',redonda_branca:'Redonda branca (ré)',
@@ -838,6 +852,7 @@ function act(a,down){
  case 'garage':{const g=$('gar');g.style.display=g.style.display==='grid'?'none':'grid'}break;
  case 'gTruck':switchTo(TRUCK);break;
  case 'gBus':switchTo(BUS);break;
+ case 'pintura':{if(!G.menu)toggleMenu();renderBusSel();const h=$('pinturaSec');if(h)h.scrollIntoView({block:'start'})}break;
  case 'busSel':{if(!G.menu)toggleMenu();renderBusSel();const h=$('busSelH');if(h)h.scrollIntoView({block:'start'})}break;
  case 'gBus2':switchTo(BUS2);break;
  case 'ign':if(v){if(v.on){v.on=false;blip(180,.12);toast('Motor desligado',900)}else if(v.fuel<=0)toast('Sem combustível! Chame o guincho no menu');else if(v.eng<=0)toast('Motor quebrado! Chame o guincho no menu');else{v.on=true;blip(90,.35,.1);setTimeout(()=>blip(140,.2,.08),250);toast('Motor ligado',900)}}break;
@@ -1145,6 +1160,13 @@ function audio(){if(!AC)return;const t=AC.currentTime;const somBus=audioOnibus(t
  hornG.gain.setTargetAtTime(G.horn?.08:0,t,.02);rainG.gain.setTargetAtTime(G.rain*.1*(G.mode==='drive'&&G.cam===1?1.5:1),t,.3)}
 
 /* ---------- loop ---------- */
+/* instalar no celular (app) */
+if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+{const bi=$('oInstall'),app=matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches||navigator.standalone,ios=/iphone|ipad|ipod/i.test(navigator.userAgent);let pedido=null;
+ if(!app){if(ios)bi.style.display='';addEventListener('beforeinstallprompt',e=>{e.preventDefault();pedido=e;bi.style.display=''});
+  bi.onclick=()=>{if(pedido){pedido.prompt();pedido.userChoice.then(r=>{if(r.outcome==='accepted'){bi.style.display='none';toast('Instalando o SimulaBr…',2500)}pedido=null})}
+   else toast(ios?'No Safari: toque em Compartilhar e depois em "Adicionar à Tela de Início"':'No Chrome: menu ⋮ → "Instalar app" ou "Adicionar à tela inicial"',6000)};
+  addEventListener('appinstalled',()=>{bi.style.display='none';toast('SimulaBr instalado! Abra pelo ícone na tela inicial.',4000)})}}
 spawnAI(0,true);spawnAI(2,true);genJobs();syncModelBtn();renderBusSel();if(G.model==='glb')loadBusModel();
 let last=performance.now(),last0=last;const wrim=$('wrim');
 function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/1000);last=now;if(G.menu||!G.started)dt=0;

@@ -55,3 +55,8 @@ Na Garagem (☰ → Garagem → Escolher modelo de ônibus), com você dentro de
 Os vidros continuam escuros (com reflexo) mesmo se a skin pintar por cima deles. Partes transparentes de um PNG mostram o ônibus branco.
 
 Arquivos: `modelos/onibus/<ônibus>_branco.jpg` (lataria branca) e `modelos/onibus/skins/modelo_<ônibus>.jpg` (modelo de pintura).
+
+## Instalar no celular
+Em ☰ → Trabalhos e ajustes → Ajustes, o botão **📲 Instalar no celular** coloca o SimulaBr na tela inicial como app (tela cheia, deitado).
+No iPhone: Safari → Compartilhar → "Adicionar à Tela de Início". Arquivos: `manifest.webmanifest`, `sw.js` e a pasta `icones/`.
+Os ônibus e sons ficam guardados no aparelho: da segunda vez o jogo abre mais rápido. Quando um ônibus é atualizado, a versão nova aparece na abertura seguinte.
