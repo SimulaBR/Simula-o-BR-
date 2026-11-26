@@ -65,3 +65,31 @@ Os ônibus e sons ficam guardados no aparelho: da segunda vez o jogo abre mais r
 A frota agora são 4 carrocerias brancas, feitas a partir dos modelos de alta qualidade do Meshy com a redução nova (forma preservada):
 urbano.glb (Urbano), rodoviario_2e.glb, rodoviario_3e.glb e rodoviario_4e.glb. Cada uma tem o seu modelo de pintura em modelos/onibus/skins/.
 Os arquivos antigos (rodoviario_01…09, urbano_07/08/10 e os _branco.jpg) não são mais usados: pode apagar do repositório.
+
+## Mapa grande (versão 0.8)
+A capital continua igual. Dela saem 4 rodovias: BR-101 (leste), BR-364 (oeste), BR-040 (norte) e BR-116 (sul). A norte e a sul se dividem num trevo.
+- Porto Azul: cidade grande do litoral, com praia, mar, prédios altos e favela. Rodoviária grande, com 8 plataformas.
+- Nova Safra: cidade do agro, com lavouras e silos. Rodoviária de concreto com marquise em V.
+- Serra Verde: cidade da serra, com chalés, pinheiros e montanhas. Rodoviária de madeira.
+- Santa Aurora: cidade histórica do interior, com igreja matriz e coreto na praça. Rodoviária de tijolo.
+- Pedra Seca: cidade do sertão, com chão vermelho, casas coloridas de laje e cactos. Rodoviária-praça aberta.
+- Ribeira do Norte: cidade ribeirinha, com rio, ponte e palafitas. Rodoviária de vidro.
+
+Cada cidade tem posto com oficina ao lado da rodoviária, 4 pontos de carga e descarga e 2 pontos de ônibus. Cada rodovia tem mais um posto.
+
+Ônibus: o embarque começa na plataforma livre em que você parar de frente. Na viagem rodoviária, o desembarque acontece em qualquer plataforma livre da cidade de destino. As plataformas ocupadas por NPC ou por outro veículo não contam.
+Caminhão: a carreta espera no pátio do ponto de origem. Ela deve ser levada até a área DESCARGA do ponto de destino.
+
+Mapa do mundo: tecla N, toque no minimapa ou ☰ → Mapa do mundo. O guincho leva você ao posto mais próximo.
+
+## Moldes de vidros e detalhes (versão 0.8)
+Nos 4 ônibus de carroceria padrão, o painel 🎨 Pintura agora tem 3 moldes. Cada um você baixa, pinta e carrega:
+- Carroceria (modelo_<id>.jpg): é o mesmo de antes.
+- Vidros (modelo_<id>_vidros.jpg): só as áreas escuras de vidro são usadas. Cor escura continua com cara de vidro, com reflexo; cor clara vira adesivo.
+- Detalhes (modelo_<id>_detalhes.png): quadros de farol, lanterna traseira, placa, letreiro e calota. O verde puro (#00FF00) fica transparente, e um quadro todo verde mantém a peça original do ônibus.
+  - No farol, o branco acende como farol e o laranja como pisca.
+  - Na lanterna, o vermelho é lanterna e freio, o laranja é pisca e o branco é ré.
+  - O letreiro brilha à noite.
+  - O lado direito é espelhado do esquerdo.
+  - Com o molde de detalhes ativo, a lanterna desenhada passa a usar o seu desenho, e a posição continua a do painel de ajuste.
+Tudo fica salvo no aparelho.
