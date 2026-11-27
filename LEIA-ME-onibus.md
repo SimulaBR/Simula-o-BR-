@@ -112,3 +112,11 @@ Qualquer cavalo puxa qualquer carreta, porque o engate de cada um está medido.
 Quem escolhe a carreta é a carga: grãos e fertilizante vão no bitrem; bebidas, cimento e sacaria na grade 3 eixos; frutas e madeira na grade alta; o resto no baú.
 Grade e bitrem não têm portas: é só parar na área DESCARGA.
 A garagem (☰) tem a lista "Caminhões". A pintura funciona igual à dos ônibus.
+
+## Luz dos faróis e facho no chão
+Cada farol pronto tem um mapa de luz em modelos/pecas/<farol>_luz.png, com 3 cores:
+- vermelho: lentes do farol (acendem no baixo e ficam mais fortes no alto);
+- verde: LED diurno (fica aceso com o motor ligado);
+- azul: pisca.
+Os caminhões têm o brilho do farol, da lanterna e do pisca na posição certa de cada modelo.
+À noite, ônibus e caminhões projetam um facho de luz no chão, que fica maior no farol alto.
