@@ -887,7 +887,7 @@ function applyGLB(v,M,def){const PR={...def.prof};
  if(PR.interior!=='none'){const ig=new THREE.Group();ig.position.z=PR.intZ||0;root.add(ig);interior(ig,PR.interior)}
  v.setGLB=G2;if(!v.setProc){v.setProc={glows:null,cockOff:[0,0,0],lant:null,dentro:null,corpo:null};for(const k of PKEYS)if(v.setProc[k]===undefined)v.setProc[k]=v[k]}
  {const cs=[];root.traverse(o=>{if(o.isMesh&&o.geometry.attributes.skinuv)cs.push(o)});
-  if(cs.length){const base=cs[0].material,U={skinMap:{value:TEX1},uSkin:{value:0},uVidro:{value:1},vidMask:{value:TEX1},uMask:{value:0},vidMap:{value:TEX1},detMap:{value:TEX1},luzMap:{value:TEX1},uVid:{value:0},uDet:{value:0},uFr:{value:new THREE.Vector4()},uLt:{value:new THREE.Vector4()},uFarol:{value:0},uSetaE:{value:0},uSetaD:{value:0},uLetr:{value:0},drlMap:{value:TEX1},uDRL:{value:0}},mat=matCorpo(base,U);for(const o of cs)o.material=mat;G2.corpo={mat,orig:base.map,U};if(DETR[def.id])mascaraVidro(def.id).then(t=>{U.vidMask.value=t;U.uMask.value=1}).catch(()=>{})}else G2.corpo=null}
+  if(cs.length){const base=cs[0].material,U={skinMap:{value:TEX1},uSkin:{value:0},uVidro:{value:1},vidMask:{value:TEX1},uMask:{value:0},uCorpo:{value:new THREE.Color(1,1,1)},uCorpo2:{value:new THREE.Color(1,1,1)},uCorpo3:{value:new THREE.Color(1,1,1)},uCorpo4:{value:new THREE.Color(1,1,1)},vidMap:{value:TEX1},detMap:{value:TEX1},luzMap:{value:TEX1},uVid:{value:0},uDet:{value:0},uFr:{value:new THREE.Vector4()},uLt:{value:new THREE.Vector4()},uFarol:{value:0},uSetaE:{value:0},uSetaD:{value:0},uLetr:{value:0},drlMap:{value:TEX1},uDRL:{value:0}},mat=matCorpo(base,U);for(const o of cs)o.material=mat;G2.corpo={mat,orig:base.map,U};if(DETR[def.id])mascaraVidro(def.id).then(t=>{U.vidMask.value=t;U.uMask.value=1}).catch(()=>{})}else G2.corpo=null}
  useModel(v,true);aplicarPintura(v)}
 function useModel(v,glb){if(!v.glbRoot)return;const set=glb?v.setGLB:v.setProc,old=glb?v.setProc:v.setGLB;
  set.doors.forEach(d=>{const o=old.doors.filter(x=>x.grp===d.grp)[0];if(o){d.tgt=o.tgt;d.cur=o.cur}});
@@ -934,10 +934,10 @@ function matCorpo(base,U){const m=base.clone();
  m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,U);
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec2 skinuv;varying vec2 vSk;varying vec3 vSkN;varying vec3 vSkV;')
    .replace('#include <project_vertex>','#include <project_vertex>\nvSk=skinuv;vec4 skW=modelMatrix*vec4(transformed,1.0);vSkV=cameraPosition-skW.xyz;vSkN=mat3(modelMatrix)*objectNormal;');
-  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D skinMap;uniform float uSkin;uniform float uVidro;uniform sampler2D vidMask;uniform float uMask;uniform sampler2D vidMap;uniform sampler2D detMap;uniform sampler2D luzMap;uniform float uVid;uniform float uDet;uniform vec4 uFr;uniform vec4 uLt;uniform float uFarol;uniform float uSetaE;uniform float uSetaD;uniform float uLetr;uniform sampler2D drlMap;uniform float uDRL;varying vec2 vSk;varying vec3 vSkN;varying vec3 vSkV;')
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D skinMap;uniform float uSkin;uniform float uVidro;uniform sampler2D vidMask;uniform float uMask;uniform vec3 uCorpo;uniform vec3 uCorpo2;uniform vec3 uCorpo3;uniform vec3 uCorpo4;uniform sampler2D vidMap;uniform sampler2D detMap;uniform sampler2D luzMap;uniform float uVid;uniform float uDet;uniform vec4 uFr;uniform vec4 uLt;uniform float uFarol;uniform float uSetaE;uniform float uSetaD;uniform float uLetr;uniform sampler2D drlMap;uniform float uDRL;varying vec2 vSk;varying vec3 vSkN;varying vec3 vSkV;')
    .replace('#include <map_fragment>','#include <map_fragment>\nfloat skLum=dot(diffuseColor.rgb,vec3(.299,.587,.114));float skVid=uVidro*(uMask>.5?texture2D(vidMask,vSk).r:(1.0-smoothstep(.06,.17,skLum)));\n'+
     'if(uSkin>.5){vec4 sk=texture2D(skinMap,vSk);float dk=uMask>.5?1.0-smoothstep(.07,.3,skLum):0.0;diffuseColor.rgb=mix(diffuseColor.rgb,mix(min(diffuseColor.rgb*sk.rgb*1.12,vec3(1.0)),sk.rgb,dk),sk.a*(1.0-skVid));'+
-    'if(uMask>.5&&uVid<.5){diffuseColor.rgb=mix(diffuseColor.rgb,sk.rgb,sk.a*skVid);skVid*=1.0-sk.a*smoothstep(.55,.8,dot(sk.rgb,vec3(.299,.587,.114)));}}'+
+    'if(uMask>.5&&uVid<.5){float lS=dot(sk.rgb,vec3(.299,.587,.114)),dS=1.0-smoothstep(.3,.45,lS),stS=(1.0-dS)*smoothstep(.14,.28,min(distance(sk.rgb,uCorpo),min(distance(sk.rgb,uCorpo2),min(distance(sk.rgb,uCorpo3),distance(sk.rgb,uCorpo4)))));diffuseColor.rgb=mix(diffuseColor.rgb,sk.rgb,sk.a*skVid*(dS+stS));skVid*=1.0-sk.a*stS;}}'+
     'if(uVid>.5){vec4 vd=texture2D(vidMap,vSk);diffuseColor.rgb=mix(diffuseColor.rgb,vd.rgb,vd.a*skVid);skVid*=1.0-vd.a*smoothstep(.28,.5,dot(vd.rgb,vec3(.299,.587,.114)));}'+
     'vec4 dtl=vec4(0.);if(uDet>.5){dtl=texture2D(detMap,vSk);diffuseColor.rgb=mix(diffuseColor.rgb,dtl.rgb,dtl.a);skVid*=1.0-dtl.a*.6;}')
    .replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );',
@@ -947,7 +947,7 @@ function matCorpo(base,U){const m=base.clone();
     'if(uDet>.5){vec4 lu=texture2D(luzMap,vSk);bool fe=vSk.x>uFr.x&&vSk.x<uFr.z&&vSk.y>uFr.y&&vSk.y<uFr.w;vec3 em=fe?(vec3(1.,.97,.88)*lu.r*uFarol+vec3(1.,.55,.08)*(lu.g*uSetaE+lu.b*uSetaD)+vec3(.95,.97,1.)*texture2D(drlMap,vSk).r*uDRL):vec3(0.);'+
     'if(vSk.x>uLt.x&&vSk.x<uLt.z&&vSk.y>uLt.y&&vSk.y<uLt.w)em+=dtl.rgb*dtl.a*uLetr;outgoingLight+=em*1.5;}\n'+
     'gl_FragColor = vec4( outgoingLight, diffuseColor.a );')};
- m.customProgramCacheKey=()=>'corpoSB5';return m}
+ m.customProgramCacheKey=()=>'corpoSB8';return m}
 /* skins guardadas no aparelho (IndexedDB: a imagem é grande demais para o localStorage) */
 const IDB={p:null,abrir(){return this.p||(this.p=new Promise((res,rej)=>{const r=indexedDB.open('simulabr',1);r.onupgradeneeded=()=>r.result.createObjectStore('skins');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))},
  async get(k){const db=await this.abrir();return new Promise((res,rej)=>{const q=db.transaction('skins').objectStore('skins').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})},
@@ -958,11 +958,15 @@ const TEXB={},SKINT={};
 function texBranca(id){return TEXB[id]||(TEXB[id]=new Promise((res,rej)=>new THREE.TextureLoader().load((busDef(id).pasta||PASTA_ONIBUS)+id+'_branco.jpg',t=>{t.flipY=false;t.anisotropy=4;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;res(t)},undefined,()=>{delete TEXB[id];rej(new Error(id+'_branco.jpg'))})))}
 function texDeBlob(blob){return new Promise((res,rej)=>{const u=URL.createObjectURL(blob),im=new Image();im.onload=()=>{const t=new THREE.Texture(im);t.flipY=false;t.anisotropy=4;t.needsUpdate=true;res(t)};im.onerror=()=>rej(new Error('imagem da skin'));im.src=u})}
 async function skinTex(id){if(SKINT[id])return SKINT[id];const b=await IDB.get(id+'@'+(busDef(id).prof.lantVer||1));if(!b)return null;
- return SKINT[id]=await texDeBlob(b)}
+ const t=await texDeBlob(b);try{t._corpo=corDaSkin(t.image)}catch(e){}return SKINT[id]=t}
+/* cor principal da carroceria na skin (para a tinta que vaza no vidro não virar adesivo) */
+function corDaSkin(im){const c=cnv(256,256),g=c.getContext('2d',{willReadFrequently:true});g.drawImage(im,0,0,256,256);const d=g.getImageData(0,0,256,110).data,H={};let best=null;
+ for(let i=0;i<d.length;i+=4){const R=d[i],G_=d[i+1],B=d[i+2];if(R*.299+G_*.587+B*.114<64)continue;const k=(R>>4)+'_'+(G_>>4)+'_'+(B>>4),h=H[k]||(H[k]=[0,0,0,0]);h[0]++;h[1]+=R;h[2]+=G_;h[3]+=B}
+ const tot=d.length/4,L=[];for(const h of Object.values(H).sort((a,b)=>b[0]-a[0])){if(h[0]<tot*.01||L.length>=4)break;const c=[h[1]/h[0]/255,h[2]/h[0]/255,h[3]/h[0]/255];if(L.every(q=>Math.hypot(q[0]-c[0],q[1]-c[1],q[2]-c[2])>.12))L.push(c)}while(L.length<4)L.push(L[0]||[1,1,1]);return L}
 async function aplicarPintura(v){if(!v||!v.corpo||!v.busId)return;const id=v.busId,base=busDef(id).prof.base,modo0=v===BUS||v===BUS2||v===TRUCK?(G.pintura[id]||(base?'branco':'original')):'original',modo=base&&modo0==='branco'?'original':modo0,C=v.corpo;
  try{if(modo==='original'){C.mat.map=C.orig;C.U.uSkin.value=0}
   else{const tb=base?C.orig:await texBranca(id);if(v.busId!==id)return;C.mat.map=tb;
-   if(modo==='skin'){const st=await skinTex(id);C.U.skinMap.value=st||TEX1;C.U.uSkin.value=st?1:0}else C.U.uSkin.value=0}
+   if(modo==='skin'){const st=await skinTex(id);C.U.skinMap.value=st||TEX1;C.U.uSkin.value=st?1:0;if(st&&st._corpo){const L=st._corpo;C.U.uCorpo.value.setRGB(...L[0]);C.U.uCorpo2.value.setRGB(...L[1]);C.U.uCorpo3.value.setRGB(...L[2]);C.U.uCorpo4.value.setRGB(...L[3])}}else C.U.uSkin.value=0}
   C.mat.needsUpdate=true}catch(e){toast('Não consegui carregar a pintura: '+(e.message||e),4000)}
  await aplicarExtras(v)}
 function escolherPintura(modo){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo){toast('Entre num ônibus da frota para pintar');return}

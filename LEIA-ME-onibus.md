@@ -131,3 +131,8 @@ Nos 4 ônibus padrão, o molde da carroceria (modelos/onibus/skins/modelo_<id>.j
 O que você pinta num quadro vai para a peça; o outro lado é espelhado. A lanterna continua acendendo: vermelho no freio, laranja no pisca, branco na ré.
 Quadro deixado como veio no molde = fica a peça original. As posições dos quadros e as miniaturas de comparação estão em skins/slots.json.
 Peças prontas escolhidas no painel ficam por cima dos quadros da skin. Os moldes antigos separados (vidros e detalhes) continuam funcionando.
+
+## Vidros na skin e caminhões (27/11)
+A pintura da carroceria que "vaza" para o vidro (como acontece em skins feitas por IA) não vira mais adesivo: a cor parecida com a da carroceria fica como vidro. Adesivo só aparece onde a cor é diferente da carroceria.
+A máscara de vidro agora também pega a parte do para-brisa que fica na faixa do teto.
+Caminhões: a versão branca (_branco.jpg) e os moldes foram refeitos com o branco por igual, para a skin não sair manchada.
