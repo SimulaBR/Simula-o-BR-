@@ -1,9 +1,6 @@
-// SimulaBr — ligação com o banco (Supabase).
-// Preencha com os dados do SEU projeto: Supabase → Project Settings → API
-//   url   = "Project URL"
-//   chave = "anon public" (essa chave pode ficar pública, a segurança está no banco)
-// Deixe vazio para o jogo rodar sem contas (modo local, como antes).
+// SimulaBr — ligação com o banco (Supabase). Só URL e chave publishable (pública).
+// NUNCA coloque aqui a chave secret.
 window.SIMULA_SUPABASE = {
-  url: '',
-  chave: ''
+  url: 'https://mxgrdacytnkrjeozruvo.supabase.co',
+  chave: 'sb_publishable_Rm-g9zBdAa5nh9tC-CLmdg_fqNCURDh'
 };
