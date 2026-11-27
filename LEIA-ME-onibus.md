@@ -159,3 +159,13 @@ Como funciona:
 - `?ajuste` no endereço continua funcionando no modo local (agora com o botão 💡 Faróis também).
 
 Importante: `banco/config.js` só vem neste pacote. Os próximos pacotes não trazem ele, para não apagar a sua chave.
+
+## Novos G7, interior e rodoviários antigos (27/11)
+- **Rodoviário G7 3 eixos** (novo, `rodoviario_g7`): base branca lisa, vidros lisos, porta da frente abrindo, faróis e lanternas de verdade, interior com cabine e poltronas (aparece na câmera de dentro).
+- **Rodoviário 4 eixos** agora é o G7 de dois andares (sem a pintura da 1001), com interior completo. Skins antigas do 4 eixos antigo não servem mais: baixe o molde novo.
+- Os moldes dos dois G7 não têm quadros de peças: faróis, lanternas e cromados já são peças do ônibus.
+- Faróis dos ônibus: sem os retângulos brancos, só o brilho (igual ao caminhão).
+- Rodoviários clássicos 01, 02, 03, 04, 05, 06 e 09 voltaram como **Beta**.
+- Linhas urbanas podem ser feitas com rodoviário.
+- Rode `banco/atualizacao_2.sql` no SQL Editor (urbanos fora da loja e novos veículos como Beta).
+- Créditos (CC-BY-4.0): Marcopolo g7 1200 FREE, por SquielOFICIAL; Marcopolo G7 1200 VOLVO Auto Viação 1001, por miguterj2106.
