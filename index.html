@@ -156,7 +156,7 @@ body.aj #ajLantBtn,body.aj #pedrow,body.aj #wheel{visibility:hidden}
   <div class="row"><h2>Trabalhos</h2><button class="btn" id="mclose">Fechar</button></div>
   <h4>Fretes de caminhão — a carreta espera no pátio de origem</h4><div id="jt"></div>
   <h4>Linhas de ônibus — urbanas (até um ponto) e rodoviárias (entre cidades)</h4><div id="jb"></div>
-  <h4 id="busSelH">Garagem de ônibus — escolha o modelo</h4><div id="busSel"></div>
+  <h4 id="busSelH">Garagem — escolha o caminhão ou ônibus</h4><div id="busSel"></div>
   <h4>Ajustes</h4>
   <div class="opts">
     <button class="btn" id="oSteer">Direção: volante</button>
@@ -686,7 +686,9 @@ function makeVehicle(type,color,ai){
   box(2.2,.4,.4,DARK,0,2.2,3.25,g,false);
   box(2.4,.06,2.3,mat(0x3a3f47),0,3.44,2.25,g,false);box(2.4,2.3,.06,mat(0x3a3f47),0,2.3,1.08,g,false);
   lampHalos(v.halos,g,v.hm,[['head',.9,1.25,3.74,1.1],['head',-.9,1.25,3.74,1.1],['tail',.99,1,-3.6,.8],['tail',-.99,1,-3.6,.8],['il',1.15,1.5,3.62,.6],['il',1.15,1.3,-3.6,.6],['ir',-1.15,1.5,3.62,.6],['ir',-1.15,1.3,-3.6,.6]]);
-  v.sw=new THREE.Mesh(new THREE.TorusGeometry(.22,.035,8,20),DARK);const sp=new THREE.Group();sp.position.set(.6,2.5,2.95);sp.rotation.x=-.5;sp.add(v.sw);g.add(sp);
+  v.procParts=g.children.slice();v.cock=new THREE.Group();g.add(v.cock);v.eng5=-1.6;
+  box(1.9,.42,.5,DARK,0,2.12,3.1,v.cock,false);
+  v.sw=new THREE.Mesh(new THREE.TorusGeometry(.22,.035,8,20),DARK);const sp=new THREE.Group();sp.position.set(.6,2.5,2.95);sp.rotation.x=-.5;sp.add(v.sw);v.cock.add(sp);
  }
  if(!ai){const fz=type==='bus'?6.1:3.7,hy=type==='bus'?1.05:1.25;
   v.spots=[.85,-.85].map(x=>{const s=new THREE.SpotLight(0xfff1d0,0,85,.48,.55,1);s.position.set(x,hy,fz);const t=new THREE.Object3D();t.position.set(x*1.6,0,fz+26);g.add(s);g.add(t);s.target=t;return s})}
@@ -708,7 +710,22 @@ function makeTrailer(color){
  t.legs=[box(.14,1,.14,DARK,.9,.55,-2.2,g),box(.14,1,.14,DARK,-.9,.55,-2.2,g)];
  TR.push(t);return t}
 function placeTrailer(t,kx,kz,h){t.x=kx;t.z=kz;t.h=h;const f=fwd(h);t.ax=kx-f.x*t.L;t.az=kz-f.z*t.L}
-function removeTrailer(t){scene.remove(t.g);const i=TR.indexOf(t);if(i>=0)TR.splice(i,1)}
+function removeTrailer(t){scene.remove(t.g);const i=TR.indexOf(t);if(i>=0)TR.splice(i,1);if(t.reboque&&t.reboque!==t)removeTrailer(t.reboque)}
+/* carretas 3D (modelos/caminhoes): grade 3 eixos, grade alta 5 eixos, bitrem lonado (2 carretas que dobram) */
+const CARR_TIPOS={bau:{n:'baú'},grade3:{n:'grade 3 eixos',arq:['car_grade3']},grade5:{n:'grade alta 5 eixos',arq:['car_grade5']},bitrem:{n:'bitrem lonado',arq:['bitrem_1','bitrem_2']}};
+let CARR_OK=false;function carregarCarretas(){if(CARR_OK)return Promise.resolve();return getRoda().then(()=>Promise.all(['car_grade3','car_grade5','bitrem_1','bitrem_2'].map(a=>{if(MODELS[a])return;return fetch('modelos/caminhoes/'+a+'.glb').then(r=>{if(!r.ok)throw new Error(a);return r.arrayBuffer()}).then(b=>parseGLB(b)).then(M=>{MODELS[a]=M})}))).then(()=>{CARR_OK=true})}
+function carretaDeModelo(arq){const M=MODELS[arq],D=CARR_DADOS[arq],g=new THREE.Group();scene.add(g);
+ const t={halos:[],hm:haloMats(),g,x:0,z:0,h:0,ax:0,az:0,hw:D.hw,hl:D.hl,cz:D.cz,L:-(D.rodas.reduce((a,e)=>a+e[0],0)/D.rodas.length),attached:null,loaded:true,empty:false,doors:[],wheels:[],front:[],spin:0,speed:0,steer:0,dieT:-1,legs:[],semPorta:true,modelo:arq};
+ if(D.engT!==null&&D.engT!==undefined)t.eng5=D.engT;
+ t.mBrake=new THREE.MeshLambertMaterial({color:0x7a1010,emissive:0xff2a1a,emissiveIntensity:0});
+ for(const n of M.nodes){const piv=new THREE.Group();piv.position.fromArray(n.t);g.add(piv);for(const p of n.prims){const m=new THREE.Mesh(p.g,M.mats[p.mi]||M.mats[0]);m.castShadow=true;m.receiveShadow=true;piv.add(m)}}
+ montarRodas(g,{wheels:t.wheels,front:[]},{rodas:{eixos:D.rodas,cy:D.rodas[0][1]},ester:D.rodas.map(()=>0)});
+ for(const q of D.tail){const e=new THREE.Mesh(BOX1,t.mBrake);e.scale.set(.32,.2,.05);e.position.set(q[0],q[1],q[2]);g.add(e)}
+ const q=D.tail[0];lampHalos(t.halos,g,t.hm,[['tail',q[0],q[1],q[2]-.08,.9],['tail',-q[0],q[1],q[2]-.08,.9],['il',q[0]+.12,q[1]+.25,q[2]-.08,.6],['ir',-q[0]-.12,q[1]+.25,q[2]-.08,.6]]);
+ TR.push(t);return t}
+function novaCarreta(tipo,cor){const T=CARR_TIPOS[tipo];if(!T||!T.arq||!CARR_OK||!T.arq.every(a=>MODELS[a])){const t=makeTrailer(cor);t.tipo='bau';return t}
+ const t=carretaDeModelo(T.arq[0]);t.tipo=tipo;if(T.arq[1]){const t2=carretaDeModelo(T.arq[1]);t2.tipo=tipo;t.reboque=t2;t2.attached=t;t2.dieT=-1}return t}
+function colocarCarreta(t,kx,kz,h){placeTrailer(t,kx,kz,h);if(t.reboque){const f=fwd(h),e=t.eng5;placeTrailer(t.reboque,kx+f.x*e,kz+f.z*e,h)}}
 
 const TRUCK=makeVehicle('truck',0x1f6fb2);Object.assign(TRUCK,{x:100,z:30,h:Math.PI});
 const BUS=makeVehicle('bus',0xf2f2ee);Object.assign(BUS,{x:100,z:-40,h:Math.PI,hb:true});
@@ -748,7 +765,7 @@ const PROF={
   lamps:{head:[[.8,.85,6.04],[-.8,.85,6.04]],tail:[[1.12,1.6,-6.04],[-1.12,1.6,-6.04]],il:[[1.1,1.1,6.02],[1.12,1.1,-6.05]],ir:[[-1.1,1.1,6.02],[-1.12,1.1,-6.05]]}},
  urban:{wb:4.83,seat:[.6,2.15,4.3],cockOff:[0,-.45,-.75],hl:5.28,hw:1.18,exit:[-2.2,4.07],door:[-1.7,4.07],hasLug:false,interior:'urban',hubs:true,
   lamps:{head:[[.82,.92,5.24],[-.82,.92,5.24]],tail:[[.98,1.35,-5.26],[-.98,1.35,-5.26]],il:[[1,1.26,5.16],[1.05,1.65,-5.26]],ir:[[-1,1.26,5.16],[-1.05,1.65,-5.26]]}}};
-const PKEYS=['wheels','front','doors','wb','glows','halos','seat','cockOff','hl','hw','cz','exit','door','hasLug','lant','dentro','corpo','name','accel','maxSpeed','brakeF','gears','redline','maxSteer','top','camD','camH'];
+const PKEYS=['eng5','engY','wheels','front','doors','wb','glows','halos','seat','cockOff','hl','hw','cz','exit','door','hasLug','lant','dentro','corpo','name','accel','maxSpeed','brakeF','gears','redline','maxSteer','top','camD','camH'];
 function interior(root,kind){const add=(geo,m,x,y,z,rx)=>{const e=new THREE.Mesh(geo,m);e.position.set(x,y,z);if(rx)e.rotation.x=rx;root.add(e);return e};
  const bx=(w,h,d,x,y,z,m,rx)=>{const e=add(BOX1,m,x,y,z,rx);e.scale.set(w,h,d);return e};
  const FL=mat(0x4a4f57),WALL=mat(0x3a3f47),CEIL=mat(0xd8d6d0),YEL=mat(0xe0c341),GRY=mat(0x8d9398),RED=mat(0xc8312e);
@@ -793,23 +810,25 @@ const FROTA_CLASSICA=[
  {id:'urbano_classico',nome:'Urbano clássico',desc:'2 eixos, 3 portas',tipo:'urban',som:'onibusN',tom:1.08,comp:10.5,peso:15,
   fis:{accel:2.4,maxSpeed:22,brakeF:6.8,gears:[4,8,13,18,22],redline:2400,maxSteer:.62},prof:PROF.urban}];
 const FROTA_FATOR=[{"id":"urbano","nome":"Urbano","desc":"piso baixo, 3 portas","tipo":"urban","som":"onibusN","tom":1.08,"comp":12.5,"peso":17,"fis":{"accel":2.2,"maxSpeed":22,"brakeF":6.8,"gears":[4,8,13,18,22],"redline":2400,"maxSteer":0.541},"prof":{"wb":5.705,"hl":6.25,"cz":0.0,"hw":1.26,"top":3.23,"camD":15.5,"camH":5.2,"seat":[0.6,2.15,5.27],"cockOff":[0,-0.45,0.22],"intZ":0.75,"interior":"urban","exit":[-2.4,4.73],"door":[-1.9,4.73],"hasLug":false,"lamps":{"head":[[0.88,0.81,6.133],[-0.88,0.81,6.131]],"tail":[],"il":[[1.15,0.81,5.965]],"ir":[[-1.15,0.81,5.954]]},"rodas":{"eixos":[[3.705,0.56],[-2.0,0.56]],"cy":0.56,"xo":1.164,"xi":0.744},"ester":[1.0,0.0],"lant":{"des":"urbano_led_l","x":1.1,"z":-6.14,"y":0.84,"h":1.12,"w":0.4,"ang":35},"lantVer":1,"base":true}},{"id":"rodoviario_2e","nome":"Rodoviário 2 eixos","desc":"carroceria padrão","tipo":"coach","som":"onibusN","comp":14.0,"peso":18,"fis":{"accel":2.0,"maxSpeed":28,"brakeF":6.3,"gears":[4,8,12,17,22,28],"redline":2200,"maxSteer":0.564},"prof":{"wb":6.96,"hl":7.0,"cz":0.0,"hw":1.38,"top":3.93,"camD":17.4,"camH":6.4,"seat":[0.6,2.02,5.65],"cockOff":[0,-0.55,0.85],"intZ":0.95,"interior":"coach","exit":[-2.4,5.9],"door":[-1.9,5.9],"hasLug":false,"lamps":{"head":[[0.96,1.04,6.913],[-0.96,1.04,6.912]],"tail":[],"il":[[1.23,1.04,6.806]],"ir":[[-1.23,1.04,6.799]]},"rodas":{"eixos":[[3.68,0.61],[-3.28,0.61]],"cy":0.61,"xo":1.331,"xi":0.911},"ester":[1.0,0.0],"lant":{"des":"leds_x","x":1.14,"z":-6.8,"y":0.9,"h":1.1,"w":0.31,"ang":30},"lantVer":1,"base":true}},{"id":"rodoviario_3e","nome":"Rodoviário 3 eixos","desc":"carroceria padrão","tipo":"coach","som":"onibusN","comp":14.5,"peso":23,"fis":{"accel":1.85,"maxSpeed":28,"brakeF":6.1,"gears":[4,7.5,11.5,16,21.5,28],"redline":2200,"maxSteer":0.52},"prof":{"wb":6.87,"hl":7.25,"cz":-0.0,"hw":1.42,"top":3.88,"camD":18.0,"camH":6.3,"seat":[0.6,2.02,5.89],"cockOff":[0,-0.55,1.09],"intZ":1.19,"interior":"coach","exit":[-2.4,6.19],"door":[-1.9,6.19],"hasLug":false,"lamps":{"head":[[1.04,0.88,7.127],[-1.04,0.88,7.12]],"tail":[],"il":[[1.297,0.88,6.962]],"ir":[[-1.297,0.88,6.971]]},"rodas":{"eixos":[[4.565,0.6],[-2.305,0.6],[-3.705,0.6]],"cy":0.6,"xo":1.326,"xi":0.906},"ester":[1.0,0.0,-0.204],"lant":{"des":"leds_x","x":1.16,"z":-7.12,"y":0.9,"h":1.1,"w":0.31,"ang":30},"lantVer":1,"base":true}},{"id":"rodoviario_4e","nome":"Rodoviário 4 eixos","desc":"dois andares","tipo":"coach","som":"onibusN","comp":14.7,"peso":26,"fis":{"accel":1.7,"maxSpeed":27,"brakeF":5.9,"gears":[3.8,7,11,15.5,21,27],"redline":2100,"maxSteer":0.545},"prof":{"wb":7.585,"hl":7.36,"cz":-0.14,"hw":1.36,"top":4.22,"camD":18.2,"camH":6.8,"seat":[0.6,2.02,5.87],"cockOff":[0,-0.55,1.06],"intZ":1.17,"interior":"coach","exit":[-2.4,6.06],"door":[-1.9,6.06],"hasLug":false,"lamps":{"head":[[0.9,0.96,7.055],[-0.9,0.96,7.035]],"tail":[],"il":[[1.17,0.96,6.903]],"ir":[[-1.17,0.96,6.896]]},"rodas":{"eixos":[[4.38,0.56],[2.92,0.56],[-3.205,0.56],[-4.485,0.56]],"cy":0.56,"xo":1.36,"xi":0.94},"ester":[1.0,0.808,0.0,-0.169],"lant":{"des":"rod_vertical_a","x":1.02,"z":-7.28,"y":0.5,"h":1.2,"w":0.5,"ang":30},"lantVer":1,"base":true}}];
-const FROTA=[...FROTA_CLASSICA,...FROTA_FATOR];
+const FROTA_CAM=[{"id": "cav_cinza", "nome": "Cavalo 6x2 cinza", "desc": "cabine leito, 3 eixos", "tipo": "truck", "som": "onibusN", "tom": 0.82, "comp": 5.3, "peso": 9.5, "pasta": "modelos/caminhoes/", "fis": {"accel": 2.8, "maxSpeed": 25, "brakeF": 7, "gears": [4, 7, 10, 14, 18, 25], "redline": 2300, "maxSteer": 0.6}, "prof": {"wb": 2.938, "hl": 2.654, "cz": 1.581, "hw": 1.201, "top": 3.6, "camD": 12, "camH": 5, "seat": [0.6, 2.55, 2.78], "cockOff": [0, -0.3, 0.48], "exit": [2.4, 2.78], "interior": "none", "lamps": {"head": [[0.85, 0.9, 4.203112616634369], [-0.85, 0.9, 4.202272065973282]], "tail": [[1.0, 0.9, -1.088171714448929], [-1.0, 0.9, -1.0876678346633912]], "il": [[1.1, 0.9, 4.124805417156219]], "ir": [[-1.1, 0.9, 4.151187571382523]]}, "rodas": {"eixos": [[2.938, 0.556, 1.18, 0.6], [0.556, 0.556, 1.26, 0.64], [-0.556, 0.556, 1.26, 0.64]], "cy": 0.556}, "ester": [1, 0, 0], "engate": 0.718, "engY": 1.31}}, {"id": "cav_verde", "nome": "Cavalo 6x2 verde", "desc": "cabine baixa, 3 eixos", "tipo": "truck", "som": "onibusN", "tom": 0.82, "comp": 6.6, "peso": 9, "pasta": "modelos/caminhoes/", "fis": {"accel": 2.8, "maxSpeed": 25, "brakeF": 7, "gears": [4, 7, 10, 14, 18, 25], "redline": 2300, "maxSteer": 0.6}, "prof": {"wb": 3.85, "hl": 3.3, "cz": 2.015, "hw": 1.3, "top": 3.36, "camD": 12, "camH": 5, "seat": [0.6, 2.5, 3.87], "cockOff": [0, -0.35, 1.57], "exit": [2.4, 3.87], "interior": "none", "lamps": {"head": [[0.85, 0.95, 5.331330127716065], [-0.85, 0.95, 5.330610103607178]], "tail": [[1.0, 0.9, -1.2983200860023496], [-1.0, 0.9, -1.2948600363731382]], "il": [[1.1, 0.95, 5.309840269088745]], "ir": [[-1.1, 0.95, 5.308180279731751]]}, "rodas": {"eixos": [[3.85, 0.608, 1.25, 0.67], [0.6, 0.608, 1.25, 0.65], [-0.59, 0.608, 1.25, 0.65]], "cy": 0.608}, "ester": [1, 0, 0], "engate": 0.1, "engY": 1.06}}, {"id": "cav_azul", "nome": "Cavalo 4x2 azul", "desc": "cabine alta, 2 eixos", "tipo": "truck", "som": "onibusN", "tom": 0.82, "comp": 5.2, "peso": 7.5, "pasta": "modelos/caminhoes/", "fis": {"accel": 3.1, "maxSpeed": 26, "brakeF": 7.2, "gears": [4, 7, 10, 14, 19, 26], "redline": 2400, "maxSteer": 0.62}, "prof": {"wb": 3.148, "hl": 2.608, "cz": 1.957, "hw": 1.245, "top": 3.92, "camD": 12, "camH": 5, "seat": [0.6, 2.55, 3.11], "cockOff": [0, -0.3, 0.81], "exit": [2.4, 3.11], "interior": "none", "lamps": {"head": [[0.85, 0.9, 4.472633992767333], [-0.85, 0.9, 4.468008675312995]], "tail": [[1.0, 0.9, -0.6430506679058076], [-1.0, 0.9, -0.6435466381549836]], "il": [[1.1, 0.9, 4.421427907681465]], "ir": [[-1.1, 0.9, 4.416472153997421]]}, "rodas": {"eixos": [[3.148, 0.562, 1.18, 0.6], [0.0, 0.562, 1.21, 0.59]], "cy": 0.562}, "ester": [1, 0], "engate": 0.223, "engY": 1.25}}, {"id": "cav_laranja", "nome": "Cavalo 4x2 laranja", "desc": "cabine extra-alta, 2 eixos", "tipo": "truck", "som": "onibusN", "tom": 0.82, "comp": 5.4, "peso": 8, "pasta": "modelos/caminhoes/", "fis": {"accel": 3.0, "maxSpeed": 27, "brakeF": 7.2, "gears": [4, 7, 10, 14, 19, 27], "redline": 2400, "maxSteer": 0.62}, "prof": {"wb": 3.364, "hl": 2.715, "cz": 1.942, "hw": 1.253, "top": 4.28, "camD": 12, "camH": 5, "seat": [0.6, 2.75, 3.21], "cockOff": [0, -0.1, 0.91], "exit": [2.4, 3.21], "interior": "none", "lamps": {"head": [[0.85, 1.0, 4.6651388797283175], [-0.85, 1.0, 4.662441847038269]], "tail": [[1.0, 0.9, -0.7322979858398436], [-1.0, 0.9, -0.7312859287738799]], "il": [[1.1, 1.0, 4.589210918855667]], "ir": [[-1.1, 1.0, 4.563374856424332]]}, "rodas": {"eixos": [[3.364, 0.548, 1.24, 0.66], [0.0, 0.548, 1.22, 0.6]], "cy": 0.548}, "ester": [1, 0], "engate": 0.827, "engY": 1.27}}];
+const CARR_DADOS={"car_grade3": {"rodas": [[-8.61, 0.676, 1.25, 0.65], [-9.95, 0.676, 1.25, 0.65], [-11.35, 0.676, 1.25, 0.65]], "hl": 8.264, "cz": -5.509, "hw": 1.263, "tail": [[1.0, 1.1, -12.28077013015747], [-1.0, 1.1, -12.323110289573668]], "engT": null}, "car_grade5": {"rodas": [[-8.459, 0.68, 1.27, 0.67], [-9.736, 0.68, 1.27, 0.67], [-11.004, 0.68, 1.27, 0.67], [-12.289, 0.68, 1.27, 0.67], [-13.616, 0.68, 1.27, 0.67]], "hl": 7.958, "cz": -7.021, "hw": 1.262, "tail": [[1.0, 1.1, -14.938055444717406], [-1.0, 1.1, -14.955225230216978]], "engT": null}, "bitrem_1": {"rodas": [[-7.97, 0.578, 1.27, 0.67], [-9.253, 0.578, 1.27, 0.67]], "hl": 5.471, "cz": -4.674, "hw": 1.32, "tail": [[1.0, 1.1, -9.841688955724237], [-1.0, 1.1, -9.828521939516065]], "engT": -9.12}, "bitrem_2": {"rodas": [[-4.617, 0.578, 1.27, 0.67], [-6.223, 0.578, 1.27, 0.67]], "hl": 4.295, "cz": -3.723, "hw": 1.32, "tail": [[1.0, 1.1, -8.01029825925827], [-1.0, 1.1, -8.01162780046463]], "engT": null}};
+const FROTA=[...FROTA_CLASSICA,...FROTA_FATOR,...FROTA_CAM];
 const busDef=id=>FROTA.find(b=>b.id===id);
 const ler=(k,d)=>{try{return localStorage.getItem(k)||d}catch(e){return d}};
-G.busSel={coach:ler('sb_onibus_rod','rodoviario_2e'),urban:ler('sb_onibus_urb','urbano')};
+G.busSel={coach:ler('sb_onibus_rod','rodoviario_2e'),urban:ler('sb_onibus_urb','urbano'),truck:ler('sb_caminhao','cav_cinza')};if(!busDef(G.busSel.truck))G.busSel.truck='cav_cinza';
 if(!busDef(G.busSel.coach))G.busSel.coach='rodoviario_2e';if(!busDef(G.busSel.urban))G.busSel.urban='urbano';
-const busOf=tipo=>tipo==='coach'?BUS:BUS2;
+const busOf=tipo=>tipo==='coach'?BUS:tipo==='truck'?TRUCK:BUS2;
 
 /* roda dos ônibus da frota (um arquivo só para todos) */
 let RODA=null;
 async function getRoda(){if(RODA)return RODA;const r=await fetch(PASTA_ONIBUS+'roda_onibus.glb');if(!r.ok)throw new Error('roda_onibus.glb não encontrado');return RODA=await parseGLB(await r.arrayBuffer())}
-function montarRodas(root,G2,PR){const R=PR.rodas,W=RODA.nodes[0],sx=(R.xo-R.xi)/.6;
- R.eixos.forEach(([z,r],i)=>{const k=PR.ester?PR.ester[i]:(i===0?1:0);
-  for(const sg of [1,-1]){const piv=new THREE.Group();piv.position.set(sg*(R.xo+R.xi)/2,R.cy,z);root.add(piv);const sp=new THREE.Group();piv.add(sp);
+function montarRodas(root,G2,PR){const R=PR.rodas,W=RODA.nodes[0];
+ R.eixos.forEach(([z,r,exo,exi],i)=>{const k=PR.ester?PR.ester[i]:(i===0?1:0),xo=exo!==undefined?exo:R.xo,xi=exi!==undefined?exi:R.xi,sx=(xo-xi)/.6,cy=exo!==undefined?r:R.cy;
+  for(const sg of [1,-1]){const piv=new THREE.Group();piv.position.set(sg*(xo+xi)/2,cy,z);root.add(piv);const sp=new THREE.Group();piv.add(sp);
    for(const p of W.prims){const m=new THREE.Mesh(p.g,RODA.mats[p.mi]||RODA.mats[0]);m.scale.set(sg*sx,r,r);m.castShadow=true;sp.add(m)}
    G2.wheels.push(sp);if(k){piv.userData.k=k;G2.front.push(piv)}
    if(!G2.calMat)G2.calMat=new THREE.MeshLambertMaterial({map:TEX1,transparent:true,alphaTest:.4,side:THREE.DoubleSide});
-   const cd=new THREE.Mesh(CALG,G2.calMat);cd.scale.setScalar(r*.57);cd.position.x=sg*((R.xo-R.xi)/2-.035);cd.rotation.y=sg*Math.PI/2;cd.visible=false;sp.add(cd);(G2.calotas||(G2.calotas=[])).push(cd)}})}
+   const cd=new THREE.Mesh(CALG,G2.calMat);cd.scale.setScalar(r*.57);cd.position.x=sg*((xo-xi)/2-.035);cd.rotation.y=sg*Math.PI/2;cd.visible=false;sp.add(cd);(G2.calotas||(G2.calotas=[])).push(cd)}})}
 const CALG=new THREE.CircleGeometry(1,32);
 
 /* lanterna desenhada: o desenho é jogado na lataria por raios inclinados na quina (como no Fator RP) */
@@ -851,7 +870,7 @@ const ALVO={};function montarLant(root,cfg,id){const pecas=(cfg.pecas||[cfg]).fi
 function applyGLB(v,M,def){const PR={...def.prof};
  if(v.glbRoot){v.g.remove(v.glbRoot);v.glbRoot=null}
  const root=new THREE.Group();v.g.add(root);v.glbRoot=root;v.busId=def.id;
- const G2={wheels:[],front:[],doors:[],glows:[],halos:[],dentro:[],lant:null,name:def.tipo==='coach'?'ônibus':'ônibus urbano',...def.fis};for(const k of PKEYS)if(PR[k]!==undefined)G2[k]=PR[k];
+ const G2={wheels:[],front:[],doors:[],glows:[],halos:[],dentro:[],lant:null,name:def.tipo==='coach'?'ônibus':def.tipo==='truck'?'caminhão':'ônibus urbano',eng5:PR.engate,engY:PR.engY,...def.fis};for(const k of PKEYS)if(PR[k]!==undefined)G2[k]=PR[k];
  for(const n of M.nodes){const piv=new THREE.Group();piv.position.fromArray(n.t);root.add(piv);const sp=new THREE.Group();piv.add(sp);
   for(const p of n.prims){const mt=M.mats[p.mi]||M.mats[0];const m=new THREE.Mesh(p.g,mt);m.castShadow=!mt.transparent;m.receiveShadow=true;if(n.name==='carroceria')m.userData.corpo=true;if(n.name==='carroceria_dentro')G2.dentro.push(m);sp.add(m)}
   if(n.name.startsWith('roda')){G2.wheels.push(sp);if(n.name.includes('dianteira'))G2.front.push(piv);
@@ -865,7 +884,7 @@ function applyGLB(v,M,def){const PR={...def.prof};
  for(const k in L)for(const p of L[k]){const e=new THREE.Mesh(BOX1,MM[k]);e.scale.set(SZ[k][0],SZ[k][1],.06);e.position.set(p[0],p[1],p[2]);root.add(e);G2.glows.push(e);
   lampHalos(G2.halos,root,v.hm,[[k,p[0],p[1],p[2]+Math.sign(p[2])*.1,SZ[k][2]]])}
  {const lc=lantCfgV(v,def);if(lc){try{G2.lant=montarLant(root,lc,def.id)}catch(e){console.warn('lanterna',e)}}}
- const ig=new THREE.Group();ig.position.z=PR.intZ||0;root.add(ig);interior(ig,PR.interior);
+ if(PR.interior!=='none'){const ig=new THREE.Group();ig.position.z=PR.intZ||0;root.add(ig);interior(ig,PR.interior)}
  v.setGLB=G2;if(!v.setProc){v.setProc={glows:null,cockOff:[0,0,0],lant:null,dentro:null,corpo:null};for(const k of PKEYS)if(v.setProc[k]===undefined)v.setProc[k]=v[k]}
  {const cs=[];root.traverse(o=>{if(o.isMesh&&o.geometry.attributes.skinuv)cs.push(o)});
   if(cs.length){const base=cs[0].material,U={skinMap:{value:TEX1},uSkin:{value:0},uVidro:{value:1},vidMask:{value:TEX1},uMask:{value:0},vidMap:{value:TEX1},detMap:{value:TEX1},luzMap:{value:TEX1},uVid:{value:0},uDet:{value:0},uFr:{value:new THREE.Vector4()},uLt:{value:new THREE.Vector4()},uFarol:{value:0},uSetaE:{value:0},uSetaD:{value:0},uLetr:{value:0}},mat=matCorpo(base,U);for(const o of cs)o.material=mat;G2.corpo={mat,orig:base.map,U};if(DETR[def.id])mascaraVidro(def.id).then(t=>{U.vidMask.value=t;U.uMask.value=1}).catch(()=>{})}else G2.corpo=null}
@@ -877,12 +896,12 @@ function useModel(v,glb){if(!v.glbRoot)return;const set=glb?v.setGLB:v.setProc,o
  if(v.gear>v.gears.length)v.gear=v.gears.length}
 G.model=ler('rb_model','glb');
 const MODELS={};
-async function getModel(id){if(MODELS[id])return MODELS[id];const f=PASTA_ONIBUS+id+'.glb',r=await fetch(f);if(!r.ok)throw new Error(f+' não encontrado');
+async function getModel(id){if(MODELS[id])return MODELS[id];const df=busDef(id),f=(df&&df.pasta||PASTA_ONIBUS)+id+'.glb',r=await fetch(f);if(!r.ok)throw new Error(f+' não encontrado');
  const M=await parseGLB(await r.arrayBuffer());if(!M.nodes.length)throw new Error('modelo vazio');return MODELS[id]=M}
 async function carregarOnibus(id){const def=busDef(id);if(def.prof.rodas)await getRoda();return getModel(id)}
 /* coloca o ônibus escolhido no veículo do jogador (e nos ônibus da rodoviária, se for rodoviário) */
 function loadBusModel(){G.modelErr=null;syncModelBtn();
- Promise.all(['coach','urban'].map(t=>{const id=G.busSel[t];return carregarOnibus(id).then(M=>{if(G.model!=='glb'||G.busSel[t]!==id)return;const def=busDef(id);
+ Promise.all(['coach','urban','truck'].map(t=>{const id=G.busSel[t];return carregarOnibus(id).then(M=>{if(G.model!=='glb'||G.busSel[t]!==id)return;const def=busDef(id);
    applyGLB(busOf(t),M,def);if(t==='coach')for(const a of AI)applyGLB(a.v,M,def)})}))
  .then(()=>{syncModelBtn();renderBusSel()}).catch(e=>{G.modelErr=e.message||String(e);syncModelBtn();toast('Não consegui carregar o ônibus 3D: '+G.modelErr,5000)})}
 function aiModel(v){const id=G.busSel.coach;if(G.model==='glb'&&MODELS[id])applyGLB(v,MODELS[id],busDef(id))}
@@ -890,15 +909,16 @@ function escolherOnibus(id){const def=busDef(id),t=def.tipo,v=busOf(t);
  if(G.busSel[t]===id&&v.busId===id){switchTo(v);return}
  const j=G.job;if(j&&j.kind==='bus'&&j.bus===v&&j.stage!=='toBay'){toast('Termine a linha antes de trocar de ônibus');return}
  if(Math.abs(v.speed)>.8){toast('Pare o ônibus antes de trocar');return}
- G.busSel[t]=id;try{localStorage.setItem(t==='coach'?'sb_onibus_rod':'sb_onibus_urb',id)}catch(e){}
+ if(t==='truck'&&v.trailer&&Math.abs(v.speed)>.3){toast('Pare antes de trocar');return}
+ G.busSel[t]=id;try{localStorage.setItem(t==='coach'?'sb_onibus_rod':t==='truck'?'sb_caminhao':'sb_onibus_urb',id)}catch(e){}
  G.carregando=id;renderBusSel();toast('Carregando '+def.nome+'…',1500);
  carregarOnibus(id).then(M=>{G.carregando=null;if(G.busSel[t]!==id)return;if(G.model!=='glb'){G.model='glb';try{localStorage.setItem('rb_model','glb')}catch(e){}}
    v.doors.forEach(d=>{d.tgt=0;d.cur=0});applyGLB(v,M,def);if(t==='coach')for(const a of AI)applyGLB(a.v,M,def);
-   for(const o of [BUS,BUS2])if(o!==v&&o.glbRoot)useModel(o,true);
+   for(const o of [BUS,BUS2,TRUCK])if(o!==v&&o.glbRoot)useModel(o,true);
    renderBusSel();syncModelBtn();if(!(G.mode==='drive'&&G.active===v))switchTo(v);else toast('Agora você está no '+def.nome,1600)})
   .catch(e=>{G.carregando=null;renderBusSel();toast('Não consegui carregar '+def.nome+': '+(e.message||e),5000)})}
 function renderBusSel(){const el=$('busSel');if(!el)return;el.innerHTML='';
- for(const [t,tit] of [['coach','Rodoviários'],['urban','Urbanos']]){const h=document.createElement('div');h.className='bsT';h.textContent=tit;el.appendChild(h);
+ for(const [t,tit] of [['truck','Caminhões (cavalos)'],['coach','Rodoviários'],['urban','Urbanos']]){const h=document.createElement('div');h.className='bsT';h.textContent=tit;el.appendChild(h);
   for(const b of FROTA.filter(x=>x.tipo===t)){const on=G.busSel[t]===b.id,bt=document.createElement('button');bt.className='job'+(on?' sel':'');
    const vel=Math.round(b.fis.maxSpeed*3.6);
    bt.innerHTML=`<span>${b.nome}<small>${b.desc} · ${String(b.comp).replace('.',',')} m · ${b.peso} t · até ${vel} km/h</small></span><b>${G.carregando===b.id?'…':on?'✓':''}</b>`;
@@ -934,10 +954,10 @@ const IDB={p:null,abrir(){return this.p||(this.p=new Promise((res,rej)=>{const r
 G.pintura=(()=>{try{return JSON.parse(localStorage.getItem('sb_pintura')||'{}')||{}}catch(e){return{}}})();
 const salvarPintura=()=>{try{localStorage.setItem('sb_pintura',JSON.stringify(G.pintura))}catch(e){}};
 const TEXB={},SKINT={};
-function texBranca(id){return TEXB[id]||(TEXB[id]=new Promise((res,rej)=>new THREE.TextureLoader().load(PASTA_ONIBUS+id+'_branco.jpg',t=>{t.flipY=false;t.anisotropy=4;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;res(t)},undefined,()=>{delete TEXB[id];rej(new Error(id+'_branco.jpg'))})))}
+function texBranca(id){return TEXB[id]||(TEXB[id]=new Promise((res,rej)=>new THREE.TextureLoader().load((busDef(id).pasta||PASTA_ONIBUS)+id+'_branco.jpg',t=>{t.flipY=false;t.anisotropy=4;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;res(t)},undefined,()=>{delete TEXB[id];rej(new Error(id+'_branco.jpg'))})))}
 function texDeBlob(blob){return new Promise((res,rej)=>{const u=URL.createObjectURL(blob),im=new Image();im.onload=()=>{const t=new THREE.Texture(im);t.flipY=false;t.anisotropy=4;t.needsUpdate=true;res(t)};im.onerror=()=>rej(new Error('imagem da skin'));im.src=u})}
 async function skinTex(id){if(SKINT[id])return SKINT[id];const b=await IDB.get(id+'@'+(busDef(id).prof.lantVer||1));if(!b)return null;return SKINT[id]=await texDeBlob(b)}
-async function aplicarPintura(v){if(!v||!v.corpo||!v.busId)return;const id=v.busId,base=busDef(id).prof.base,modo0=v===BUS||v===BUS2?(G.pintura[id]||(base?'branco':'original')):'original',modo=base&&modo0==='branco'?'original':modo0,C=v.corpo;
+async function aplicarPintura(v){if(!v||!v.corpo||!v.busId)return;const id=v.busId,base=busDef(id).prof.base,modo0=v===BUS||v===BUS2||v===TRUCK?(G.pintura[id]||(base?'branco':'original')):'original',modo=base&&modo0==='branco'?'original':modo0,C=v.corpo;
  try{if(modo==='original'){C.mat.map=C.orig;C.U.uSkin.value=0}
   else{const tb=base?C.orig:await texBranca(id);if(v.busId!==id)return;C.mat.map=tb;
    if(modo==='skin'){const st=await skinTex(id);C.U.skinMap.value=st||TEX1;C.U.uSkin.value=st?1:0}else C.U.uSkin.value=0}
@@ -955,7 +975,7 @@ function carregarSkin(){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo){
   im.onerror=()=>toast('Esse arquivo não é uma imagem que o navegador abre',3500);im.src=u};
  inp.click()}
 function baixarModelo(t){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo)return;if(t==='det'&&temDet(G.pintura2[v.busId])){const nome='modelo_'+v.busId+'_detalhes.png';montaDet(v.busId,true).then(c=>c.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nome;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast('Salvo em Downloads: '+nome,3500)},'image/png'));return}const id=v.busId,nome='modelo_'+id+(t==='vid'?'_vidros.jpg':t==='det'?'_detalhes.png':'.jpg');toast('Baixando o molde…',1500);
- fetch(PASTA_ONIBUS+'skins/'+nome).then(r=>{if(!r.ok)throw new Error(nome);return r.blob()}).then(b=>{const f=new File([b],nome,{type:t==='det'?'image/png':'image/jpeg'});
+ fetch((busDef(id).pasta||PASTA_ONIBUS)+'skins/'+nome).then(r=>{if(!r.ok)throw new Error(nome);return r.blob()}).then(b=>{const f=new File([b],nome,{type:t==='det'?'image/png':'image/jpeg'});
   if(TOUCH&&navigator.canShare&&navigator.canShare({files:[f]}))return navigator.share({files:[f],title:nome}).catch(()=>{});
   const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nome;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast('Salvo em Downloads: '+nome,3500)})
  .catch(e=>toast('Não consegui baixar o modelo: '+(e.message||e),4000))}
@@ -1204,17 +1224,18 @@ function drive(v,dt,I){
  v.h+=v.speed/v.wb*Math.tan(v.steer)*dt;
  const f=fwd(v.h),k=Math.min(1,grip*dt*(as<3?4:1));
  v.vx+=(f.x*v.speed-v.vx)*k;v.vz+=(f.z*v.speed-v.vz)*k;v.x+=v.vx*dt;v.z+=v.vz*dt;
- const t=v.trailer;let tp=null;if(t)tp={x:t.x,z:t.z,h:t.h,ax:t.ax,az:t.az};
- let hit=collide(v,t?[t]:[]);
- if(!hit&&t){updTrailer(t,v);if(collide(t,[v]))hit=true}
- if(hit){v.x=px;v.z=pz;v.h=ph;const imp=Math.hypot(pvx,pvz);v.speed*=-.25;v.vx=-pvx*.25;v.vz=-pvz*.25;if(t)Object.assign(t,tp);if(imp>1.8)damage(v,imp)}
+ const t=v.trailer,t2=t&&t.reboque;let tp=null,tp2=null;if(t)tp={x:t.x,z:t.z,h:t.h,ax:t.ax,az:t.az};if(t2)tp2={x:t2.x,z:t2.z,h:t2.h,ax:t2.ax,az:t2.az};
+ let hit=collide(v,t?[t,t2].filter(Boolean):[]);
+ if(!hit&&t){updTrailer(t,v);if(collide(t,[v,t2].filter(Boolean)))hit=true}
+ if(!hit&&t2){updTrailer(t2,t);if(collide(t2,[v,t]))hit=true}
+ if(hit){v.x=px;v.z=pz;v.h=ph;const imp=Math.hypot(pvx,pvz);v.speed*=-.25;v.vx=-pvx*.25;v.vz=-pvz*.25;if(t)Object.assign(t,tp);if(t2)Object.assign(t2,tp2);if(imp>1.8)damage(v,imp)}
  const dd=Math.abs(v.speed)*dt;
  if(v.on){v.fuel=Math.max(0,v.fuel-dt*(.005+thr*.055*loaded*(v.rpm/v.redline)));if(v.fuel<=0){v.on=false;toast('O motor apagou: sem combustível')}}
  v.tires=Math.max(0,v.tires-dd*.0016);v.eng=Math.max(0,v.eng-dd*.0006-(v.rpm>v.redline*.97?dt*.05:0));v.brakes=Math.max(0,v.brakes-(stop>0?stop:0)*Math.abs(v.speed)*dt*.004);
  if(v.eng<=0&&v.on){v.on=false;toast('O motor quebrou! Chame o guincho no menu')}
  if(v.fuel<12&&v.fuel>0)warn('Combustível acabando! Vá ao posto (P).');
 }
-function updTrailer(t,tr){const f=fwd(tr.h),hx=tr.x-f.x*1.6,hz=tr.z-f.z*1.6;
+function updTrailer(t,tr){const f=fwd(tr.h),e=tr.eng5!==undefined?tr.eng5:-1.6,hx=tr.x+f.x*e,hz=tr.z+f.z*e;
  let dx=hx-t.ax,dz=hz-t.az;const d=Math.hypot(dx,dz)||1;dx/=d;dz/=d;let h=Math.atan2(dx,dz);
  const rel=angN(h-tr.h);if(Math.abs(rel)>1.45)h=tr.h+Math.sign(rel)*1.45;const nf=fwd(h);
  t.ax=hx-nf.x*t.L;t.az=hz-nf.z*t.L;t.x=hx;t.z=hz;t.h=h;t.speed=tr.speed}
@@ -1228,21 +1249,21 @@ function walk(dt,I){const mv=TOUCH&&Math.abs(T.jy)>.12?-T.jy:((K.KeyW||K.ArrowUp
  P.g.position.set(P.x,0,P.z);P.g.rotation.y=P.h}
 const exitPt=v=>toW(v,v.exit[0],v.exit[1]);
 function nearVeh(r=3.6){let best=null,bd=r;for(const v of PV){const d=dist(P,exitPt(v));if(d<bd){bd=d;best=v}}return best}
-function nearTrunk(){if(BUS.hasLug!==false&&dist(P,toW(BUS,-2.1,-2.2))<3.6)return{o:BUS,g:'lug',n:'bagageiro'};for(const t of TR){if(dist(P,toW(t,0,-12.6))<3.6)return{o:t,g:'rear',n:'portas da carreta'}}return null}
+function nearTrunk(){if(BUS.hasLug!==false&&dist(P,toW(BUS,-2.1,-2.2))<3.6)return{o:BUS,g:'lug',n:'bagageiro'};for(const t of TR){if(t.semPorta)continue;if(dist(P,toW(t,0,-12.6))<3.6)return{o:t,g:'rear',n:'portas da carreta'}}return null}
 function switchTo(v){if(G.mode==='drive'){const c=G.active;if(c===v){toast('Você já está no '+v.name);return}if(Math.abs(c.speed)>.8){toast('Pare o veículo antes de trocar');return}c.hb=true;c.speed=0;c.vx=c.vz=0;G.horn=false}
  G.mode='drive';G.active=v;v.hb=false;P.g.visible=false;document.body.classList.remove('walk');CAM.yaw=CAM.pitch=0;$('gar').style.display='none';$('panel').classList.remove('on');$('bPanel').classList.remove('on');toast('Você está no '+v.name+(v.on?'':' · ligue o motor'),1800)}
-function enterVeh(v){G.mode='drive';G.active=v;document.body.classList.remove('walk');if(!v.on)setTimeout(()=>{if(G.active===v&&!v.on)toast('Ligue o motor '+key('I','⏻'),1800)},1300);v.hb=false;P.g.visible=false;if(v.type==='truck'){const d=v.doors[0];d.tgt=1;setTimeout(()=>{d.tgt=0},800)}toast('Você entrou no '+v.name,1200)}
+function enterVeh(v){G.mode='drive';G.active=v;document.body.classList.remove('walk');if(!v.on)setTimeout(()=>{if(G.active===v&&!v.on)toast('Ligue o motor '+key('I','⏻'),1800)},1300);v.hb=false;P.g.visible=false;if(v.type==='truck'&&v.doors[0]){const d=v.doors[0];d.tgt=1;setTimeout(()=>{d.tgt=0},800)}toast('Você entrou no '+v.name,1200)}
 function exitVeh(){const v=G.active;if(Math.abs(v.speed)>.8){toast('Pare o veículo para sair');return}
  let p=exitPt(v);if(blockedP(p.x,p.z))p=toW(v,-v.exit[0],v.exit[1]);if(blockedP(p.x,p.z)){toast('Sem espaço para descer aqui');return}
  v.hb=true;v.speed=0;v.vx=v.vz=0;G.horn=false;G.mode='walk';document.body.classList.add('walk');T.acc=T.brk=0;W.rot=0;P.x=p.x;P.z=p.z;P.h=v.h;P.g.visible=true;
- if(v.type==='truck'){const d=v.doors[0];d.tgt=1;setTimeout(()=>{d.tgt=0},800)}}
+ if(v.type==='truck'&&v.doors[0]){const d=v.doors[0];d.tgt=1;setTimeout(()=>{d.tgt=0},800)}}
 
 /* ---------- ações ---------- */
 function toggleDoors(o,grp){if(o.attached!==undefined?Math.abs(o.speed)>1.5:Math.abs(o.speed)>1.5){toast('Pare o veículo primeiro');return}
  const ds=o.doors.filter(d=>d.grp===grp);const open=!ds.some(d=>d.tgt);ds.forEach(d=>d.tgt=open?1:0);if(o.type==='bus'&&o.busId&&G.model==='glb'&&ds.length)somPorta();else blip(open?520:380,.07)}
 function hitch(v){if(v.trailer){if(Math.abs(v.speed)>.5){toast('Pare para soltar a carreta');return}
   const t=v.trailer;t.attached=null;v.trailer=null;for(const k in t.hm)t.hm[k].opacity=0;t.speed=0;t.legs.forEach(l=>l.visible=true);blip(300,.1);toast('Carreta solta');if(t.empty)t.dieT=4;return}
- const f=fwd(v.h),hp={x:v.x-f.x*1.6,z:v.z-f.z*1.6};let best=null,bd=3.2;
+ const f=fwd(v.h),e=v.eng5!==undefined?v.eng5:-1.6,hp={x:v.x+f.x*e,z:v.z+f.z*e};let best=null,bd=3.2;
  for(const t of TR){if(t.attached)continue;const d=dist(hp,t);if(d<bd&&Math.abs(angN(t.h-v.h))<.6){bd=d;best=t}}
  if(!best){const any=TR.filter(t=>!t.attached).map(t=>dist(hp,t)).sort((a,b)=>a-b)[0];toast(any!==undefined&&any<12?`Dê ré até o pino da carreta (faltam ${any.toFixed(1)} m)`:'Nenhuma carreta atrás do caminhão');return}
  best.attached=v;v.trailer=best;best.legs.forEach(l=>l.visible=false);best.dieT=-1;blip(200,.12,.1);toast('Carreta engatada!')}
@@ -1262,7 +1283,7 @@ function act(a,down){
  case 'mapa':abrirMapa();break;
  case 'enter':if(v)exitVeh();else{const n=nearVeh();n?enterVeh(n):toast('Chegue perto da porta de um veículo')}break;
  case 'doors':{const o=v||nearVeh(5);o?toggleDoors(o,'main'):toast('Chegue perto de um veículo')}break;
- case 'trunk':if(v){if(v.type==='bus')toggleDoors(v,'lug');else if(v.trailer)toggleDoors(v.trailer,'rear');else toast('Sem carreta engatada')}else{const n=nearTrunk();n?toggleDoors(n.o,n.g):toast('Chegue perto do bagageiro ou da traseira da carreta')}break;
+ case 'trunk':if(v){if(v.type==='bus')toggleDoors(v,'lug');else if(v.trailer){if(v.trailer.semPorta)toast('Essa carreta não tem portas: é só parar na área de descarga');else toggleDoors(v.trailer,'rear')}else toast('Sem carreta engatada')}else{const n=nearTrunk();n?toggleDoors(n.o,n.g):toast('Chegue perto do bagageiro ou da traseira da carreta')}break;
  case 'hitch':v&&v.type==='truck'?hitch(v):toast('Entre no caminhão para engatar');break;
  case 'act':doAction();break;
  case 'lights':if(v){v.lights=(v.lights+1)%3;blip(700,.04);toast(['Farol desligado','Farol baixo','Farol alto'][v.lights],900)}break;
@@ -1319,14 +1340,14 @@ function aiUpdate(dt){
   v.lights=G.day<.4}}
 
 /* ---------- trabalhos ---------- */
-const CARGO=[['Eletrônicos',true,1.15],['Grãos',false,.85],['Móveis',false,.95],['Vidro',true,1.25],['Bebidas',false,.9],['Remédios',true,1.2],['Peças de carro',false,1],['Frutas',false,.95],['Cimento',false,.9],['Açaí',true,1.1]];
+const CARGO=[['Eletrônicos',true,1.15,'bau'],['Grãos',false,.85,'bitrem'],['Móveis',false,.95,'bau'],['Vidro',true,1.25,'bau'],['Bebidas',false,.9,'grade3'],['Remédios',true,1.2,'bau'],['Peças de carro',false,1,'bau'],['Frutas',false,.95,'grade5'],['Cimento',false,.9,'grade3'],['Açaí',true,1.1,'bau'],['Madeira',false,.95,'grade5'],['Fertilizante',false,.9,'bitrem'],['Sacaria',false,.9,'grade3']];
 const cpNome=p=>p.n+(p.cid>=0?' ('+CIT[p.cid].n+')':'');
 const stopCid=s=>s.cid===undefined?-1:s.cid;
 function pickNear(list,F,pos=o=>o){const w=list.map(o=>1/(1+dist(F,pos(o))/350));let r=Math.random()*w.reduce((a,b)=>a+b,0);for(let i=0;i<list.length;i++){r-=w[i];if(r<=0)return i}return list.length-1}
 function genJobs(){G.jobs=[];const F=G.mode==='drive'?G.active:P,ORI=CP.map((p,i)=>i).filter(i=>CP[i].slots),DST=CP.map((p,i)=>i).filter(i=>!CP[i].dep);
  for(let i=0;i<3;i++){const c=CARGO[(Math.random()*CARGO.length)|0],o=ORI[pickNear(ORI,F,k=>CP[k])],O=CP[o];
   let cand=DST.filter(k=>k!==o&&CP[k].cid!==O.cid);if(!cand.length||Math.random()<.3)cand=DST.filter(k=>k!==o);const dd=cand[(Math.random()*cand.length)|0],d=dist(O,CP[dd]);
-  G.jobs.push({kind:'truck',cargo:c[0],fragile:c[1],o,dd,d,pay:Math.round((650+Math.min(d,400)*2.4+d*1.05)*c[2]/10)*10})}
+  G.jobs.push({kind:'truck',cargo:c[0],fragile:c[1],tipo:c[3]||'bau',o,dd,d,pay:Math.round((650+Math.min(d,400)*2.4+d*1.05)*c[2]/10)*10})}
  for(let i=0;i<2;i++){const s=pickNear(STATIONS,F,o=>o.ctr),st=STATIONS[s],cand=STOPS.map((p,k)=>k).filter(k=>stopCid(STOPS[k])===st.cid);if(!cand.length)continue;
   const k=cand[(Math.random()*cand.length)|0],d=dist(st.ctr,STOPS[k]),pax=8+((Math.random()*18)|0);
   G.jobs.push({kind:'bus',tipo:'urb',s,k,d,pax,lug:false,line:'Linha '+(100+((Math.random()*80)|0)),pay:Math.round((pax*22+d*1.3)/10)*10})}
@@ -1337,14 +1358,14 @@ function genJobs(){G.jobs=[];const F=G.mode==='drive'?G.active:P,ORI=CP.map((p,i
 const jobDest=j=>j.tipo==='rod'?STATIONS[j.t].n:'Ponto '+STOPS[j.k].n;
 function renderJobs(){const jt=$('jt'),jb=$('jb');jt.innerHTML='';jb.innerHTML='';
  G.jobs.forEach((j,i)=>{const b=document.createElement('button');b.className='job';
-  b.innerHTML=j.kind==='truck'?`<span>${j.cargo}${j.fragile?' · frágil':''}<small>${cpNome(CP[j.o])} → ${cpNome(CP[j.dd])} · ${fmtD(j.d)}</small></span><b>${brl(j.pay)}</b>`:`<span>${j.line} · ${j.pax} passageiros<small>${STATIONS[j.s].n} → ${jobDest(j)} · ${fmtD(j.d)}${j.lug?' · com bagagem':''}</small></span><b>~${brl(j.pay)}</b>`;
+  b.innerHTML=j.kind==='truck'?`<span>${j.cargo}${j.fragile?' · frágil':''} · carreta ${(CARR_TIPOS[j.tipo]||CARR_TIPOS.bau).n}<small>${cpNome(CP[j.o])} → ${cpNome(CP[j.dd])} · ${fmtD(j.d)}</small></span><b>${brl(j.pay)}</b>`:`<span>${j.line} · ${j.pax} passageiros<small>${STATIONS[j.s].n} → ${jobDest(j)} · ${fmtD(j.d)}${j.lug?' · com bagagem':''}</small></span><b>~${brl(j.pay)}</b>`;
   b.onclick=()=>accept(i);(j.kind==='truck'?jt:jb).appendChild(b)})}
-const slotFree=s=>!TR.some(t=>dist(t,s)<6)&&!PV.some(v=>dist(v,toW(s,0,-5))<7);
+const slotFree=s=>!TR.some(t=>dist(t,s)<6||dist(toW(t,0,t.cz||-5.25),toW(s,0,-6))<6)&&!PV.some(v=>dist(v,toW(s,0,-5))<7);
 function accept(i){if(G.job){toast('Termine ou cancele o trabalho atual');return}const j=Object.assign({},G.jobs[i],{hits:0,cdmg:0,prog:0});
  if(j.kind==='truck'){const O=CP[j.o];let slot=O.slots.find(slotFree);
   if(!slot){const e=TR.find(t=>!t.attached&&dist(t,O)<120);if(e){removeTrailer(e);slot=O.slots.find(slotFree)}}
   if(!slot){toast(`Pátio de ${O.n} cheio. Tire o veículo da frente das vagas.`);return}
-  const t=makeTrailer([0xe9e4da,0xc8312e,0x2c6fb0,0x3f6b33,0x5b6670][(Math.random()*5)|0]);placeTrailer(t,slot.x,slot.z,slot.h);j.trailer=t;j.stage='pickup';
+  const t=novaCarreta(j.tipo,[0xe9e4da,0xc8312e,0x2c6fb0,0x3f6b33,0x5b6670][(Math.random()*5)|0]);colocarCarreta(t,slot.x,slot.z,slot.h);j.trailer=t;j.stage='pickup';
   j.title=`Frete: ${j.cargo} → ${CP[j.dd].n}`;toast(`Frete aceito! A carreta está em ${cpNome(O)}`,3200)}
  else{j.stage='toBay';j.bay=-1;j.dbay=-1;j.waiting=[];j.boarded=0;j.off=0;j.lp=0;j.lp2=0;j.bt=0;j.title=`${j.line} → ${jobDest(j)}`;
   toast(`Linha aceita! Vá até a ${STATIONS[j.s].n} e pare de frente em qualquer plataforma livre`,3600)}
@@ -1361,15 +1382,15 @@ const baiaOnde=(st,b)=>st.bays.findIndex(p=>inPose(b,p));
 function jobUpdate(dt){const j=G.job;
  if(!j){ui('Sem trabalho',`Escolha um frete ou linha em ${TOUCH?'☰ → Trabalhos':'[B]'}`);return}
  const stopped=o=>Math.abs(o.speed)<.3;
- if(j.kind==='truck'){const t=j.trailer,O=CP[j.o],W=CP[j.dd],c=toW(t,0,-5.25),d=Math.hypot(c.x-W.x,c.z-W.z);
+ if(j.kind==='truck'){const t=j.trailer,O=CP[j.o],W=CP[j.dd],c=toW(t,0,t.cz!==undefined?t.cz:-5.25),d=Math.hypot(c.x-W.x,c.z-W.z);
   if(j.stage==='pickup'){if(t.attached===TRUCK){j.stage='deliver';toast('Carreta engatada! Leve até '+cpNome(W))}
    const dt2=G.mode==='drive'&&G.active===TRUCK?dist(TRUCK,t):null;ui(j.title,G.active!==TRUCK||G.mode!=='drive'?`Pegue o caminhão e vá até ${cpNome(O)}`:dt2>60?`Vá até ${cpNome(O)} · ${fmtD(dt2)}`:`Dê ré até alinhar com a carreta e aperte ${key('J','Engatar')}${dt2<25?' · '+fmtD(dt2):''}`)}
   else if(j.stage==='deliver'){if(d<10&&(!t.attached||stopped(t.attached)))j.stage='unload';else if(!t.attached)j.stage='pickup';ui(j.title,`Leve a carreta até ${cpNome(W)} · ${fmtD(d)}`)}
-  else if(j.stage==='unload'){if(d>12){j.stage=t.attached?'deliver':'pickup';return}const open=doorsFull(t,'rear'),still=!t.attached||stopped(t.attached);
+  else if(j.stage==='unload'){if(d>12){j.stage=t.attached?'deliver':'pickup';return}const open=t.semPorta||doorsFull(t,'rear'),still=!t.attached||stopped(t.attached);
    if(open&&still)j.prog=Math.min(1,j.prog+dt/6);
    ui(j.title,open?(still?'Descarregando…':'Pare para descarregar'):`Abra as portas traseiras da carreta ${key('T','Bagag.')}`,j.prog);
-   if(j.prog>=1){t.loaded=false;t.empty=true;t.cargo.material=HOLE;const q=Math.round(100*(1-Math.min(.7,j.cdmg)));payOut(j,j.pay*(1-Math.min(.7,j.cdmg)),`Entrega concluída! Carga ${q}%`);if(!t.attached)t.dieT=6;
-    setTimeout(()=>{if(!G.job)toast(`Feche as portas e solte a carreta ${key('J','Engatar')}`,3000)},3600)}}
+   if(j.prog>=1){t.loaded=false;t.empty=true;if(t.cargo)t.cargo.material=HOLE;const q=Math.round(100*(1-Math.min(.7,j.cdmg)));payOut(j,j.pay*(1-Math.min(.7,j.cdmg)),`Entrega concluída! Carga ${q}%`);if(!t.attached)t.dieT=6;
+    setTimeout(()=>{if(!G.job)toast(t.semPorta?`Solte a carreta ${key('J','Engatar')}`:`Feche as portas e solte a carreta ${key('J','Engatar')}`,3000)},3600)}}
   return}
  const cand=G.mode==='drive'&&G.active.type==='bus'?G.active:null;if(!j.bus||(j.stage==='toBay'&&cand))j.bus=cand||j.bus||BUS;
  const b=j.bus,st=STATIONS[j.s],dst=j.tipo==='rod'?STATIONS[j.t]:null,S=dst?null:STOPS[j.k],lug=j.lug&&b.hasLug!==false,dp=b.door||[-1.9,5.2];
@@ -1465,7 +1486,7 @@ function sync(o,dt){o.g.position.set(o.x,0,o.z);o.g.rotation.y=o.h;
   if(o.glows)for(const e of o.glows)e.visible=e.material.emissiveIntensity>0;
   {const hm=o.hm;hm.head.opacity=o.lights?(o.lights===2?1:.7):0;hm.tail.opacity=o.brk?1:(o.lights?.38:0);hm.il.opacity=o.indL&&G.blink?.95:0;hm.ir.opacity=o.indR&&G.blink?.95:0;
    for(const s of o.halos)if(s.material===hm.head)s.scale.setScalar(o.lights===2?1.9:1.3);
-   if(o.trailer){const th=o.trailer.hm;th.tail.opacity=hm.tail.opacity;th.il.opacity=hm.il.opacity;th.ir.opacity=hm.ir.opacity}}
+   if(o.trailer){const th=o.trailer.hm;th.tail.opacity=hm.tail.opacity;th.il.opacity=hm.il.opacity;th.ir.opacity=hm.ir.opacity;const t2=o.trailer.reboque;if(t2){const h2=t2.hm;h2.tail.opacity=hm.tail.opacity;h2.il.opacity=hm.il.opacity;h2.ir.opacity=hm.ir.opacity;t2.mBrake.emissiveIntensity=o.mBrake.emissiveIntensity}}}
   if(o.spots)for(const s of o.spots){s.intensity=o.lights===2?3.4:o.lights?2.2:0;s.distance=o.lights===2?150:85;s.angle=o.lights===2?.36:.48}if(o.sw)o.sw.rotation.z=-o.steer*4;if(o.needles){o.needles[0].rotation.z=2.2-Math.min(1,Math.abs(o.speed)*3.6/120)*4.4;o.needles[1].rotation.z=2.2-Math.min(1,o.rpm/3000)*4.4}}
  if(o.mBrake&&o.trailer)o.trailer.mBrake.emissiveIntensity=o.mBrake.emissiveIntensity;
  if(o.dentro){const ck=G.cam===1&&G.mode==='drive'&&G.active===o;for(const m of o.dentro)m.visible=!ck}
@@ -1508,7 +1529,7 @@ function toggleMenu(f){G.menu=f===undefined?!G.menu:f;if(G.menu){$('panel').clas
 $('mclose').onclick=()=>toggleMenu(false);
 $('oSteer').textContent='Direção: '+(G.steer==='wheel'?'volante':'setas');
 $('oModel').onclick=()=>{G.model=G.model==='glb'?'simple':'glb';try{localStorage.setItem('rb_model',G.model)}catch(e){}
- if(G.model==='glb'){G.modelErr=null;loadBusModel()}else for(const v of [BUS,BUS2,...AI.map(a=>a.v)])useModel(v,false);syncModelBtn()};
+ if(G.model==='glb'){G.modelErr=null;loadBusModel()}else for(const v of [BUS,BUS2,TRUCK,...AI.map(a=>a.v)])useModel(v,false);syncModelBtn()};
 $('oSteer').onclick=()=>{G.steer=G.steer==='wheel'?'arrows':'wheel';document.body.classList.toggle('arr',G.steer==='arrows');$('oSteer').textContent='Direção: '+(G.steer==='wheel'?'volante':'setas');try{localStorage.setItem('rb_steer',G.steer)}catch(e){}};
 function syncRainBtn(){$('oRain').textContent='Chuva: '+(G.rainT?'ligada':'desligada')}
 $('oRain').onclick=()=>{G.rainT=G.rainT?0:1;G.wNext=4;syncRainBtn()};
@@ -1532,8 +1553,8 @@ function prompts(){const out=[],add=(a,k,t)=>out.push(`<button data-a="${a}">${T
  if(!v.on)add('ign','I','Ligar motor');
  if(st){const c=costs(v);if(pertoDe(v,FUEL))add('act','G',c.fuel<5?'Tanque cheio':'Abastecer '+brl(c.fuel));if(pertoDe(v,SHOP))add('act','G',c.fix<5?'Veículo em ordem':'Consertar '+brl(c.fix))}
  if(st&&v.type==='bus'&&j&&j.kind==='bus'&&['board','close','drop'].includes(j.stage)){add('doors','F',doorsOpen(v,'main')?'Fechar porta':'Abrir porta');if(j.lug)add('trunk','T',doorsOpen(v,'lug')?'Fechar bagageiro':'Abrir bagageiro')}
- if(v.type==='truck'){if(!v.trailer){const f=fwd(v.h),hp={x:v.x-f.x*1.6,z:v.z-f.z*1.6};if(TR.some(t=>!t.attached&&dist(hp,t)<3.2&&Math.abs(angN(t.h-v.h))<.6))add('hitch','J','Engatar carreta')}
-  else{if(st&&j&&j.kind==='truck'&&j.stage==='unload')add('trunk','T',doorsOpen(v.trailer,'rear')?'Fechar portas da carreta':'Abrir portas da carreta');if(st&&(!j||j.trailer!==v.trailer))add('hitch','J','Soltar carreta')}}
+ if(v.type==='truck'){if(!v.trailer){const f=fwd(v.h),e=v.eng5!==undefined?v.eng5:-1.6,hp={x:v.x+f.x*e,z:v.z+f.z*e};if(TR.some(t=>!t.attached&&dist(hp,t)<3.2&&Math.abs(angN(t.h-v.h))<.6))add('hitch','J','Engatar carreta')}
+  else{if(st&&j&&j.kind==='truck'&&j.stage==='unload'&&!v.trailer.semPorta)add('trunk','T',doorsOpen(v.trailer,'rear')?'Fechar portas da carreta':'Abrir portas da carreta');if(st&&(!j||j.trailer!==v.trailer))add('hitch','J','Soltar carreta')}}
  return out.slice(0,4).join('')}
 const mc=$('mini'),mx=mc.getContext('2d');let hudT=0,miniT=0,lastCtx='',lastW='';
 mc.style.pointerEvents='auto';mc.onclick=()=>abrirMapa(true);
@@ -1597,7 +1618,7 @@ function somTroca(){if(!AC||!G.noise)return;const t=AC.currentTime;
 function somPorta(){if(!AC||!G.noise)return;const t=AC.currentTime;
  try{const a=AC.createBufferSource(),fa=AC.createBiquadFilter(),ga=AC.createGain();a.buffer=G.noise;fa.type='highpass';fa.frequency.value=1800;ga.gain.value=0;a.connect(fa);fa.connect(ga);ga.connect(master);
   a.start(t,Math.random());ga.gain.setTargetAtTime(.09,t,.03);ga.gain.setTargetAtTime(0,t+.35,.15);a.stop(t+1.2)}catch(e){}}
-function audioOnibus(t){const v=G.mode==='drive'?G.active:null,bus=v&&v.type==='bus'&&G.model==='glb'&&v.busId,def=bus&&busDef(v.busId);
+function audioOnibus(t){const v=G.mode==='drive'?G.active:null,bus=v&&(v.type==='bus'||v.type==='truck')&&G.model==='glb'&&v.busId,def=bus&&busDef(v.busId);
  if(!def){if(MOT.gl){MOT.gl.gain.setTargetAtTime(0,t,.1);MOT.ga.gain.setTargetAtTime(0,t,.1);MOT.gr.gain.setTargetAtTime(0,t,.05)}MOT.on=false;return false}
  motorSet(def.som);
  if(v.on&&!MOT.on){MOT.tOn=t;tocar(def.som+'_partida',.75,def.tom||1)}MOT.on=v.on;
@@ -1623,7 +1644,7 @@ if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWo
   bi.onclick=()=>{if(pedido){pedido.prompt();pedido.userChoice.then(r=>{if(r.outcome==='accepted'){bi.style.display='none';toast('Instalando o SimulaBr…',2500)}pedido=null})}
    else toast(ios?'No Safari: toque em Compartilhar e depois em "Adicionar à Tela de Início"':'No Chrome: menu ⋮ → "Instalar app" ou "Adicionar à tela inicial"',6000)};
   addEventListener('appinstalled',()=>{bi.style.display='none';toast('SimulaBr instalado! Abra pelo ícone na tela inicial.',4000)})}}
-spawnAI(0,true);spawnAI(2,true);genJobs();syncModelBtn();renderBusSel();if(G.model==='glb')loadBusModel();
+spawnAI(0,true);spawnAI(2,true);genJobs();carregarCarretas().catch(e=>console.warn('carretas',e));syncModelBtn();renderBusSel();if(G.model==='glb')loadBusModel();
 let last=performance.now(),last0=last;const wrim=$('wrim');
 function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/1000);last=now;if(G.menu||!G.started)dt=0;
  G.blink=(now%800)<400;G.warnT-=dt;

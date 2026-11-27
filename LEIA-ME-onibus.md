@@ -104,3 +104,11 @@ O molde de detalhes que você baixa já vem com as peças escolhidas desenhadas 
 Cada ônibus padrão agora tem uma máscara de janelas: o arquivo modelos/onibus/skins/vidro_<id>.png. Assim o molde de vidros pega as janelas com cortina e o vidro traseiro, e não só as partes escuras.
 O teto e os frisos escuros deixaram de ser tratados como vidro: a skin da carroceria pinta essas partes também.
 A calota ficou um pouco menor e para dentro, para não sobrar para fora da roda.
+
+## Caminhões e carretas (versão 0.9)
+Ficam em modelos/caminhoes/. São 4 cavalos: cav_cinza (6x2), cav_verde (6x2), cav_azul (4x2) e cav_laranja (4x2). Cada um tem a versão branca (_branco.jpg) e o molde de pintura em skins/.
+Carretas: car_grade3 (grade 3 eixos), car_grade5 (grade alta 5 eixos) e bitrem_1 + bitrem_2 (bitrem lonado, as 2 carretas dobram na curva). O baú continua o antigo, até chegar um modelo 3D de baú.
+Qualquer cavalo puxa qualquer carreta, porque o engate de cada um está medido.
+Quem escolhe a carreta é a carga: grãos e fertilizante vão no bitrem; bebidas, cimento e sacaria na grade 3 eixos; frutas e madeira na grade alta; o resto no baú.
+Grade e bitrem não têm portas: é só parar na área DESCARGA.
+A garagem (☰) tem a lista "Caminhões". A pintura funciona igual à dos ônibus.
