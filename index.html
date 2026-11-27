@@ -790,7 +790,7 @@ const PROF={
   lamps:{head:[[.8,.85,6.04],[-.8,.85,6.04]],tail:[[1.12,1.6,-6.04],[-1.12,1.6,-6.04]],il:[[1.1,1.1,6.02],[1.12,1.1,-6.05]],ir:[[-1.1,1.1,6.02],[-1.12,1.1,-6.05]]}},
  urban:{wb:4.83,seat:[.6,2.15,4.3],cockOff:[0,-.45,-.75],hl:5.28,hw:1.18,exit:[-2.2,4.07],door:[-1.7,4.07],hasLug:false,interior:'urban',hubs:true,
   lamps:{head:[[.82,.92,5.24],[-.82,.92,5.24]],tail:[[.98,1.35,-5.26],[-.98,1.35,-5.26]],il:[[1,1.26,5.16],[1.05,1.65,-5.26]],ir:[[-1,1.26,5.16],[-1.05,1.65,-5.26]]}}};
-const PKEYS=['intMesh','eng5','engY','wheels','front','doors','wb','glows','halos','seat','cockOff','hl','hw','cz','exit','door','hasLug','lant','dentro','corpo','name','accel','maxSpeed','brakeF','gears','redline','maxSteer','top','camD','camH'];
+const PKEYS=['l3d','intMesh','eng5','engY','wheels','front','doors','wb','glows','halos','seat','cockOff','hl','hw','cz','exit','door','hasLug','lant','dentro','corpo','name','accel','maxSpeed','brakeF','gears','redline','maxSteer','top','camD','camH'];
 function interior(root,kind){const add=(geo,m,x,y,z,rx)=>{const e=new THREE.Mesh(geo,m);e.position.set(x,y,z);if(rx)e.rotation.x=rx;root.add(e);return e};
  const bx=(w,h,d,x,y,z,m,rx)=>{const e=add(BOX1,m,x,y,z,rx);e.scale.set(w,h,d);return e};
  const FL=mat(0x4a4f57),WALL=mat(0x3a3f47),CEIL=mat(0xd8d6d0),YEL=mat(0xe0c341),GRY=mat(0x8d9398),RED=mat(0xc8312e);
@@ -898,7 +898,7 @@ function applyGLB(v,M,def){const PR={...def.prof};{const F=farolCfg(def.id);if(F
  const root=new THREE.Group();v.g.add(root);v.glbRoot=root;v.busId=def.id;
  const G2={wheels:[],front:[],doors:[],glows:[],halos:[],dentro:[],intMesh:[],lant:null,name:def.tipo==='coach'?'ônibus':def.tipo==='truck'?'caminhão':'ônibus urbano',eng5:PR.engate,engY:PR.engY,...def.fis};for(const k of PKEYS)if(PR[k]!==undefined)G2[k]=PR[k];
  for(const n of M.nodes){const piv=new THREE.Group();piv.position.fromArray(n.t);root.add(piv);const sp=new THREE.Group();piv.add(sp);
-  for(const p of n.prims){const mt=M.mats[p.mi]||M.mats[0];const m=new THREE.Mesh(p.g,mt);m.castShadow=!mt.transparent;m.receiveShadow=true;if(n.name==='carroceria')m.userData.corpo=true;if(n.name==='carroceria_dentro')G2.dentro.push(m);if(n.name==='interior'){G2.intMesh.push(m);m.visible=false;m.castShadow=false}sp.add(m)}
+  for(const p of n.prims){const mt=M.mats[p.mi]||M.mats[0];const m=new THREE.Mesh(p.g,mt);m.castShadow=!mt.transparent;m.receiveShadow=true;if(n.name==='carroceria')m.userData.corpo=true;if(n.name==='carroceria_dentro')G2.dentro.push(m);if(n.name==='interior'){G2.intMesh.push(m);m.visible=false;m.castShadow=false}sp.add(m);if(n.name.startsWith('porta')){const c=new THREE.Mesh(p.g,PORTA_COSTAS);c.userData.costas=true;sp.add(c)}}
   if(n.name.startsWith('roda')){G2.wheels.push(sp);if(n.name.includes('dianteira'))G2.front.push(piv);
    if(PR.hubs){const g=n.prims[0].g;g.computeBoundingBox();const bb=g.boundingBox,r=(bb.max.y-bb.min.y)/2,ox=n.t[0]<0?bb.min.x-.005:bb.max.x+.005;
     const h=new THREE.Mesh(WHEELG,RIM);h.scale.set(.04,r*.62,r*.62);h.position.x=ox;sp.add(h);const k=new THREE.Mesh(BOX1,SPOKE);k.scale.set(.06,r*1.1,.1);k.position.x=ox;sp.add(k);
@@ -908,10 +908,11 @@ function applyGLB(v,M,def){const PR={...def.prof};{const F=farolCfg(def.id);if(F
  montarLuzes(root,G2,v.hm,def);
  {const lc=lantCfgV(v,def);if(lc){try{G2.lant=montarLant(root,lc,def.id)}catch(e){console.warn('lanterna',e)}}}
  if(PR.interior!=='none'){const ig=new THREE.Group();ig.position.z=PR.intZ||0;root.add(ig);interior(ig,PR.interior)}
- if(!G2.intMesh.length)try{cabine(root,def,G2)}catch(e){console.warn('cabine',e)}
+ if(!G2.intMesh.length){let ok=false;try{ok=cabineG7(root,def,G2)}catch(e){console.warn('cabineG7',e)}if(!ok||def.tipo==='truck')try{cabine(root,def,G2,ok)}catch(e){console.warn('cabine',e)}}
+ try{G2.l3d=lanternas3D(root,def)}catch(e){console.warn('lanternas3D',e);G2.l3d=null}
  {const sus=new THREE.Group();const keep=new Set(G2.wheels.map(w=>w.parent));for(const ch of root.children.slice())if(!keep.has(ch)){root.remove(ch);sus.add(ch)}root.add(sus);root.userData.susp=sus;aplicarSusp(v,def)}
  v.setGLB=G2;if(!v.setProc){v.setProc={glows:null,cockOff:[0,0,0],lant:null,dentro:null,corpo:null};for(const k of PKEYS)if(v.setProc[k]===undefined)v.setProc[k]=v[k]}
- {const cs=[];root.traverse(o=>{if(o.isMesh&&o.geometry.attributes.skinuv)cs.push(o)});
+ {const cs=[];root.traverse(o=>{if(o.isMesh&&o.geometry.attributes.skinuv&&!o.userData.costas)cs.push(o)});
   if(cs.length){const base=cs[0].material,U={skinMap:{value:TEX1},uSkin:{value:0},uVidro:{value:1},vidMask:{value:TEX1},uMask:{value:0},uCorpo:{value:new THREE.Color(1,1,1)},uCorpo2:{value:new THREE.Color(1,1,1)},uCorpo3:{value:new THREE.Color(1,1,1)},uCorpo4:{value:new THREE.Color(1,1,1)},vidMap:{value:TEX1},detMap:{value:TEX1},luzMap:{value:TEX1},uVid:{value:0},uDet:{value:0},uFr:{value:new THREE.Vector4()},uLt:{value:new THREE.Vector4()},uFarol:{value:0},uSetaE:{value:0},uSetaD:{value:0},uLetr:{value:0},drlMap:{value:TEX1},uDRL:{value:0}},mat=matCorpo(base,U);for(const o of cs)o.material=mat;G2.corpo={mat,orig:base.map,U};if(DETR[def.id]||def.prof.vidro)mascaraVidro(def.id).then(t=>{U.vidMask.value=t;U.uMask.value=1}).catch(()=>{})}else G2.corpo=null}
  useModel(v,true);aplicarPintura(v)}
 function useModel(v,glb){if(!v.glbRoot)return;const set=glb?v.setGLB:v.setProc,old=glb?v.setProc:v.setGLB;
@@ -923,7 +924,7 @@ G.model=ler('rb_model','glb');
 const MODELS={};
 async function getModel(id){if(MODELS[id])return MODELS[id];const df=busDef(id),f=(df&&df.pasta||PASTA_ONIBUS)+id+'.glb',r=await fetch(f);if(!r.ok)throw new Error(f+' não encontrado');
  const M=await parseGLB(await r.arrayBuffer());if(!M.nodes.length)throw new Error('modelo vazio');return MODELS[id]=M}
-async function carregarOnibus(id){const def=busDef(id);if(def.prof.rodas)await getRoda();return getModel(id)}
+async function carregarOnibus(id){const def=busDef(id);if(def.prof.rodas)await getRoda();if(def.tipo!=='urban')await getCab(def.tipo);return getModel(id)}
 /* coloca o ônibus escolhido no veículo do jogador (e nos ônibus da rodoviária, se for rodoviário) */
 function loadBusModel(){G.modelErr=null;syncModelBtn();
  Promise.all(['coach','urban','truck'].map(t=>{const id=G.busSel[t];return carregarOnibus(id).then(M=>{if(G.model!=='glb'||G.busSel[t]!==id)return;const def=busDef(id);
@@ -1390,14 +1391,15 @@ function desenharLuzes(){const A=G.ajL;if(!A)return;const C=A.cfg,bt=(id,t,cor)=
   h+=bt('esp',p.esp===false?'Só um lado':'↔ Os dois lados',p.esp===false?'':'#7d5ba6')+bt('del','🗑 Tirar')}
  h+=`<span class="aj">Novo: ${Object.keys(TIPOS_LUZ).map(k=>bt('n:'+k,'+ '+TIPOS_LUZ[k])).join('')}</span>`;
  const T=A.teste;h+=`<span class="aj">${bt('tl',['Faróis desligados','Farol baixo','Farol alto'][T.luz],T.luz?'#8a7a10':'')}${bt('tf','Freio',T.freio?'#c0392b':'')}${bt('tr','Ré',T.re?'#888':'')}${bt('ts','Setas',T.seta?'#c77a10':'')}</span>`;
- h+=bt('vista',A.vista==='frente'?'Ver traseira':'Ver frente')+bt('passo',A.passo>1?'Passo: grosso':'Passo: fino',A.passo>1?'#8a5a10':'')+bt('salvar','💾 Salvar','#1f7a3a')+bt('padrao','Padrão')+bt('fechar','✖');
+ {const l3=C.l3d!==undefined?!!C.l3d:l3dPadrao(busDef(A.id));h+=bt('l3d',l3?'Lanternas 3D: sim':'Lanternas 3D: não',l3?'#1f6a8a':'')}h+=bt('vista',A.vista==='frente'?'Ver traseira':'Ver frente')+bt('passo',A.passo>1?'Passo: grosso':'Passo: fino',A.passo>1?'#8a5a10':'')+bt('salvar','💾 Salvar','#1f7a3a')+bt('padrao','Padrão')+bt('fechar','✖');
  A.el.innerHTML=h;ligarLuzes()}
 function ligarLuzes(){const A=G.ajL;A.el.querySelectorAll('[data-u]').forEach(e=>{const k=e.dataset.u;
  if(e.tagName==='SELECT'){e.onchange=()=>{if(k==='modelo')trocarLuzes(e.value);else{A.cfg.pontos[A.sel].t=e.value;aplicarLuzes()}};return}
  e.onclick=async()=>{const C=A.cfg;
   if(k==='fechar'){fecharLuzes();return}
   if(k==='passo'){A.passo=A.passo>1?1:5;desenharLuzes();return}
-  if(!C)return;const T=A.teste;
+  if(!C)return;
+  if(k==='l3d'){C.l3d=!(C.l3d!==undefined?!!C.l3d:l3dPadrao(busDef(A.id)));aplicarLuzes();return}const T=A.teste;
   if(k==='tl'){T.luz=(T.luz+1)%3;desenharLuzes();return}if(k==='tf'){T.freio=!T.freio;desenharLuzes();return}if(k==='tr'){T.re=!T.re;desenharLuzes();return}if(k==='ts'){T.seta=!T.seta;desenharLuzes();return}
   if(k==='vista'){A.vista=A.vista==='frente'?'tras':'frente';visaoLuzes();desenharLuzes();return}
   if(k.startsWith('s:')){A.sel=+k.slice(2);desenharLuzes();return}
@@ -1416,7 +1418,7 @@ function ligarLuzes(){const A=G.ajL;A.el.querySelectorAll('[data-u]').forEach(e=
 const CABM={deg:new THREE.MeshLambertMaterial({color:0x6a7079}),bor:new THREE.MeshLambertMaterial({color:0xe0b020}),piso:new THREE.MeshLambertMaterial({color:0x3a3d42}),
  par:new THREE.MeshLambertMaterial({color:0xd6d9dd}),div:new THREE.MeshLambertMaterial({color:0xa7adb5}),porta:new THREE.MeshLambertMaterial({color:0x5f6670}),vid:new THREE.MeshLambertMaterial({color:0x1d242c}),
  metal:new THREE.MeshLambertMaterial({color:0xcfd2d6}),teto:new THREE.MeshLambertMaterial({color:0xd8d6d0}),cort:new THREE.MeshLambertMaterial({color:0x34405a}),couro:new THREE.MeshLambertMaterial({color:0x2a2c30})};
-function cabine(root,def,G2){const P=def.prof,g=new THREE.Group();g.name='cabine';root.add(g);
+function cabine(root,def,G2,semBanco){const P=def.prof,g=new THREE.Group();g.name='cabine';root.add(g);
  const cx=(w,h,d,m,x,y,z)=>{const e=new THREE.Mesh(BOX1,m);e.scale.set(w,h,d);e.position.set(x,y,z);e.receiveShadow=true;g.add(e);return e};
  const hw=(P.hw||1.25)-.06,top=P.top||3.5,seat=P.seat||[.6,2,5],F=(P.hl||6)+(P.cz||0);
  /* moldura do para-brisa e painel (por dentro a lataria some, então a cabine tem colunas próprias) */
@@ -1424,12 +1426,13 @@ function cabine(root,def,G2){const P=def.prof,g=new THREE.Group();g.name='cabine
   for(const sg of [1,-1]){const c=cx(.09,yt-yb,.1,CABM.couro,sg*(hw-.03),(yt+yb)/2,zf);c.rotation.x=-.18}
   cx(2*hw,.14,.16,CABM.couro,0,yt+.04,zf-.06);
   for(const sg of [1,-1])cx(.1,yt-yb,.1,CABM.couro,sg*(hw-.03),(yt+yb)/2,seat[2]-.65)}
- if(def.tipo==='truck'){const fl=Math.max(1.2,seat[1]-1.15),zb=seat[2]-.75,zf=Math.min(F-.35,seat[2]+1.1),zm=(zb+zf)/2;
+ if(def.tipo==='truck'){const fl=semBanco?seat[1]-1.38:Math.max(1.2,seat[1]-1.15),zb=seat[2]-.75,zf=Math.min(F-.35,seat[2]+1.1),zm=(zb+zf)/2;
   cx(2*hw,.06,zf-zb,CABM.piso,0,fl,zm);                                   // assoalho
   cx(2*hw,top-fl-.15,.06,CABM.cort,0,(top+fl)/2,zb);                      // fundo com a cortina da cama
   for(const sg of [1,-1])cx(.05,.75,zf-zb-.2,CABM.couro,sg*hw,fl+.4,zm);  // portas por dentro (até a janela)
   cx(2*hw,.05,zf-zb,CABM.teto,0,top-.12,zm);
-  const bc=cx(.5,.55,.5,CABM.couro,seat[0],fl+.3,seat[2]-.1),en=cx(.5,.7,.1,CABM.couro,seat[0],fl+.9,seat[2]-.38);return}
+  if(!semBanco){cx(.5,.55,.5,CABM.couro,seat[0],fl+.3,seat[2]-.1);cx(.5,.7,.1,CABM.couro,seat[0],fl+.9,seat[2]-.38)}
+  for(const m of g.children){m.visible=false;m.castShadow=false;G2.intMesh.push(m)}return}
  const fl=Math.max(.75,seat[1]-1.2),dz=(P.door&&P.door[1])||F-1,z0=dz-.55,z1=dz+.55,xd=-hw,xi=-.25;
  // degraus da entrada (do chão até a cabine)
  const n=3,h0=.38,dh=(fl-h0)/n;for(let i=0;i<n;i++){const y=h0+dh*i,w=(xi-xd)-i*.16,x=xd+((xi-xd)-w)/2+w/2+i*.16;
@@ -1446,6 +1449,78 @@ function cabine(root,def,G2){const P=def.prof,g=new THREE.Group();g.name='cabine
  // divisória com porta atrás do motorista (esconde as poltronas)
  const hp=top-.3-fl,yp=fl+hp/2;cx(2*hw,hp,.06,CABM.div,0,yp,zp);
  const pt=cx(.75,Math.min(1.95,hp-.05),.04,CABM.porta,-.05,fl+Math.min(1.95,hp-.05)/2,zp+.035);cx(.42,.5,.02,CABM.vid,-.05,fl+1.45,zp+.06);cx(.04,.18,.06,CABM.metal,.25,fl+1,zp+.07)}
+/* ---------- cabine do G7 1200 (ônibus) e do FH16 (caminhões) para os veículos sem interior ---------- */
+const PORTA_COSTAS=new THREE.MeshStandardMaterial({color:0x8e9196,roughness:.55,metalness:.25,side:THREE.BackSide,polygonOffset:true,polygonOffsetFactor:2,polygonOffsetUnits:2});
+const CAB_INFO={coach:{arq:'modelos/cabines/cabine_onibus.glb',W:1.26,esp:.16,F0:-.73,B0:-1.86,zf:1.5},truck:{arq:'modelos/cabines/cabine_caminhao.glb',W:1.16,esp:.14,F0:null,zf:.85}},CABS={},CAB_GEO={};
+async function getCab(t){const k=t==='truck'?'truck':'coach';if(CABS[k]!==undefined)return CABS[k];
+ try{const r=await fetch(CAB_INFO[k].arq);if(!r.ok)throw new Error(r.status);CABS[k]=await parseGLB(await r.arrayBuffer())}catch(e){console.warn('cabine',k,e);CABS[k]=null}return CABS[k]}
+const cabCfg=id=>Object.assign({dz:0,dy:0,sw:1},(G.cabPrev&&G.cabPrev.id===id?G.cabPrev.cfg:null)||(G.suspArq[id]||{}).cab||{});
+function cabineG7(root,def,G2){const k=def.tipo==='truck'?'truck':def.tipo==='coach'?'coach':null,M=k&&CABS[k];if(!M||!M.nodes.length)return false;
+ const I=CAB_INFO[k],P=def.prof,seat=P.seat||[.6,2,5],hw=P.hw||1.25,F=(P.hl||6)+(P.cz||0),C=cabCfg(def.id);
+ const sx=(hw-I.esp)/I.W*(+C.sw||1),Y=seat[1]+(+C.dy||0);let Z=seat[2]+(+C.dz||0);if(!C.dz&&Z+I.zf>F-.3)Z=F-.3-I.zf;
+ const g=new THREE.Group();g.name='cabineG7';g.position.set(0,Y,Z);root.add(g);G2.seat=[+(seat[0]>0?.62*sx:seat[0]).toFixed(3),Y,Z];
+ const key=k+'|'+sx.toFixed(3)+'|'+Y.toFixed(3);
+ for(const n of M.nodes)for(const [j,p] of n.prims.entries()){const kk=key+'|'+n.name+j;let geo=CAB_GEO[kk];
+  if(!geo){geo=p.g.clone();const a=geo.attributes.position,b0=.40-Y;
+   for(let i=0;i<a.count;i++){let x=a.getX(i)*sx,y=a.getY(i);
+    if(I.F0!=null&&y<I.F0){const t=(y-I.B0)/(I.F0-I.B0);y=I.F0-b0>.08?b0+t*(I.F0-b0):Math.max(y,b0)}
+    a.setXYZ(i,x+n.t[0]*sx,y+n.t[1],a.getZ(i)+n.t[2])}
+   a.needsUpdate=true;geo.computeVertexNormals();geo.computeBoundingSphere();CAB_GEO[kk]=geo}
+  const m=new THREE.Mesh(geo,M.mats[p.mi]||M.mats[0]);m.visible=false;m.receiveShadow=true;g.add(m);G2.intMesh.push(m)}
+ return true}
+/* ---------- lanternas 3D (dianteiras e traseiras) feitas no jogo, no estilo dos ônibus novos ---------- */
+const L3D_REAIS=new Set(['rodoviario_g7','rodoviario_4e','rodoviario_tourismo','cav_fh16']);
+const l3dPadrao=def=>def.tipo==='coach'&&!L3D_REAIS.has(def.id)&&!def.prof.vidro;
+const l3dLigado=def=>{const c=luzesCfg(def.id);return c&&c.l3d!==undefined?!!c.l3d:l3dPadrao(def)};
+function rrShape(w,h,r){const s=new THREE.Shape(),x=-w/2,y=-h/2;r=Math.max(.001,Math.min(r,w/2,h/2));
+ s.moveTo(x+r,y);s.lineTo(x+w-r,y);s.quadraticCurveTo(x+w,y,x+w,y+r);s.lineTo(x+w,y+h-r);s.quadraticCurveTo(x+w,y+h,x+w-r,y+h);s.lineTo(x+r,y+h);s.quadraticCurveTo(x,y+h,x,y+h-r);s.lineTo(x,y+r);s.quadraticCurveTo(x,y,x+r,y);return s}
+const L3G={};function rrGeo(w,h,r,d,bev){const k=[w,h,r,d,bev||0].map(v=>v.toFixed(3)).join();if(L3G[k])return L3G[k];
+ const g=new THREE.ExtrudeGeometry(rrShape(w,h,r),{depth:d,bevelEnabled:!!bev,bevelThickness:bev||0,bevelSize:bev||0,bevelSegments:2,curveSegments:8});g.translate(0,0,-d);return L3G[k]=g}
+const L3M={casco:new THREE.MeshStandardMaterial({color:0x0a0b0e,metalness:.55,roughness:.2}),cromo:new THREE.MeshStandardMaterial({color:0xd3d6dc,metalness:1,roughness:.16}),
+ fundo:new THREE.MeshStandardMaterial({color:0x07080a,metalness:.3,roughness:.35}),refl:new THREE.MeshStandardMaterial({color:0xaab0b8,metalness:1,roughness:.08})};
+const L3_CUP=new THREE.CylinderGeometry(1,1,1,24,1,true).rotateX(Math.PI/2),L3_LENTE=new THREE.SphereGeometry(1,20,10,0,Math.PI*2,0,Math.PI/2).rotateX(Math.PI/2),L3_ARO=new THREE.TorusGeometry(1,.12,8,28);
+function lanternas3D(root,def){if(!l3dLigado(def))return null;const C=luzesCfg(def.id);if(!C||!C.pontos)return null;
+ const lente=(cor,emi)=>new THREE.MeshStandardMaterial({color:cor,emissive:emi,emissiveIntensity:0,metalness:.1,roughness:.12});
+ const M={head:lente(0xdfe6ee,0xfff4dc),alto:lente(0xdfe6ee,0xeef3ff),drl:lente(0xe8ecf2,0xffffff),tail:lente(0x55080a,0xff1a0c),re:lente(0xc9ccd2,0xffffff),il:lente(0x6a3a00,0xff9800),ir:lente(0x6a3a00,0xff9800)};
+ const pts=[];for(const p of C.pontos)for(const sg of (p.esp===false?[1]:[1,-1]))pts.push({t:p.t,x:p.x*sg,y:+p.y,z:+p.z});
+ const lg=new THREE.Group();lg.name='lanternas3D';root.add(lg);
+ const add=(geo,mat,par,x,y,z,sx,sy,sz)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);if(sx)m.scale.set(sx,sy,sz);m.castShadow=false;par.add(m);return m};
+ for(const sg of [1,-1]){
+  // ---- frente ----
+  const fr=pts.filter(p=>p.z>0&&p.x*sg>0),far=fr.filter(p=>p.t==='farol');
+  if(far.length){const al=fr.filter(p=>p.t==='alto'),c0=far.reduce((a,p)=>a+p.x,0)/far.length,y0=far.reduce((a,p)=>a+p.y,0)/far.length;
+   const usa=[...far,...al].filter(p=>Math.abs(p.x-c0)<.8&&Math.abs(p.y-y0)<.5);
+   const xs=usa.map(p=>p.x),ys=usa.map(p=>p.y),zF=Math.max(...far.map(p=>p.z));
+   const r=.07,w=Math.max(.56,Math.max(...xs)-Math.min(...xs)+2*r+.3),h=Math.max(.26,Math.max(...ys)-Math.min(...ys)+2*r+.12);
+   const cx=(Math.max(...xs)+Math.min(...xs))/2+sg*.06,cy=(Math.max(...ys)+Math.min(...ys))/2;
+   const u=new THREE.Group();u.position.set(cx,cy,zF+.03);lg.add(u);
+   add(rrGeo(w,h,h*.38,.08,.012),L3M.casco,u,0,0,0);
+   add(rrGeo(w-.03,h-.03,(h-.03)*.36,.006),L3M.cromo,u,0,0,.016);
+   add(rrGeo(w-.065,h-.065,(h-.065)*.34,.006),L3M.fundo,u,0,0,.02);
+   const lens=usa.length>1?usa:[...usa,{t:'alto',x:usa[0].x-sg*.2,y:usa[0].y}];
+   for(const p of lens){const lx=p.x-cx,ly=p.y-cy,rr=Math.min(r,h*.3);
+    add(L3_CUP,L3M.refl,u,lx,ly,.02,rr*1.35,rr*1.35,.03);add(L3_ARO,L3M.cromo,u,lx,ly,.024,rr*1.3,rr*1.3,rr*1.3);add(L3_LENTE,M[p.t==='alto'?'alto':'head'],u,lx,ly,.02,rr,rr,rr*.7)}
+   add(rrGeo(.06,h-.1,.03,.006),M[sg>0?'il':'ir'],u,sg*(w/2-.065),0,.026);                          // seta âmbar na ponta
+   add(rrGeo(w-.2,.024,.012,.006),M.drl,u,-sg*.03,-h/2+.04,.026);                                   // LED diurno
+   add(rrGeo(w*.45,.016,.008,.006),M.drl,u,-sg*(w*.2),h/2-.035,.026)}
+  // ---- traseira ----
+  const tr=pts.filter(p=>p.z<0&&p.x*sg>0),lan=tr.filter(p=>p.t==='lanterna');
+  if(lan.length){const usa=tr.filter(p=>p.t==='lanterna'||p.t==='re'||p.t==='seta').filter(p=>Math.abs(p.x-lan[0].x)<.5&&Math.abs(p.y-lan[0].y)<.9);
+   const xs=usa.map(p=>p.x),ys=usa.map(p=>p.y),zT=Math.min(...usa.map(p=>p.z));
+   const w=Math.max(.3,Math.min(.5,Math.max(...xs)-Math.min(...xs)+.18)),h=Math.max(.86,Math.min(1.3,Math.max(...ys)-Math.min(...ys)+.32));
+   const cx=(Math.max(...xs)+Math.min(...xs))/2,cy=(Math.max(...ys)+Math.min(...ys))/2;
+   const u=new THREE.Group();u.position.set(cx,cy,zT-.03);u.rotation.y=Math.PI;lg.add(u);
+   const ord=usa.slice().sort((a,b)=>b.y-a.y).map(p=>p.t==='seta'?'seta':p.t);
+   if(!ord.includes('seta'))ord.splice(Math.min(1,ord.length),0,'seta');if(!ord.includes('re'))ord.push('re');if(ord.filter(t=>t==='lanterna').length<2)ord.push('lanterna');
+   add(rrGeo(w,h,w*.42,.08,.012),L3M.casco,u,0,0,0);add(rrGeo(w-.03,h-.03,(w-.03)*.4,.006),L3M.cromo,u,0,0,.016);
+   const hi=h-.08,sh=hi/ord.length;
+   ord.forEach((t,i)=>{const y=hi/2-sh*(i+.5);add(rrGeo(w-.07,sh-.028,Math.min(.03,(sh-.03)/2),.008),t==='seta'?M[sg>0?'il':'ir']:t==='re'?M.re:M.tail,u,0,y,.026)});
+   add(rrGeo(.022,h-.12,.011,.006),M.tail,u,sg*(w/2-.03),0,.032)}}                                       // guia de LED vermelha
+ return{M,g:lg}}
+function l3dQuadro(o,hm,A){const M=o.l3d.M,on=A?true:o.on;
+ M.head.emissiveIntensity=.04+hm.head.opacity*2.4;M.alto.emissiveIntensity=.04+(hm.alto?hm.alto.opacity:0)*2.6;
+ M.drl.emissiveIntensity=on||hm.head.opacity>0?1.6:.03;M.tail.emissiveIntensity=.12+hm.tail.opacity*2.2;
+ M.re.emissiveIntensity=(hm.re?hm.re.opacity:0)*2.2;M.il.emissiveIntensity=hm.il.opacity*2.6;M.ir.emissiveIntensity=hm.ir.opacity*2.6}
 /* ---------- suspensão: dianteira e traseira, limite do administrador ---------- */
 G.suspArq={};
 const SUSP_PADRAO={rodoviario_4e:{f:.08,r:.08,lim:.12}};
@@ -1536,8 +1611,14 @@ function netSalvarPecas(){if(!NET.user||!G.active)return;const r=NET.meus.find(x
 function desenharAdmSusp(el){const v=G.active,id=v&&v.busId;if(!id){el.innerHTML='';return}const c=suspCfg(id),cm=x=>Math.round(x*100);
  el.innerHTML=`<h4>Suspensão · ${busDef(id).nome}</h4><div class="admV"><label>Altura de fábrica dianteira <input data-q="f" type="number" step="1" value="${cm(c.f)}"> cm</label><label>traseira <input data-q="r" type="number" step="1" value="${cm(c.r)}"> cm</label><label>O jogador sobe/abaixa até ± <input data-q="lim" type="number" min="0" step="1" value="${cm(c.lim)}"> cm</label><button class="btn" data-q="ver">Ver</button><button class="btn" data-q="salvar">Salvar</button></div>`;
  const ler=()=>({f:(+el.querySelector('[data-q=f]').value||0)/100,r:(+el.querySelector('[data-q=r]').value||0)/100,lim:Math.max(0,(+el.querySelector('[data-q=lim]').value||0)/100)});
- el.querySelector('[data-q=ver]').onclick=()=>{G.suspArq[id]=ler();aplicarSuspId(id);toast('Aplicado no ônibus (feche o painel para ver)',2000)};
- el.querySelector('[data-q=salvar]').onclick=async()=>{const d=ler();G.suspArq[id]=d;aplicarSuspId(id);const ok=await netSalvarAjuste(id,'suspensao',d);toast(ok?'Suspensão salva para todos':'Não salvei no servidor',2500)}}
+ el.querySelector('[data-q=ver]').onclick=()=>{const cb=(G.suspArq[id]||{}).cab;G.suspArq[id]=ler();if(cb)G.suspArq[id].cab=cb;aplicarSuspId(id);toast('Aplicado no ônibus (feche o painel para ver)',2000)};
+ el.querySelector('[data-q=salvar]').onclick=async()=>{const d=ler();const cb=(G.suspArq[id]||{}).cab;if(cb)d.cab=cb;G.suspArq[id]=d;aplicarSuspId(id);const ok=await netSalvarAjuste(id,'suspensao',d);toast(ok?'Suspensão salva para todos':'Não salvei no servidor',2500)}
+ {const def=busDef(id),cb=cabCfg(id),d=document.createElement('div');d.innerHTML=`<h4 style="margin-top:14px">Cabine (1ª pessoa) · ${def.nome}</h4><div class="admV"><label>Frente/trás <input data-c="dz" type="number" step="1" value="${Math.round(cb.dz*100)}"> cm</label><label>Altura <input data-c="dy" type="number" step="1" value="${Math.round(cb.dy*100)}"> cm</label><label>Largura <input data-c="sw" type="number" step="1" value="${Math.round(cb.sw*100)}"> %</label><button class="btn" data-c="ver">Ver</button><button class="btn" data-c="salvar">Salvar</button><button class="btn" data-c="zerar">Zerar</button></div><p style="opacity:.75;font-size:12px;margin:4px 0">Vale para os veículos que usam a cabine do G7 1200 (ônibus) ou do FH16 (caminhões). Feche o painel e use a câmera de 1ª pessoa para conferir.</p>`;el.appendChild(d);
+  const lc=()=>({dz:(+d.querySelector('[data-c=dz]').value||0)/100,dy:(+d.querySelector('[data-c=dy]').value||0)/100,sw:Math.max(.5,Math.min(1.5,(+d.querySelector('[data-c=sw]').value||100)/100))});
+  const pega=()=>Object.assign({},suspCfg(id),G.suspArq[id]||{});
+  d.querySelector('[data-c=ver]').onclick=()=>{const s=pega();s.cab=lc();G.suspArq[id]=s;reaplicarModelo(id);toast('Cabine aplicada (feche o painel e veja em 1ª pessoa)',2200)};
+  d.querySelector('[data-c=zerar]').onclick=()=>{d.querySelector('[data-c=dz]').value=0;d.querySelector('[data-c=dy]').value=0;d.querySelector('[data-c=sw]').value=100};
+  d.querySelector('[data-c=salvar]').onclick=async()=>{const s=pega();s.cab=lc();G.suspArq[id]=s;reaplicarModelo(id);const ok=await netSalvarAjuste(id,'suspensao',s);toast(ok?'Cabine salva para todos':'Não salvei no servidor',2500)}}}
 function desenharAdmSkins(el){G.admSk=G.admSk||(G.active&&G.active.busId)||FROTA.find(b=>b.prof.base).id;const ops=FROTA.map(b=>`<option value="${b.id}"${b.id===G.admSk?' selected':''}>${b.nome}</option>`).join('');G.admSk=G.admSk||(G.active&&G.active.busId)||FROTA.find(b=>b.prof.base).id;
  const L=Object.values(NET.skins).filter(s=>s.modelo===G.admSk).sort((a,b)=>b.id-a.id),st={beta:'🧪 Beta',publico:'✅ Pública',oculto:'🚫 Oculta'};
  let h=`<h4>Skins</h4><div class="row" style="justify-content:flex-start;flex-wrap:wrap;gap:6px"><select id="admSkM" class="admSel">${ops}</select><button class="btn" data-s="molde">⬇ Baixar molde</button><label class="btn" style="cursor:pointer">📤 Enviar skin<input id="admSkF" type="file" accept="image/png,image/jpeg" style="display:none"></label></div>
@@ -1924,7 +2005,7 @@ function sync(o,dt){o.g.position.set(o.x,0,o.z);o.g.rotation.y=o.h;facho(o);
   if(o.glows)for(const e of o.glows)e.visible=e.material.emissiveIntensity>0;
   {const hm=o.hm;hm.head.opacity=o.lights?(o.lights===2?1:.7):0;hm.tail.opacity=o.brk?1:(o.lights?.38:0);hm.il.opacity=o.indL&&G.blink?.95:0;hm.ir.opacity=o.indR&&G.blink?.95:0;
    {const A=G.ajL&&G.ajL.v===o?G.ajL.teste:null;if(A){hm.head.opacity=A.luz?(A.luz===2?1:.7):0;hm.tail.opacity=A.freio?1:(A.luz?.38:0);hm.il.opacity=hm.ir.opacity=A.seta&&G.blink?.95:0}
-    if(hm.alto)hm.alto.opacity=(A?A.luz===2:o.lights===2)?1:0;if(hm.re)hm.re.opacity=(A?A.re:o.on&&(o.gear<0||(G.auto&&o.sel==='R')))?.9:0}
+    if(hm.alto)hm.alto.opacity=(A?A.luz===2:o.lights===2)?1:0;if(hm.re)hm.re.opacity=(A?A.re:o.on&&(o.gear<0||(G.auto&&o.sel==='R')))?.9:0;if(o.l3d)l3dQuadro(o,hm,A)}
    for(const s of o.halos){const b=s.userData.b;if(b){if(s.material===hm.head){const k=hm.head.opacity>.9?1.2:1;s.scale.set(b[0]*k,b[1]*k,1)}}else if(s.material===hm.head)s.scale.setScalar(o.lights===2?1.9:1.3)}
    if(o.trailer){const th=o.trailer.hm;th.tail.opacity=hm.tail.opacity;th.il.opacity=hm.il.opacity;th.ir.opacity=hm.ir.opacity;const t2=o.trailer.reboque;if(t2){const h2=t2.hm;h2.tail.opacity=hm.tail.opacity;h2.il.opacity=hm.il.opacity;h2.ir.opacity=hm.ir.opacity;t2.mBrake.emissiveIntensity=o.mBrake.emissiveIntensity}}}
   if(o.spots)for(const s of o.spots){s.intensity=o.lights===2?3.4:o.lights?2.2:0;s.distance=o.lights===2?150:85;s.angle=o.lights===2?.36:.48}if(o.sw)o.sw.rotation.z=-o.steer*4;if(o.needles){o.needles[0].rotation.z=2.2-Math.min(1,Math.abs(o.speed)*3.6/120)*4.4;o.needles[1].rotation.z=2.2-Math.min(1,o.rpm/3000)*4.4}}

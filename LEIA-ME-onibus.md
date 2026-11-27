@@ -209,3 +209,18 @@ Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
 - Atrás do motorista há uma divisória com porta: na primeira pessoa não se veem as poltronas.
 - Primeira pessoa: a câmera fica presa à cabine; por dentro a lataria não tapa mais a visão (só o cenário passa pelos vidros); colunas e moldura do para-brisa próprias; menos tranco.
 - Caminhões: cabine com assoalho, fundo com cortina da cama, portas por dentro e teto.
+
+## Cabine do G7 1200, lanternas 3D, portas e skins novas (27/11, noite)
+- **Cabine do G7 1200 em todos os ônibus** que não têm interior próprio (clássicos 01 a 09, 2 eixos, 3 eixos, clássico): painel, volante, coluna, pedais, câmbio, poltrona do motorista, divisória com porta, teto e escada de entrada. A câmera da 1ª pessoa acompanha a cabine.
+- **Caminhões antigos** (azul, cinza, laranja e verde): painel, volante e bancos do FH16, com as paredes da cabine. Agora tudo isso só aparece na 1ª pessoa ou com a porta aberta; antes umas placas escuras apareciam por fora.
+- **Ajuste da cabine** (administrador): ☰ → 🛠 Administrador → Suspensão → "Cabine (1ª pessoa)": frente/trás, altura e largura. Use "Ver", feche o painel e confira na 1ª pessoa; "Salvar" vale para todos. Fica guardado junto com a suspensão, então não precisa de SQL novo para isso.
+- **Lanternas 3D** feitas no jogo, no estilo dos ônibus novos: farol com moldura cromada, lentes, seta âmbar e LED diurno; lanterna traseira vertical com vermelho, seta, ré e guia de LED. Acendem com farol, freio, ré e setas. Saem nos ônibus que não têm lanterna de verdade (G7, DD e Tourismo continuam com as próprias). Elas seguem os pontos do painel 💡 Luzes; lá tem o botão "Lanternas 3D: sim/não" por veículo.
+- **Portas**: o lado de dentro das portas, que ficava invisível, agora é cinza.
+- **Skins novas, todas em BETA** (só o administrador vê): rode `banco/atualizacao_5.sql` no SQL Editor (pode rodar de novo, não duplica). As imagens ficam na pasta `skins_oficiais/` do site.
+  - G7 1200: Cronos Viações, Expresso SimBR, Expert Bus, Maximus Brasil preto e cinza.
+  - G7 DD: Kondoe, Merlin Prata, Expresso SimBR.
+  - Rodoviário 3 eixos: Expresso Kondoe, Expert SBR, Merlin Prata, Kondoe.
+  - Rodoviário 2 eixos: Expresso Kondoe, SimBR, Merlin Prata.
+  - Clássico 03: Cronos, Expresso SimBR, Merlin Prata. Clássico 09: Cronos, Chapadinha, Maximus Brasil.
+  - Caminhões (azul, cinza, laranja, verde e FH16): FIVE Transportes em 11 cores (branco, prata, grafite, preto, vermelho, vinho, laranja, amarelo, verde, azul e azul-marinho). A grade e os cromados da frente não mudam de cor.
+  - Todas entram com **preço 0**. Antes de deixar uma skin Pública, defina o preço (com preço 0 ela fica grátis para todos).
