@@ -93,3 +93,9 @@ Nos 4 ônibus de carroceria padrão, o painel 🎨 Pintura agora tem 3 moldes. C
   - O lado direito é espelhado do esquerdo.
   - Com o molde de detalhes ativo, a lanterna desenhada passa a usar o seu desenho, e a posição continua a do painel de ajuste.
 Tudo fica salvo no aparelho.
+
+## Peças prontas
+No 🎨 Pintura, em "Peças prontas", você escolhe farol, lanterna, calota e letreiro (Original ou um modelo) e digita o texto do letreiro.
+As imagens ficam em modelos/pecas/. O fundo_farol_<id>.png apaga o farol original por baixo da peça nova.
+Para pôr peças novas, mande a imagem: eu recorto o fundo e coloco a peça na lista PECAS do index.html (o campo p diz em quais ônibus ela serve).
+O molde de detalhes que você baixa já vem com as peças escolhidas desenhadas no lugar.

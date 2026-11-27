@@ -87,6 +87,7 @@ button{font-family:Rajdhani,"Arial Narrow",Arial,sans-serif}
 .bar i{display:block;height:100%;width:100%;background:var(--ok);transition:width .2s}.bar i.lo{background:var(--bad)}.bar i.md{background:var(--acc)}
 #menu,#start{position:fixed;inset:0;z-index:5;display:none;place-items:center;background:rgba(5,7,10,.55);padding:12px}
 #menu.on,#start.on{display:grid}
+.pcG{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-top:4px}.pcL{display:flex;flex-direction:column;font-size:12px;color:#aab;gap:3px}.pcL select,.pcL input{font:inherit;font-size:14px;padding:7px 8px;border-radius:8px;border:1px solid var(--line);background:#1a2027;color:var(--ink)}
 #wmap{position:fixed;inset:0;z-index:6;display:none;place-items:center;background:rgba(5,7,10,.82);padding:10px}#wmap.on{display:grid}#wmap canvas{max-width:100%;max-height:calc(100vh - 70px);border-radius:12px;border:1px solid var(--line)}#wmx{margin-top:8px}
 .card{background:#12161b;border:1px solid var(--line);border-radius:14px;width:min(640px,100%);max-height:calc(100vh - 24px);overflow:auto;padding:16px 18px 18px;touch-action:pan-y}
 .card h2{margin:0;font-size:28px;line-height:1.05}
@@ -903,6 +904,7 @@ function renderBusSel(){const el=$('busSel');if(!el)return;el.innerHTML='';
    bt.innerHTML=`<span>${b.nome}<small>${b.desc} · ${String(b.comp).replace('.',',')} m · ${b.peso} t · até ${vel} km/h</small></span><b>${G.carregando===b.id?'…':on?'✓':''}</b>`;
    bt.onclick=()=>escolherOnibus(b.id);el.appendChild(bt)}}
  const pd=document.createElement('div');pd.id='pinturaSec';pd.innerHTML=htmlPintura();el.insertBefore(pd,el.firstChild);
+ pd.querySelectorAll('select[data-pc]').forEach(s=>s.onchange=()=>escolherPeca(s.dataset.pc,s.value));{const i=pd.querySelector('input[data-txt]');if(i)i.onchange=()=>textoLetreiro(i.value)}
  pd.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const k=b.dataset.p,t=k.slice(2);if(k==='carregar')carregarSkin();else if(k==='modelo')baixarModelo();else if(k.startsWith('m_'))baixarModelo(t);else if(k.startsWith('c_'))carregarExtra(t);else if(k.startsWith('r_'))tirarExtra(t);else escolherPintura(k)})}
 function syncModelBtn(){const b=$('oModel');if(!b)return;const ok=MODELS[G.busSel.coach]&&MODELS[G.busSel.urban];
  b.textContent='Ônibus: '+(G.model==='glb'?(ok?'modelo 3D':G.modelErr?'modelo 3D (erro: '+G.modelErr+')':'modelo 3D (carregando…)'):'simples')}
@@ -952,7 +954,7 @@ function carregarSkin(){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo){
     catch(e){toast('Não consegui salvar a skin: '+(e.message||e),4000)}},'image/png')};
   im.onerror=()=>toast('Esse arquivo não é uma imagem que o navegador abre',3500);im.src=u};
  inp.click()}
-function baixarModelo(t){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo)return;const id=v.busId,nome='modelo_'+id+(t==='vid'?'_vidros.jpg':t==='det'?'_detalhes.png':'.jpg');toast('Baixando o molde…',1500);
+function baixarModelo(t){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo)return;if(t==='det'&&temDet(G.pintura2[v.busId])){const nome='modelo_'+v.busId+'_detalhes.png';montaDet(v.busId,true).then(c=>c.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nome;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast('Salvo em Downloads: '+nome,3500)},'image/png'));return}const id=v.busId,nome='modelo_'+id+(t==='vid'?'_vidros.jpg':t==='det'?'_detalhes.png':'.jpg');toast('Baixando o molde…',1500);
  fetch(PASTA_ONIBUS+'skins/'+nome).then(r=>{if(!r.ok)throw new Error(nome);return r.blob()}).then(b=>{const f=new File([b],nome,{type:t==='det'?'image/png':'image/jpeg'});
   if(TOUCH&&navigator.canShare&&navigator.canShare({files:[f]}))return navigator.share({files:[f],title:nome}).catch(()=>{});
   const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nome;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast('Salvo em Downloads: '+nome,3500)})
@@ -964,6 +966,30 @@ const DETR={urbano:{c:182.6,fa:[48,1040,102,1085],pf:[156,1095,210,1116],pt:[530
  rodoviario_4e:{c:172,fa:[27,1384,92,1424],pf:[146,1446,198,1464],pt:[504,1440,553,1458],lt:[95,1208,250,1230],fr:[8,1028,335,1526]}};
 const SLOT={farol:[60,140,760,440],placa:[60,560,760,790],lanterna:[880,140,1180,1340],calota:[1320,140,1920,740],letreiro:[60,1440,1440,1640]};
 G.pintura2=(()=>{try{return JSON.parse(localStorage.getItem('sb_pintura2')||'{}')||{}}catch(e){return{}}})();
+/* peças prontas (imagens em modelos/pecas): p = ônibus em que servem (sem p = todos) */
+const PECAS={farol:[{id:'farol_urbano_1',n:'LED duplo',p:['urbano']}],lanterna:[{id:'lanterna_urbano_1',n:'LED vertical',p:['urbano']}],
+ calota:[{id:'calota_cromada',n:'Cromada'}],letreiro:[{id:'letreiro_led',n:'Painel de LED'}]};
+const PNOME={farol:'Farol',lanterna:'Lanterna',calota:'Calota',letreiro:'Letreiro'};
+function slotDe(id,k){if(k!=='farol')return SLOT[k];const fa=DETR[id].fa,asp=(fa[2]-fa[0])/(fa[3]-fa[1]),fw=300*asp<=700?Math.round(300*asp):700,fh=300*asp<=700?300:Math.round(700/asp);return[60,140,60+fw,140+fh]}
+const PIMG={};function imgPeca(id){return PIMG[id]||(PIMG[id]=new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>{delete PIMG[id];rej(new Error(id))};im.src='modelos/pecas/'+id+'.png'}))}
+const temDet=f=>!!(f&&(f.det||f.txt||(f.pc&&Object.values(f.pc).some(Boolean))));
+/* monta o molde de detalhes: peças escolhidas + texto do letreiro + o desenho do player por cima (verde = vazio) */
+async function montaDet(id,comTexto){const f=G.pintura2[id]||{},pc=f.pc||{};if(!temDet(f)&&!comTexto)return null;
+ const c=cnv(2048,2048),g=c.getContext('2d',{willReadFrequently:true});g.fillStyle='#00ff00';g.fillRect(0,0,2048,2048);
+ if(comTexto){const im=await blobImg(await (await fetch(PASTA_ONIBUS+'skins/modelo_'+id+'_detalhes.png')).blob());g.drawImage(im,0,0,2048,2048)}
+ for(const k in PECAS){const pid=pc[k];if(!pid)continue;const [x0,y0,x1,y1]=slotDe(id,k);try{const im=await imgPeca(pid);g.clearRect(x0,y0,x1-x0,y1-y0);
+  if(k==='farol'){try{const fu=await imgPeca('fundo_farol_'+id);g.globalAlpha=.98;g.drawImage(fu,x0,y0,x1-x0,y1-y0);g.globalAlpha=1}catch(e){}}
+  g.drawImage(im,x0,y0,x1-x0,y1-y0)}catch(e){}}
+ if(f.txt){const [x0,y0,x1,y1]=SLOT.letreiro,w=x1-x0,h=y1-y0;if(!pc.letreiro){g.fillStyle='#0b0b0b';g.fillRect(x0,y0,w,h)}
+  const t=cnv(w,h),q=t.getContext('2d');q.fillStyle='#ffb020';q.font=`700 ${Math.round(h*.62)}px Rajdhani,"Arial Narrow",Arial,sans-serif`;q.textAlign='center';q.textBaseline='middle';
+  const tx=f.txt.toUpperCase().slice(0,28);let sz=Math.round(h*.62);while(q.measureText(tx).width>w*.88&&sz>20){sz-=4;q.font=`700 ${sz}px Rajdhani,"Arial Narrow",Arial,sans-serif`}q.fillText(tx,w/2,h/2+2);
+  q.globalCompositeOperation='destination-out';q.fillStyle='#000';for(let x=0;x<w;x+=9)q.fillRect(x,0,3,h);for(let y=0;y<h;y+=9)q.fillRect(0,y,w,3);g.drawImage(t,x0,y0)}
+ if(f.det){const b=await IDB.get(id+'@det');if(b){const im=await blobImg(b),t=cnv(2048,2048),q=t.getContext('2d',{willReadFrequently:true});q.drawImage(im,0,0,2048,2048);
+  const d=q.getImageData(0,0,2048,2048),a=d.data;for(let i=0;i<a.length;i+=4){const R=a[i],G_=a[i+1],B=a[i+2];if(G_>150&&R<120&&B<120&&G_>R*1.6&&G_>B*1.6)a[i+3]=0}q.putImageData(d,0,0);
+  for(const k in SLOT){const [x0,y0,x1,y1]=slotDe(id,k);g.drawImage(t,x0,y0,x1-x0,y1-y0,x0,y0,x1-x0,y1-y0)}}}
+ return c}
+function escolherPeca(k,pid){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo)return;const id=v.busId,f=G.pintura2[id]||(G.pintura2[id]={});(f.pc||(f.pc={}))[k]=pid||null;salvarPintura2();delete EXT[id+'det'];v.detNovo=true;aplicarPintura(v).then(renderBusSel)}
+function textoLetreiro(txt){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo)return;const id=v.busId,f=G.pintura2[id]||(G.pintura2[id]={});f.txt=txt.trim();salvarPintura2();delete EXT[id+'det'];aplicarPintura(v)}
 const salvarPintura2=()=>{try{localStorage.setItem('sb_pintura2',JSON.stringify(G.pintura2))}catch(e){}};
 const EXT={};
 function blobImg(b){return new Promise((res,rej)=>{const u=URL.createObjectURL(b),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=()=>rej(new Error('imagem'));im.src=u})}
@@ -972,15 +998,15 @@ const cnv=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;
 function quadro(im,k,w,h,sl){const [x0,y0,x1,y1]=sl||SLOT[k],c=cnv(w,h),g=c.getContext('2d',{willReadFrequently:true});g.drawImage(im,x0,y0,x1-x0,y1-y0,0,0,w,h);const d=g.getImageData(0,0,w,h),a=d.data;
  for(let i=0;i<a.length;i+=4){const R=a[i],G_=a[i+1],B=a[i+2];if(G_>150&&R<120&&B<120&&G_>R*1.6&&G_>B*1.6)a[i+3]=0}g.putImageData(d,0,0);return c}
 function luzes(src,mapa){const w=src.width,h=src.height,c=cnv(w,h),g=c.getContext('2d',{willReadFrequently:true}),d=src.getContext('2d',{willReadFrequently:true}).getImageData(0,0,w,h),a=d.data,o=g.createImageData(w,h),b=o.data;
- for(let i=0;i<a.length;i+=4){if(a[i+3]<100){b[i+3]=255;continue}const R=a[i]/255,G_=a[i+1]/255,B=a[i+2]/255,mx=Math.max(R,G_,B),mn=Math.min(R,G_,B);let cls=null;
+ for(let i=0;i<a.length;i+=4){if(a[i+3]<253){b[i+3]=255;continue}const R=a[i]/255,G_=a[i+1]/255,B=a[i+2]/255,mx=Math.max(R,G_,B),mn=Math.min(R,G_,B);let cls=null;
   if(mn>.7&&mx-mn<.22)cls='branco';else if(R>.5&&G_>R*.3&&G_<R*.85&&B<R*.45)cls='ambar';else if(R>.3&&R>G_*1.7&&R>B*1.7)cls='vermelho';
   const m=cls&&mapa[cls];if(m){const k=cls==='vermelho'?Math.min(1,R*1.3):1;b[i]=m[0]*k;b[i+1]=m[1]*k;b[i+2]=m[2]*k}b[i+3]=255}
  g.putImageData(o,0,0);return c}
 const cheio=c=>{const d=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i]>100)n++;return n>d.length/4*.02};
 function poe(g,src,r,esp){const w=r[2]-r[0],h=r[3]-r[1];g.save();if(esp){g.translate(r[0]+w,r[1]);g.scale(-1,1);g.drawImage(src,0,0,w,h)}else g.drawImage(src,r[0],r[1],w,h);g.restore()}
-async function prepDet(id){if(EXT[id+'det'])return EXT[id+'det'];const b=await IDB.get(id+'@det');if(!b)return null;const im=await blobImg(b),R=DETR[id];
+async function prepDet(id){if(EXT[id+'det'])return EXT[id+'det'];const im=await montaDet(id);if(!im)return null;const R=DETR[id];
  const det=cnv(2048,2048),gd=det.getContext('2d'),luz=cnv(2048,2048),gl=luz.getContext('2d');gl.fillStyle='#000';gl.fillRect(0,0,2048,2048);gl.globalCompositeOperation='lighter';
- const fa=R.fa,fm=[2*R.c-fa[2],fa[1],2*R.c-fa[0],fa[3]],asp=(fa[2]-fa[0])/(fa[3]-fa[1]),fw=300*asp<=700?Math.round(300*asp):700,fh=300*asp<=700?300:Math.round(700/asp),F=quadro(im,'farol',Math.round(60*asp),60,[60,140,60+fw,140+fh]);
+ const fa=R.fa,fm=[2*R.c-fa[2],fa[1],2*R.c-fa[0],fa[3]],asp=(fa[2]-fa[0])/(fa[3]-fa[1]),F=quadro(im,'farol',Math.round(60*asp),60,slotDe(id,'farol'));
  if(cheio(F)){poe(gd,F,fa,false);poe(gd,F,fm,true);
  poe(gl,luzes(F,{branco:[255,0,0],ambar:[0,0,255]}),fa,false);poe(gl,luzes(F,{branco:[255,0,0],ambar:[0,255,0]}),fm,true)}
  const PL=quadro(im,'placa',300,98);if(cheio(PL)){poe(gd,PL,R.pf,false);poe(gd,PL,R.pt,false)}const LT=quadro(im,'letreiro',690,100);if(cheio(LT))poe(gd,LT,R.lt,false);
@@ -995,7 +1021,7 @@ function lantCfgV(v,def){const c=lantCfg(def);if(!c||!v||!v.detSk)return c;const
  return{des:'sk_'+def.id,x:ps.reduce((a,p)=>a+p.x,0)/ps.length,z:ps[0].z,y:y0,h:y1-y0,w,ang:ps[0].ang,esp:ps[0].esp}}
 async function aplicarExtras(v){const C=v.corpo,id=v.busId;if(!C)return;const f=((v===BUS||v===BUS2)&&DETR[id]&&G.pintura2[id])||{},U=C.U;
  try{if(f.vid){const t=await extraTex(id,'vid');U.vidMap.value=t||TEX1;U.uVid.value=t?1:0}else U.uVid.value=0;
-  const P=f.det?await prepDet(id):null;if(v.busId!==id)return;
+  const P=temDet(f)?await prepDet(id):null;if(v.busId!==id)return;
   if(P){const R=DETR[id];U.detMap.value=P.det;U.luzMap.value=P.luz;U.uFr.value.set(...R.fr.map(x=>x/2048));U.uLt.value.set(...R.lt.map(x=>x/2048));U.uDet.value=1}else U.uDet.value=0;
   const S=v.setGLB;if(S&&S.calMat){const cal=P&&P.cal;S.calMat.map=cal||TEX1;S.calMat.needsUpdate=true;for(const d of S.calotas||[])d.visible=!!cal}
   const sk=!!(P&&P.lant);if(!!v.detSk!==sk){v.detSk=sk;refazLant(v)}else if(sk&&v.detNovo){refazLant(v)}v.detNovo=false}
@@ -1004,17 +1030,19 @@ function carregarExtra(t){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo
  const id=v.busId,inp=document.createElement('input');inp.type='file';inp.accept='image/*';
  inp.onchange=()=>{const f=inp.files&&inp.files[0];if(!f)return;toast('Carregando…',1500);
   blobImg(f).then(im=>{const c=cnv(2048,2048);c.getContext('2d').drawImage(im,0,0,2048,2048);
-   c.toBlob(async b=>{try{await IDB.set(id+'@'+t,b);delete EXT[id+t];(G.pintura2[id]||(G.pintura2[id]={}))[t]=1;salvarPintura2();v.detNovo=t==='det';await aplicarPintura(v);renderBusSel();toast((t==='vid'?'Vidros':'Detalhes')+' aplicados no '+busDef(id).nome,2500)}
+   c.toBlob(async b=>{try{await IDB.set(id+'@'+t,b);delete EXT[id+t];delete EXT[id+'det'];(G.pintura2[id]||(G.pintura2[id]={}))[t]=1;salvarPintura2();v.detNovo=t==='det';await aplicarPintura(v);renderBusSel();toast((t==='vid'?'Vidros':'Detalhes')+' aplicados no '+busDef(id).nome,2500)}
     catch(e){toast('Não consegui salvar: '+(e.message||e),4000)}},'image/png')}).catch(()=>toast('Esse arquivo não é uma imagem que o navegador abre',3500))};
  inp.click()}
-function tirarExtra(t){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo)return;const id=v.busId;if(G.pintura2[id])G.pintura2[id][t]=0;salvarPintura2();aplicarPintura(v);renderBusSel()}
+function tirarExtra(t){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo)return;const id=v.busId;if(G.pintura2[id])G.pintura2[id][t]=0;delete EXT[id+t];v.detNovo=true;salvarPintura2();aplicarPintura(v);renderBusSel()}
 function htmlPintura(){const v=G.mode==='drive'?G.active:null;
  if(!v||!v.corpo)return '<div class="bsT">Pintura</div><p class="note" style="margin:4px 0">Entre num ônibus de carroceria padrão (Urbano ou Rodoviário 2, 3 ou 4 eixos) para pintar.</p>';
  const id=v.busId,base=busDef(id).prof.base,m=G.pintura[id]||(base?'branco':'original'),b=(k,t)=>`<button class="btn${m===k?' pri':''}" data-p="${k}" style="${m===k?'font-size:14px;min-height:40px;padding:0 14px':''}">${t}</button>`;
  return `<div class="bsT">Pintura do ${busDef(id).nome}</div><div class="opts">${base?'':b('original','Original')}${b('branco','Branco')}${b('skin','Minha skin')}</div>
   <div class="opts" style="margin-top:6px"><button class="btn" data-p="modelo">⬇ Baixar molde da carroceria</button><button class="btn" data-p="carregar">📷 Carregar skin</button></div>${DETR[id]?htmlExtras(id):''}`}
 function htmlExtras(id){const f=G.pintura2[id]||{},ex=(t,n,d)=>`<div class="bsT" style="margin-top:10px">${n}${f[t]?' · <span style="color:#5fd38d">ativo</span>':''}</div><p class="note" style="margin:2px 0 4px">${d}</p><div class="opts"><button class="btn" data-p="m_${t}">⬇ Baixar molde</button><button class="btn" data-p="c_${t}">📷 Carregar</button>${f[t]?`<button class="btn" data-p="r_${t}">✖ Tirar</button>`:''}</div>`;
- return ex('vid','Vidros','Escurecer, faixa, adesivo e logo nos vidros.')+ex('det','Detalhes','Farol, lanterna, placa, letreiro e calota. As luzes acendem no jogo.')}
+ const pc=f.pc||{},sel=Object.keys(PECAS).map(k=>{const L=PECAS[k].filter(p=>!p.p||p.p.includes(id));return `<label class="pcL">${PNOME[k]}<select data-pc="${k}"><option value="">Original</option>${L.map(p=>`<option value="${p.id}"${pc[k]===p.id?' selected':''}>${p.n}</option>`).join('')}</select></label>`}).join('');
+ return ex('vid','Vidros','Escurecer, faixa, adesivo e logo nos vidros.')+`<div class="bsT" style="margin-top:10px">Peças prontas</div><div class="pcG">${sel}<label class="pcL" style="grid-column:1/-1">Texto do letreiro<input data-txt maxlength="28" placeholder="ex.: 101 · CENTRO" value="${(f.txt||'').replace(/"/g,'&quot;')}"></label></div>`
+  +ex('det','Desenho próprio (molde de detalhes)','O molde já vem com as peças escolhidas acima. Pinte por cima; verde = fica como está.')}
 /* ---------- ajustes das lanternas: arquivo do repositório (vale para todos) + o que foi salvo neste aparelho ---------- */
 const LNOME={leds_x:'LEDs em X',rod_vertical_a:'Vertical A',rod_vertical_b:'Vertical B',rod_vertical_c:'Vertical C',rod_fina:'Fina alta',urbano_3leds:'Carcaça + 3 LEDs',urbano_led_l:'LED em L (Urbano 07)',
  moldura_redondas:'Moldura das redondas',redonda_ambar:'Redonda âmbar (seta)',redonda_vermelha:'Redonda vermelha (lanterna)',redonda_branca:'Redonda branca (ré)',
@@ -1445,7 +1473,7 @@ function sync(o,dt){o.g.position.set(o.x,0,o.z);o.g.rotation.y=o.h;
 /* ---------- entrada ---------- */
 const K={},T={jx:0,jy:0,acc:0,brk:0};
 const KM={KeyI:'ign',KeyO:'panel',KeyE:'enter',KeyF:'doors',KeyT:'trunk',KeyJ:'hitch',KeyG:'act',KeyL:'lights',KeyZ:'indL',KeyX:'indR',KeyC:'cam',KeyP:'wiper',KeyM:'gear',KeyR:'up',KeyQ:'down',Space:'hb',KeyB:'menu',KeyN:'mapa',Escape:'menu',KeyH:'horn'};
-addEventListener('keydown',e=>{initAudio();if(G.menu&&e.code!=='KeyB'&&e.code!=='Escape')return;if(!G.started&&(e.code==='Enter'||e.code==='Space')){startGame();e.preventDefault();return}
+addEventListener('keydown',e=>{initAudio();if(e.target&&(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'))return;if(G.menu&&e.code!=='KeyB'&&e.code!=='Escape')return;if(!G.started&&(e.code==='Enter'||e.code==='Space')){startGame();e.preventDefault();return}
  if(!e.repeat&&KM[e.code])act(KM[e.code],true);K[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault()});
 addEventListener('keyup',e=>{K[e.code]=false;if(e.code==='KeyH')act('horn',false)});
 addEventListener('blur',()=>{for(const k in K)K[k]=false;T.acc=T.brk=0;G.horn=false});
