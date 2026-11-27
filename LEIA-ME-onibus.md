@@ -224,3 +224,8 @@ Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
   - Clássico 03: Cronos, Expresso SimBR, Merlin Prata. Clássico 09: Cronos, Chapadinha, Maximus Brasil.
   - Caminhões (azul, cinza, laranja, verde e FH16): FIVE Transportes em 11 cores (branco, prata, grafite, preto, vermelho, vinho, laranja, amarelo, verde, azul e azul-marinho). A grade e os cromados da frente não mudam de cor.
   - Todas entram com **preço 0**. Antes de deixar uma skin Pública, defina o preço (com preço 0 ela fica grátis para todos).
+
+## G7 1200 com skin na lanterna e rasgo do G7 DD (27/11, noite)
+- **G7 1200**: a lanterna traseira agora recebe a skin, como o resto da lataria. As skins e o molde continuam valendo; nada muda no desenho. O brilho do freio, da ré e das setas continua pelos pontos do painel 💡 Luzes.
+- **G7 DD (1800)**: o rasgo na traseira foi fechado. Umas áreas escuras da traseira e das grelhas do motor eram tratadas como vidro, e dava para ver o céu e o lado de dentro através delas. Agora a traseira e as duas grelhas laterais são lataria.
+- Na primeira abertura depois de atualizar pode aparecer ainda o modelo antigo (o jogo guarda cópia no aparelho); na abertura seguinte vem o novo.
