@@ -962,13 +962,14 @@ function baixarModelo(t){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo)
 /* ---------- moldes extras: vidros e detalhes (farol, lanterna, placa, letreiro, calota) ---------- */
 const DETR={urbano:{c:182.6,fa:[48,1040,102,1085],pf:[156,1095,210,1116],pt:[530,1025,583,1046],lt:[92,842,276,872],fr:[8,794,354,1175]},
  rodoviario_2e:{c:185,fa:[30,1265,106,1330],pf:[155,1353,207,1371],pt:[547,1284,590,1301],lt:[110,1063,260,1085],fr:[8,959,362,1423]},
- rodoviario_3e:{c:183.8,fa:[30,1250,101,1320],pf:[152,1340,205,1358],pt:[535,1258,590,1276],lt:[110,1035,258,1058],fr:[8,948,359,1406]},
+ rodoviario_3e:{c:183.8,fa:[30,1250,101,1320],pf:[152,1340,205,1358],pt:[535,1258,590,1276],lt:[110,1047,258,1069],fr:[8,948,359,1406]},
  rodoviario_4e:{c:172,fa:[27,1384,92,1424],pf:[146,1446,198,1464],pt:[504,1440,553,1458],lt:[95,1208,250,1230],fr:[8,1028,335,1526]}};
 const SLOT={farol:[60,140,760,440],placa:[60,560,760,790],lanterna:[880,140,1180,1340],calota:[1320,140,1920,740],letreiro:[60,1440,1440,1640]};
 G.pintura2=(()=>{try{return JSON.parse(localStorage.getItem('sb_pintura2')||'{}')||{}}catch(e){return{}}})();
 /* peças prontas (imagens em modelos/pecas): p = ônibus em que servem (sem p = todos) */
-const PECAS={farol:[{id:'farol_urbano_1',n:'LED duplo',p:['urbano']}],lanterna:[{id:'lanterna_urbano_1',n:'LED vertical',p:['urbano']}],
- calota:[{id:'calota_cromada',n:'Cromada'}],letreiro:[{id:'letreiro_led',n:'Painel de LED'}]};
+const PECAS={farol:[{id:'farol_urbano_1',n:'LED duplo',p:['urbano']},{id:'farol_rod2e_1',n:'Projetor com LED',p:['rodoviario_2e']},{id:'farol_rod3e_1',n:'Projetor com LED',p:['rodoviario_3e']},{id:'farol_rod4e_1',n:'Duplo com LED',p:['rodoviario_4e']}],
+ lanterna:[{id:'lanterna_urbano_1',n:'LED vertical',p:['urbano']},{id:'lanterna_rod2e_1',n:'LEDs em X',p:['rodoviario_2e','rodoviario_3e']},{id:'lanterna_rod4e_1',n:'LED com ré redonda',p:['rodoviario_4e']}],
+ calota:[{id:'calota_cromada',n:'Cromada'}],letreiro:[{id:'letreiro_led',n:'Painel de LED'},{id:'letreiro_viagem',n:'LED · VIAGEM'}]};
 const PNOME={farol:'Farol',lanterna:'Lanterna',calota:'Calota',letreiro:'Letreiro'};
 function slotDe(id,k){if(k!=='farol')return SLOT[k];const fa=DETR[id].fa,asp=(fa[2]-fa[0])/(fa[3]-fa[1]),fw=300*asp<=700?Math.round(300*asp):700,fh=300*asp<=700?300:Math.round(700/asp);return[60,140,60+fw,140+fh]}
 const PIMG={};function imgPeca(id){return PIMG[id]||(PIMG[id]=new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>{delete PIMG[id];rej(new Error(id))};im.src='modelos/pecas/'+id+'.png'}))}
