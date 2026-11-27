@@ -1867,14 +1867,17 @@ const SND={},SNDp={};
 function loadSnd(n){if(SND[n]||SNDp[n])return SNDp[n]||Promise.resolve(SND[n]);
  return SNDp[n]=fetch('sons/'+n+'.mp3').then(r=>{if(!r.ok)throw new Error(n);return r.arrayBuffer()}).then(ab=>new Promise((res,rej)=>AC.decodeAudioData(ab,res,rej)))
   .then(b=>{SND[n]=b;delete SNDp[n];return b}).catch(e=>{delete SNDp[n];SND[n]=null;console.warn('som não carregou:',n);return null})}
-const MOT={set:null,lenta:null,alto:null,gl:null,ga:null,re:null,gr:null,on:false,tOn:0,gear:0,tTroca:-9};
-function loopSrc(buf,g){const s=AC.createBufferSource();s.buffer=buf;s.loop=true;s.connect(g);s.start();return s}
+const MOT={set:null,lenta:null,alto:null,freio:null,gl:null,ga:null,gf:null,re:null,gr:null,on:false,tOn:-9,gear:0,tTroca:-9,ac:null,tAc:-9,rd:null,tRd:-9,thr0:0};
+const SOM_MOTOR='scania';  /* um som só para ônibus e caminhões (cada veículo muda o tom com "tom") */
+function loopSrc(buf,g,margem){const s=AC.createBufferSource();s.buffer=buf;s.loop=true;if(margem){s.loopStart=.1;s.loopEnd=buf.duration-.1}s.connect(g);s.start(0,margem?.1:0);return s}
 function motorSet(p){if(MOT.set===p)return;motorStop();MOT.set=p;
- if(!MOT.gl){MOT.gl=AC.createGain();MOT.ga=AC.createGain();MOT.gr=AC.createGain();for(const g of [MOT.gl,MOT.ga,MOT.gr]){g.gain.value=0;g.connect(master)}}
- Promise.all([loadSnd(p+'_lenta'),loadSnd(p+'_alto'),loadSnd('marcha_re')]).then(([l,a,r])=>{if(MOT.set!==p)return;
-  if(l)MOT.lenta=loopSrc(l,MOT.gl);if(a)MOT.alto=loopSrc(a,MOT.ga);if(r&&!MOT.re)MOT.re=loopSrc(r,MOT.gr)});loadSnd(p+'_partida')}
+ if(!MOT.gl){MOT.gl=AC.createGain();MOT.ga=AC.createGain();MOT.gr=AC.createGain();MOT.gf=AC.createGain();for(const g of [MOT.gl,MOT.ga,MOT.gr,MOT.gf]){g.gain.value=0;g.connect(master)}}
+ Promise.all([loadSnd(p+'_lenta'),loadSnd(p+'_alto'),loadSnd('marcha_re'),loadSnd('freio_tambor')]).then(([l,a,r,f])=>{if(MOT.set!==p)return;
+  if(l)MOT.lenta=loopSrc(l,MOT.gl,true);if(a)MOT.alto=loopSrc(a,MOT.ga,true);if(r&&!MOT.re)MOT.re=loopSrc(r,MOT.gr);if(f&&!MOT.freio)MOT.freio=loopSrc(f,MOT.gf,true)});
+ for(const k of ['_partida','_acelera','_reducao','_desliga'])loadSnd(p+k)}
 function motorStop(){for(const k of ['lenta','alto']){if(MOT[k]){try{MOT[k].stop()}catch(e){}MOT[k]=null}}MOT.set=null}
-function tocar(n,vol=.7,rate=1){const b=SND[n];if(!b){loadSnd(n);return}const s=AC.createBufferSource(),g=AC.createGain();s.buffer=b;s.playbackRate.value=rate;g.gain.value=vol;s.connect(g);g.connect(master);s.start()}
+function pararSom(o){if(o){try{o.g.gain.setTargetAtTime(0,AC.currentTime,.08);o.s.stop(AC.currentTime+.5)}catch(e){}}}
+function tocar(n,vol=.7,rate=1){const b=SND[n];if(!b){loadSnd(n);return null}const s=AC.createBufferSource(),g=AC.createGain();s.buffer=b;s.playbackRate.value=rate;g.gain.value=vol;s.connect(g);g.connect(master);s.start();return {s,g,fim:AC.currentTime+b.duration/rate}}
 function somTroca(){if(!AC||!G.noise)return;const t=AC.currentTime;
  try{const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=G.noise;f.type='bandpass';f.frequency.value=900;f.Q.value=2;g.gain.value=.12;s.connect(f);f.connect(g);g.connect(master);s.start(t);g.gain.setTargetAtTime(0,t+.02,.02);s.stop(t+.2);
   const a=AC.createBufferSource(),fa=AC.createBiquadFilter(),ga=AC.createGain();a.buffer=G.noise;fa.type='highpass';fa.frequency.value=2500;ga.gain.value=0;a.connect(fa);fa.connect(ga);ga.connect(master);
@@ -1883,18 +1886,28 @@ function somPorta(){if(!AC||!G.noise)return;const t=AC.currentTime;
  try{const a=AC.createBufferSource(),fa=AC.createBiquadFilter(),ga=AC.createGain();a.buffer=G.noise;fa.type='highpass';fa.frequency.value=1800;ga.gain.value=0;a.connect(fa);fa.connect(ga);ga.connect(master);
   a.start(t,Math.random());ga.gain.setTargetAtTime(.09,t,.03);ga.gain.setTargetAtTime(0,t+.35,.15);a.stop(t+1.2)}catch(e){}}
 function audioOnibus(t){const v=G.mode==='drive'?G.active:null,bus=v&&(v.type==='bus'||v.type==='truck')&&G.model==='glb'&&v.busId,def=bus&&busDef(v.busId);
- if(!def){if(MOT.gl){MOT.gl.gain.setTargetAtTime(0,t,.1);MOT.ga.gain.setTargetAtTime(0,t,.1);MOT.gr.gain.setTargetAtTime(0,t,.05)}MOT.on=false;return false}
- motorSet(def.som);
- if(v.on&&!MOT.on){MOT.tOn=t;tocar(def.som+'_partida',.75,def.tom||1)}MOT.on=v.on;
+ if(!def){if(MOT.gl){for(const g of [MOT.gl,MOT.ga,MOT.gr,MOT.gf])g.gain.setTargetAtTime(0,t,.1)}MOT.on=false;return false}
+ const p=SOM_MOTOR,tom=def.tom||1;motorSet(p);
+ if(v.on&&!MOT.on){MOT.tOn=t;tocar(p+'_partida',.8,tom)}
+ if(!v.on&&MOT.on){tocar(p+'_desliga',.8,tom);pararSom(MOT.ac);pararSom(MOT.rd);MOT.ac=MOT.rd=null}
+ MOT.on=v.on;
  if(v.gear!==MOT.gear){if(v.gear>0&&MOT.gear>0&&v.on){MOT.tTroca=t;somTroca()}MOT.gear=v.gear}
- const liga=v.on?Math.min(1,Math.max(0,(t-MOT.tOn-.9)/.6)):0;
- const r=clamp((v.rpm-750)/Math.max(1,v.redline-750),0,1),parado=1-Math.min(1,Math.max(0,(r-.02)/.12));
- const dT=t-MOT.tTroca,resp=dT<.22?.55+.45*dT/.22:1;
- MOT.gl.gain.setTargetAtTime(liga*.5*parado,t,.08);
- MOT.ga.gain.setTargetAtTime(liga*(.2+.35*r+.12*v.thr)*(1-parado)*resp,t,.06);
- if(MOT.lenta)MOT.lenta.playbackRate.setTargetAtTime((1+.12*v.thr*parado)*(def.tom||1),t,.1);
- if(MOT.alto)MOT.alto.playbackRate.setTargetAtTime((.74+.5*r+.035*Math.max(0,v.gear))*(def.tom||1),t,.06);
+ const liga=v.on?Math.min(1,Math.max(0,(t-MOT.tOn-2.6)/.9)):0;
+ const r=clamp((v.rpm-750)/Math.max(1,v.redline-750),0,1),parado=1-Math.min(1,Math.max(0,(r-.02)/.12)),vel=Math.abs(v.speed);
+ /* parado: pisou e soltou = ronco de acelerar; andando em giro alto e soltou = redução */
+ const pisou=v.thr>.55&&MOT.thr0<=.55,soltou=v.thr<.1&&MOT.thr0>=.4;MOT.thr0=v.thr;
+ if(v.on&&liga>=1&&pisou&&vel<.6&&t-MOT.tAc>3){pararSom(MOT.ac);MOT.ac=tocar(p+'_acelera',.85,tom);MOT.tAc=t}
+ if(MOT.ac&&(t>MOT.ac.fim||vel>2)){if(vel>2)pararSom(MOT.ac);MOT.ac=null}
+ if(v.on&&soltou&&vel>5&&r>.4&&t-MOT.tRd>5){pararSom(MOT.rd);MOT.rd=tocar(p+'_reducao',.8,tom*(.85+.25*r));MOT.tRd=t}
+ if(MOT.rd&&(t>MOT.rd.fim||v.thr>.35)){if(v.thr>.35)pararSom(MOT.rd);MOT.rd=null}
+ const umSo=MOT.ac||MOT.rd?1:0,dT=t-MOT.tTroca,resp=dT<.22?.55+.45*dT/.22:1;
+ MOT.gl.gain.setTargetAtTime(liga*.55*parado*(MOT.ac?.15:1),t,.08);
+ MOT.ga.gain.setTargetAtTime(liga*(.25+.4*r+.15*v.thr)*(1-parado)*resp*(umSo?.12:1),t,.06);
+ if(MOT.lenta)MOT.lenta.playbackRate.setTargetAtTime((1+.1*v.thr*parado)*tom,t,.1);
+ if(MOT.alto)MOT.alto.playbackRate.setTargetAtTime((.62+.48*r+.02*Math.max(0,v.gear))*tom,t,.06);
  const re=v.on&&(v.gear<0||(G.auto&&v.sel==='R'));MOT.gr.gain.setTargetAtTime(re?.22:0,t,.03);
+ /* freio: o "tambor" só quando freia andando */
+ const fr=v.brk&&vel>1.2?Math.min(1,vel/14):0;MOT.gf.gain.setTargetAtTime(fr*.22,t,.12);if(MOT.freio)MOT.freio.playbackRate.setTargetAtTime(.8+.4*Math.min(1,vel/20),t,.2);
  return true}
 function audio(){if(!AC)return;const t=AC.currentTime;const somBus=audioOnibus(t);
  if(!somBus&&G.mode==='drive'&&G.active.on){const v=G.active,f=26+v.rpm/60*1.6;engO[0].frequency.setTargetAtTime(f,t,.05);engO[1].frequency.setTargetAtTime(f*.5,t,.05);engG.gain.setTargetAtTime(.05+.07*v.thr,t,.08)}else engG.gain.setTargetAtTime(0,t,.1);

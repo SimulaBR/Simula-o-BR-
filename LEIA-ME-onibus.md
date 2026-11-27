@@ -169,3 +169,9 @@ Importante: `banco/config.js` só vem neste pacote. Os próximos pacotes não tr
 - Linhas urbanas podem ser feitas com rodoviário.
 - Rode `banco/atualizacao_2.sql` no SQL Editor (urbanos fora da loja e novos veículos como Beta).
 - Créditos (CC-BY-4.0): Marcopolo g7 1200 FREE, por SquielOFICIAL; Marcopolo G7 1200 VOLVO Auto Viação 1001, por miguterj2106.
+
+## Som do motor Scania V8 (27/11)
+Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
+`scania_partida` (ligar), `scania_lenta` (parado), `scania_acelera` (acelerar e soltar, parado), `scania_alto` (acelerar sem soltar),
+`scania_reducao` (soltar o acelerador em giro alto, andando), `scania_desliga` (desligar). O ruído de tambor saiu do motor e virou
+`freio_tambor`, que só toca quando você freia andando.
