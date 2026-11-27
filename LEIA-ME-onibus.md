@@ -191,3 +191,10 @@ Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
 - Cada skin é de um veículo só (a do G7 não aparece no New Road).
 - Jogador: na garagem, em "Skins do …", toca na skin para comprar e usar. Não há mais envio de arquivos pelo jogador; as peças (farol, lanterna, calota) e o texto do letreiro continuam à escolha dele e ficam salvos na conta.
 - Sem conta (modo local) continua tudo como antes.
+
+## Suspensão, som antigo de volta e farol do G7 DD (27/11)
+- **Suspensão** em todos os veículos: na garagem, "Suspensão" com dianteira e traseira separadas (sobe/abaixa). O limite é do administrador:
+  ☰ → 🛠 Administrador → "Suspensão · (veículo atual)": altura de fábrica dianteira/traseira e até quantos cm o jogador pode mexer. "Ver" testa, "Salvar" vale para todos.
+  Rode `banco/atualizacao_4.sql` (libera esse ajuste no banco). O G7 DD já sai 8 cm mais alto de fábrica.
+- **Som**: voltou o som antigo do motor. Novo: parado (freio, freio de mão ou neutro), pisar no acelerador faz o motor roncar e o giro cai ao soltar. O som de tambor continua só no freio.
+- **G7 DD**: o brilho do farol foi para fora do farol (estava dentro do buraco da peça) e ficou menor.
