@@ -99,3 +99,8 @@ No 🎨 Pintura, em "Peças prontas", você escolhe farol, lanterna, calota e le
 As imagens ficam em modelos/pecas/. O fundo_farol_<id>.png apaga o farol original por baixo da peça nova.
 Para pôr peças novas, mande a imagem: eu recorto o fundo e coloco a peça na lista PECAS do index.html (o campo p diz em quais ônibus ela serve).
 O molde de detalhes que você baixa já vem com as peças escolhidas desenhadas no lugar.
+
+## Correção dos vidros (26/11)
+Cada ônibus padrão agora tem uma máscara de janelas: o arquivo modelos/onibus/skins/vidro_<id>.png. Assim o molde de vidros pega as janelas com cortina e o vidro traseiro, e não só as partes escuras.
+O teto e os frisos escuros deixaram de ser tratados como vidro: a skin da carroceria pinta essas partes também.
+A calota ficou um pouco menor e para dentro, para não sobrar para fora da roda.

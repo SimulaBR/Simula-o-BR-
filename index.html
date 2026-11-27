@@ -809,7 +809,7 @@ function montarRodas(root,G2,PR){const R=PR.rodas,W=RODA.nodes[0],sx=(R.xo-R.xi)
    for(const p of W.prims){const m=new THREE.Mesh(p.g,RODA.mats[p.mi]||RODA.mats[0]);m.scale.set(sg*sx,r,r);m.castShadow=true;sp.add(m)}
    G2.wheels.push(sp);if(k){piv.userData.k=k;G2.front.push(piv)}
    if(!G2.calMat)G2.calMat=new THREE.MeshLambertMaterial({map:TEX1,transparent:true,alphaTest:.4,side:THREE.DoubleSide});
-   const cd=new THREE.Mesh(CALG,G2.calMat);cd.scale.setScalar(r*.64);cd.position.x=sg*((R.xo-R.xi)/2+.01);cd.rotation.y=sg*Math.PI/2;cd.visible=false;sp.add(cd);(G2.calotas||(G2.calotas=[])).push(cd)}})}
+   const cd=new THREE.Mesh(CALG,G2.calMat);cd.scale.setScalar(r*.57);cd.position.x=sg*((R.xo-R.xi)/2-.035);cd.rotation.y=sg*Math.PI/2;cd.visible=false;sp.add(cd);(G2.calotas||(G2.calotas=[])).push(cd)}})}
 const CALG=new THREE.CircleGeometry(1,32);
 
 /* lanterna desenhada: o desenho é jogado na lataria por raios inclinados na quina (como no Fator RP) */
@@ -868,7 +868,7 @@ function applyGLB(v,M,def){const PR={...def.prof};
  const ig=new THREE.Group();ig.position.z=PR.intZ||0;root.add(ig);interior(ig,PR.interior);
  v.setGLB=G2;if(!v.setProc){v.setProc={glows:null,cockOff:[0,0,0],lant:null,dentro:null,corpo:null};for(const k of PKEYS)if(v.setProc[k]===undefined)v.setProc[k]=v[k]}
  {const cs=[];root.traverse(o=>{if(o.isMesh&&o.geometry.attributes.skinuv)cs.push(o)});
-  if(cs.length){const base=cs[0].material,U={skinMap:{value:TEX1},uSkin:{value:0},uVidro:{value:1},vidMap:{value:TEX1},detMap:{value:TEX1},luzMap:{value:TEX1},uVid:{value:0},uDet:{value:0},uFr:{value:new THREE.Vector4()},uLt:{value:new THREE.Vector4()},uFarol:{value:0},uSetaE:{value:0},uSetaD:{value:0},uLetr:{value:0}},mat=matCorpo(base,U);for(const o of cs)o.material=mat;G2.corpo={mat,orig:base.map,U}}else G2.corpo=null}
+  if(cs.length){const base=cs[0].material,U={skinMap:{value:TEX1},uSkin:{value:0},uVidro:{value:1},vidMask:{value:TEX1},uMask:{value:0},vidMap:{value:TEX1},detMap:{value:TEX1},luzMap:{value:TEX1},uVid:{value:0},uDet:{value:0},uFr:{value:new THREE.Vector4()},uLt:{value:new THREE.Vector4()},uFarol:{value:0},uSetaE:{value:0},uSetaD:{value:0},uLetr:{value:0}},mat=matCorpo(base,U);for(const o of cs)o.material=mat;G2.corpo={mat,orig:base.map,U};if(DETR[def.id])mascaraVidro(def.id).then(t=>{U.vidMask.value=t;U.uMask.value=1}).catch(()=>{})}else G2.corpo=null}
  useModel(v,true);aplicarPintura(v)}
 function useModel(v,glb){if(!v.glbRoot)return;const set=glb?v.setGLB:v.setProc,old=glb?v.setProc:v.setGLB;
  set.doors.forEach(d=>{const o=old.doors.filter(x=>x.grp===d.grp)[0];if(o){d.tgt=o.tgt;d.cur=o.cur}});
@@ -914,9 +914,9 @@ function matCorpo(base,U){const m=base.clone();
  m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,U);
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec2 skinuv;varying vec2 vSk;varying vec3 vSkN;varying vec3 vSkV;')
    .replace('#include <project_vertex>','#include <project_vertex>\nvSk=skinuv;vec4 skW=modelMatrix*vec4(transformed,1.0);vSkV=cameraPosition-skW.xyz;vSkN=mat3(modelMatrix)*objectNormal;');
-  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D skinMap;uniform float uSkin;uniform float uVidro;uniform sampler2D vidMap;uniform sampler2D detMap;uniform sampler2D luzMap;uniform float uVid;uniform float uDet;uniform vec4 uFr;uniform vec4 uLt;uniform float uFarol;uniform float uSetaE;uniform float uSetaD;uniform float uLetr;varying vec2 vSk;varying vec3 vSkN;varying vec3 vSkV;')
-   .replace('#include <map_fragment>','#include <map_fragment>\nfloat skLum=dot(diffuseColor.rgb,vec3(.299,.587,.114));float skVid=uVidro*(1.0-smoothstep(.06,.17,skLum));\n'+
-    'if(uSkin>.5){vec4 sk=texture2D(skinMap,vSk);diffuseColor.rgb=mix(diffuseColor.rgb,min(diffuseColor.rgb*sk.rgb*1.12,vec3(1.0)),sk.a*(1.0-skVid));}'+
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D skinMap;uniform float uSkin;uniform float uVidro;uniform sampler2D vidMask;uniform float uMask;uniform sampler2D vidMap;uniform sampler2D detMap;uniform sampler2D luzMap;uniform float uVid;uniform float uDet;uniform vec4 uFr;uniform vec4 uLt;uniform float uFarol;uniform float uSetaE;uniform float uSetaD;uniform float uLetr;varying vec2 vSk;varying vec3 vSkN;varying vec3 vSkV;')
+   .replace('#include <map_fragment>','#include <map_fragment>\nfloat skLum=dot(diffuseColor.rgb,vec3(.299,.587,.114));float skVid=uVidro*(uMask>.5?texture2D(vidMask,vSk).r:(1.0-smoothstep(.06,.17,skLum)));\n'+
+    'if(uSkin>.5){vec4 sk=texture2D(skinMap,vSk);float dk=uMask>.5?1.0-smoothstep(.07,.3,skLum):0.0;diffuseColor.rgb=mix(diffuseColor.rgb,mix(min(diffuseColor.rgb*sk.rgb*1.12,vec3(1.0)),sk.rgb,dk),sk.a*(1.0-skVid));}'+
     'if(uVid>.5){vec4 vd=texture2D(vidMap,vSk);diffuseColor.rgb=mix(diffuseColor.rgb,vd.rgb,vd.a*skVid);skVid*=1.0-vd.a*smoothstep(.28,.5,dot(vd.rgb,vec3(.299,.587,.114)));}'+
     'vec4 dtl=vec4(0.);if(uDet>.5){dtl=texture2D(detMap,vSk);diffuseColor.rgb=mix(diffuseColor.rgb,dtl.rgb,dtl.a);skVid*=1.0-dtl.a*.6;}')
    .replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );',
@@ -926,7 +926,7 @@ function matCorpo(base,U){const m=base.clone();
     'if(uDet>.5){vec4 lu=texture2D(luzMap,vSk);bool fe=vSk.x>uFr.x&&vSk.x<uFr.z&&vSk.y>uFr.y&&vSk.y<uFr.w;vec3 em=fe?(vec3(1.,.97,.88)*lu.r*uFarol+vec3(1.,.55,.08)*(lu.g*uSetaE+lu.b*uSetaD)):vec3(0.);'+
     'if(vSk.x>uLt.x&&vSk.x<uLt.z&&vSk.y>uLt.y&&vSk.y<uLt.w)em+=dtl.rgb*dtl.a*uLetr;outgoingLight+=em*1.5;}\n'+
     'gl_FragColor = vec4( outgoingLight, diffuseColor.a );')};
- m.customProgramCacheKey=()=>'corpoSB2';return m}
+ m.customProgramCacheKey=()=>'corpoSB3';return m}
 /* skins guardadas no aparelho (IndexedDB: a imagem é grande demais para o localStorage) */
 const IDB={p:null,abrir(){return this.p||(this.p=new Promise((res,rej)=>{const r=indexedDB.open('simulabr',1);r.onupgradeneeded=()=>r.result.createObjectStore('skins');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))},
  async get(k){const db=await this.abrir();return new Promise((res,rej)=>{const q=db.transaction('skins').objectStore('skins').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})},
@@ -1040,6 +1040,7 @@ function htmlPintura(){const v=G.mode==='drive'?G.active:null;
  const id=v.busId,base=busDef(id).prof.base,m=G.pintura[id]||(base?'branco':'original'),b=(k,t)=>`<button class="btn${m===k?' pri':''}" data-p="${k}" style="${m===k?'font-size:14px;min-height:40px;padding:0 14px':''}">${t}</button>`;
  return `<div class="bsT">Pintura do ${busDef(id).nome}</div><div class="opts">${base?'':b('original','Original')}${b('branco','Branco')}${b('skin','Minha skin')}</div>
   <div class="opts" style="margin-top:6px"><button class="btn" data-p="modelo">⬇ Baixar molde da carroceria</button><button class="btn" data-p="carregar">📷 Carregar skin</button></div>${DETR[id]?htmlExtras(id):''}`}
+const MVID={};function mascaraVidro(id){return MVID[id]||(MVID[id]=new Promise((res,rej)=>new THREE.TextureLoader().load(PASTA_ONIBUS+'skins/vidro_'+id+'.png',t=>{t.flipY=false;t.needsUpdate=true;res(t)},undefined,()=>{delete MVID[id];rej(new Error('vidro_'+id))})))}
 function htmlExtras(id){const f=G.pintura2[id]||{},ex=(t,n,d)=>`<div class="bsT" style="margin-top:10px">${n}${f[t]?' · <span style="color:#5fd38d">ativo</span>':''}</div><p class="note" style="margin:2px 0 4px">${d}</p><div class="opts"><button class="btn" data-p="m_${t}">⬇ Baixar molde</button><button class="btn" data-p="c_${t}">📷 Carregar</button>${f[t]?`<button class="btn" data-p="r_${t}">✖ Tirar</button>`:''}</div>`;
  const pc=f.pc||{},sel=Object.keys(PECAS).map(k=>{const L=PECAS[k].filter(p=>!p.p||p.p.includes(id));return `<label class="pcL">${PNOME[k]}<select data-pc="${k}"><option value="">Original</option>${L.map(p=>`<option value="${p.id}"${pc[k]===p.id?' selected':''}>${p.n}</option>`).join('')}</select></label>`}).join('');
  return ex('vid','Vidros','Escurecer, faixa, adesivo e logo nos vidros.')+`<div class="bsT" style="margin-top:10px">Peças prontas</div><div class="pcG">${sel}<label class="pcL" style="grid-column:1/-1">Texto do letreiro<input data-txt maxlength="28" placeholder="ex.: 101 · CENTRO" value="${(f.txt||'').replace(/"/g,'&quot;')}"></label></div>`
