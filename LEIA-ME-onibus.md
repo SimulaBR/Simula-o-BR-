@@ -175,3 +175,19 @@ Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
 `scania_partida` (ligar), `scania_lenta` (parado), `scania_acelera` (acelerar e soltar, parado), `scania_alto` (acelerar sem soltar),
 `scania_reducao` (soltar o acelerador em giro alto, andando), `scania_desliga` (desligar). O ruído de tambor saiu do motor e virou
 `freio_tambor`, que só toca quando você freia andando.
+
+## Tourismo e FH16 (27/11)
+- **Rodoviário Tourismo 3 eixos** (`rodoviario_tourismo`) e **Cavalo 4x2 FH16** (`cav_fh16`), no mesmo padrão dos G7: base branca, vidros lisos, faróis e lanternas de verdade, interior na câmera de dentro. O Tourismo tem a porta da frente abrindo; o FH16 engata as carretas normalmente.
+- Os dois entram como **Beta** (já estão no `banco/atualizacao_2.sql`; se você já rodou, rode de novo, ele só acrescenta o que falta).
+- Créditos: "Mercedes-Benz Tourismo" e "Volvo FH16", por Nieve5677 (CC-BY-4.0).
+
+## Correções (27/11, tarde)
+- Trocar de veículo pelos botões rápidos (☰ → Garagem: Caminhão/Rodoviário/Urbano) no modo online levava a câmera para fora do mapa. Agora esses botões abrem a garagem do menu.
+- G7 de dois andares: carroceria 12 cm mais alta (estava rebaixado), vidros e partes escuras corrigidos (a "película" de reflexo que cobria o ônibus inteiro saiu), para-brisa de baixo de volta.
+
+## Skins oficiais (27/11)
+- Agora só o administrador cria skins. Rode `banco/atualizacao_3.sql` no SQL Editor.
+- ☰ → 🛠 Administrador → **Skins**: escolha o veículo, **Baixar molde**, faça a skin e **Enviar skin** (PNG ou JPG, 2048 x 2048). Ela entra como Beta (só você vê). Teste no veículo, depois deixe **Pública** com o preço e salve. Marque **Padrão** na skin de fábrica (grátis; é a que o veículo usa quando o jogador não escolheu nenhuma).
+- Cada skin é de um veículo só (a do G7 não aparece no New Road).
+- Jogador: na garagem, em "Skins do …", toca na skin para comprar e usar. Não há mais envio de arquivos pelo jogador; as peças (farol, lanterna, calota) e o texto do letreiro continuam à escolha dele e ficam salvos na conta.
+- Sem conta (modo local) continua tudo como antes.
