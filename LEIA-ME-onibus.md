@@ -120,3 +120,14 @@ Cada farol pronto tem um mapa de luz em modelos/pecas/<farol>_luz.png, com 3 cor
 - azul: pisca.
 Os caminhões têm o brilho do farol, da lanterna e do pisca na posição certa de cada modelo.
 À noite, ônibus e caminhões projetam um facho de luz no chão, que fica maior no farol alto.
+
+## Peça atrás das rodas (27/11)
+Tirei dos 4 ônibus de carroceria padrão (também da parte de dentro da carroceria) o lameiro e o suporte que ficavam pendurados atrás das rodas.
+
+## Molde único (27/11)
+Nos 4 ônibus padrão, o molde da carroceria (modelos/onibus/skins/modelo_<id>.jpg) agora traz tudo numa imagem só:
+- carroceria e vidros: o vidro escuro continua vidro, com reflexo; a cor clara vira adesivo;
+- quadros de peças: lanterna, farol, placa, calota e letreiro.
+O que você pinta num quadro vai para a peça; o outro lado é espelhado. A lanterna continua acendendo: vermelho no freio, laranja no pisca, branco na ré.
+Quadro deixado como veio no molde = fica a peça original. As posições dos quadros e as miniaturas de comparação estão em skins/slots.json.
+Peças prontas escolhidas no painel ficam por cima dos quadros da skin. Os moldes antigos separados (vidros e detalhes) continuam funcionando.

@@ -936,7 +936,8 @@ function matCorpo(base,U){const m=base.clone();
    .replace('#include <project_vertex>','#include <project_vertex>\nvSk=skinuv;vec4 skW=modelMatrix*vec4(transformed,1.0);vSkV=cameraPosition-skW.xyz;vSkN=mat3(modelMatrix)*objectNormal;');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D skinMap;uniform float uSkin;uniform float uVidro;uniform sampler2D vidMask;uniform float uMask;uniform sampler2D vidMap;uniform sampler2D detMap;uniform sampler2D luzMap;uniform float uVid;uniform float uDet;uniform vec4 uFr;uniform vec4 uLt;uniform float uFarol;uniform float uSetaE;uniform float uSetaD;uniform float uLetr;uniform sampler2D drlMap;uniform float uDRL;varying vec2 vSk;varying vec3 vSkN;varying vec3 vSkV;')
    .replace('#include <map_fragment>','#include <map_fragment>\nfloat skLum=dot(diffuseColor.rgb,vec3(.299,.587,.114));float skVid=uVidro*(uMask>.5?texture2D(vidMask,vSk).r:(1.0-smoothstep(.06,.17,skLum)));\n'+
-    'if(uSkin>.5){vec4 sk=texture2D(skinMap,vSk);float dk=uMask>.5?1.0-smoothstep(.07,.3,skLum):0.0;diffuseColor.rgb=mix(diffuseColor.rgb,mix(min(diffuseColor.rgb*sk.rgb*1.12,vec3(1.0)),sk.rgb,dk),sk.a*(1.0-skVid));}'+
+    'if(uSkin>.5){vec4 sk=texture2D(skinMap,vSk);float dk=uMask>.5?1.0-smoothstep(.07,.3,skLum):0.0;diffuseColor.rgb=mix(diffuseColor.rgb,mix(min(diffuseColor.rgb*sk.rgb*1.12,vec3(1.0)),sk.rgb,dk),sk.a*(1.0-skVid));'+
+    'if(uMask>.5&&uVid<.5){diffuseColor.rgb=mix(diffuseColor.rgb,sk.rgb,sk.a*skVid);skVid*=1.0-sk.a*smoothstep(.55,.8,dot(sk.rgb,vec3(.299,.587,.114)));}}'+
     'if(uVid>.5){vec4 vd=texture2D(vidMap,vSk);diffuseColor.rgb=mix(diffuseColor.rgb,vd.rgb,vd.a*skVid);skVid*=1.0-vd.a*smoothstep(.28,.5,dot(vd.rgb,vec3(.299,.587,.114)));}'+
     'vec4 dtl=vec4(0.);if(uDet>.5){dtl=texture2D(detMap,vSk);diffuseColor.rgb=mix(diffuseColor.rgb,dtl.rgb,dtl.a);skVid*=1.0-dtl.a*.6;}')
    .replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );',
@@ -946,7 +947,7 @@ function matCorpo(base,U){const m=base.clone();
     'if(uDet>.5){vec4 lu=texture2D(luzMap,vSk);bool fe=vSk.x>uFr.x&&vSk.x<uFr.z&&vSk.y>uFr.y&&vSk.y<uFr.w;vec3 em=fe?(vec3(1.,.97,.88)*lu.r*uFarol+vec3(1.,.55,.08)*(lu.g*uSetaE+lu.b*uSetaD)+vec3(.95,.97,1.)*texture2D(drlMap,vSk).r*uDRL):vec3(0.);'+
     'if(vSk.x>uLt.x&&vSk.x<uLt.z&&vSk.y>uLt.y&&vSk.y<uLt.w)em+=dtl.rgb*dtl.a*uLetr;outgoingLight+=em*1.5;}\n'+
     'gl_FragColor = vec4( outgoingLight, diffuseColor.a );')};
- m.customProgramCacheKey=()=>'corpoSB4';return m}
+ m.customProgramCacheKey=()=>'corpoSB5';return m}
 /* skins guardadas no aparelho (IndexedDB: a imagem é grande demais para o localStorage) */
 const IDB={p:null,abrir(){return this.p||(this.p=new Promise((res,rej)=>{const r=indexedDB.open('simulabr',1);r.onupgradeneeded=()=>r.result.createObjectStore('skins');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))},
  async get(k){const db=await this.abrir();return new Promise((res,rej)=>{const q=db.transaction('skins').objectStore('skins').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})},
@@ -956,7 +957,8 @@ const salvarPintura=()=>{try{localStorage.setItem('sb_pintura',JSON.stringify(G.
 const TEXB={},SKINT={};
 function texBranca(id){return TEXB[id]||(TEXB[id]=new Promise((res,rej)=>new THREE.TextureLoader().load((busDef(id).pasta||PASTA_ONIBUS)+id+'_branco.jpg',t=>{t.flipY=false;t.anisotropy=4;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;res(t)},undefined,()=>{delete TEXB[id];rej(new Error(id+'_branco.jpg'))})))}
 function texDeBlob(blob){return new Promise((res,rej)=>{const u=URL.createObjectURL(blob),im=new Image();im.onload=()=>{const t=new THREE.Texture(im);t.flipY=false;t.anisotropy=4;t.needsUpdate=true;res(t)};im.onerror=()=>rej(new Error('imagem da skin'));im.src=u})}
-async function skinTex(id){if(SKINT[id])return SKINT[id];const b=await IDB.get(id+'@'+(busDef(id).prof.lantVer||1));if(!b)return null;return SKINT[id]=await texDeBlob(b)}
+async function skinTex(id){if(SKINT[id])return SKINT[id];const b=await IDB.get(id+'@'+(busDef(id).prof.lantVer||1));if(!b)return null;
+ return SKINT[id]=await texDeBlob(b)}
 async function aplicarPintura(v){if(!v||!v.corpo||!v.busId)return;const id=v.busId,base=busDef(id).prof.base,modo0=v===BUS||v===BUS2||v===TRUCK?(G.pintura[id]||(base?'branco':'original')):'original',modo=base&&modo0==='branco'?'original':modo0,C=v.corpo;
  try{if(modo==='original'){C.mat.map=C.orig;C.U.uSkin.value=0}
   else{const tb=base?C.orig:await texBranca(id);if(v.busId!==id)return;C.mat.map=tb;
@@ -970,7 +972,7 @@ function carregarSkin(){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo){
  inp.onchange=()=>{const f=inp.files&&inp.files[0];if(!f)return;toast('Carregando a skin…',1500);
   const u=URL.createObjectURL(f),im=new Image();
   im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=2048;c.getContext('2d').drawImage(im,0,0,2048,2048);URL.revokeObjectURL(u);
-   c.toBlob(async b=>{try{await IDB.set(id+'@'+(busDef(id).prof.lantVer||1),b);delete SKINT[id];G.pintura[id]='skin';salvarPintura();await aplicarPintura(v);renderBusSel();toast('Skin aplicada no '+busDef(id).nome,2500)}
+   c.toBlob(async b=>{try{await IDB.set(id+'@'+(busDef(id).prof.lantVer||1),b);delete SKINT[id];G.skinRev=(G.skinRev||0)+1;G.pintura[id]='skin';salvarPintura();await aplicarPintura(v);renderBusSel();toast('Skin aplicada no '+busDef(id).nome,2500)}
     catch(e){toast('Não consegui salvar a skin: '+(e.message||e),4000)}},'image/png')};
   im.onerror=()=>toast('Esse arquivo não é uma imagem que o navegador abre',3500);im.src=u};
  inp.click()}
@@ -993,11 +995,13 @@ const PECAS={farol:[{id:'farol_urbano_1',n:'LED duplo',p:['urbano']},{id:'farol_
 const PNOME={farol:'Farol',lanterna:'Lanterna',calota:'Calota',letreiro:'Letreiro'};
 function slotDe(id,k){if(k!=='farol')return SLOT[k];const fa=DETR[id].fa,asp=(fa[2]-fa[0])/(fa[3]-fa[1]),fw=300*asp<=700?Math.round(300*asp):700,fh=300*asp<=700?300:Math.round(700/asp);return[60,140,60+fw,140+fh]}
 const PIMG={};function imgPeca(id){return PIMG[id]||(PIMG[id]=new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>{delete PIMG[id];rej(new Error(id))};im.src='modelos/pecas/'+id+'.png'}))}
-const temDet=f=>!!(f&&(f.det||f.txt||(f.pc&&Object.values(f.pc).some(Boolean))));
+const temDet=(f,id)=>!!((f&&(f.det||f.txt||(f.pc&&Object.values(f.pc).some(Boolean))))||(id&&skinOn(id)));
+const skinOn=id=>!!(DETR[id]&&G.pintura[id]==='skin');
 /* monta o molde de detalhes: peças escolhidas + texto do letreiro + o desenho do player por cima (verde = vazio) */
-async function montaDet(id,comTexto){const f=G.pintura2[id]||{},pc=f.pc||{};if(!temDet(f)&&!comTexto)return null;
+async function montaDet(id,comTexto){const f=G.pintura2[id]||{},pc=f.pc||{};if(!temDet(f,id)&&!comTexto)return null;
  const c=cnv(2048,2048),g=c.getContext('2d',{willReadFrequently:true});g.fillStyle='#00ff00';g.fillRect(0,0,2048,2048);
  if(comTexto){const im=await blobImg(await (await fetch(PASTA_ONIBUS+'skins/modelo_'+id+'_detalhes.png')).blob());g.drawImage(im,0,0,2048,2048)}
+ if(skinOn(id)&&!comTexto)await quadrosDaSkin(id,g);
  for(const k in PECAS){const pid=pc[k];if(!pid)continue;const [x0,y0,x1,y1]=slotDe(id,k);try{const im=await imgPeca(pid);g.clearRect(x0,y0,x1-x0,y1-y0);
   if(k==='farol'){try{const fu=await imgPeca('fundo_farol_'+id);g.globalAlpha=.98;g.drawImage(fu,x0,y0,x1-x0,y1-y0);g.globalAlpha=1}catch(e){}}
   g.drawImage(im,x0,y0,x1-x0,y1-y0)}catch(e){}}
@@ -1009,6 +1013,18 @@ async function montaDet(id,comTexto){const f=G.pintura2[id]||{},pc=f.pc||{};if(!
   const d=q.getImageData(0,0,2048,2048),a=d.data;for(let i=0;i<a.length;i+=4){const R=a[i],G_=a[i+1],B=a[i+2];if(G_>150&&R<120&&B<120&&G_>R*1.6&&G_>B*1.6)a[i+3]=0}q.putImageData(d,0,0);
   for(const k in SLOT){const [x0,y0,x1,y1]=slotDe(id,k);g.drawImage(t,x0,y0,x1-x0,y1-y0,x0,y0,x1-x0,y1-y0)}}}
  return c}
+/* molde único: os quadros de peças da skin (lanterna, farol, placa, calota, letreiro) viram as peças */
+let SLOTS=null;const slotsSkin=()=>SLOTS||(SLOTS=fetch(PASTA_ONIBUS+'skins/slots.json').then(r=>r.json()).catch(()=>({})));
+async function quadrosDaSkin(id,g){const b=await IDB.get(id+'@'+(busDef(id).prof.lantVer||1)),S=(await slotsSkin())[id];if(!b||!S)return;const im=await blobImg(b),k2=2048/im.width;
+ for(const k in S){const {r,t}=S[k],w=r[2]-r[0],h=r[3]-r[1],c=cnv(w,h),q=c.getContext('2d',{willReadFrequently:true});q.drawImage(im,r[0]/k2,r[1]/k2,w/k2,h/k2,0,0,w,h);
+  const px=q.getImageData(0,0,w,h).data;let dif=0,n=0,j=0;
+  for(let by=0;by<12;by++)for(let bx=0;bx<12;bx++){const ya=Math.floor(by*h/12),yb=Math.floor((by+1)*h/12),xa=Math.floor(bx*w/12),xb=Math.floor((bx+1)*w/12);let R=0,G_=0,B=0,m=0;
+   for(let y=ya;y<yb;y++)for(let x=xa;x<xb;x++){const i=(y*w+x)*4;R+=px[i];G_+=px[i+1];B+=px[i+2];m++}m=m||1;dif+=Math.abs(R/m-t[j])+Math.abs(G_/m-t[j+1])+Math.abs(B/m-t[j+2]);n+=3;j+=3}
+  if(dif/n<9)continue;
+  const d=q.getImageData(0,0,w,h),a=d.data;let cheios=0;for(let i=0;i<a.length;i+=4){const R=a[i],G_=a[i+1],B=a[i+2];if((Math.abs(R-33)<14&&Math.abs(G_-33)<14&&Math.abs(B-33)<14)||(G_>150&&R<120&&B<120))a[i+3]=0;else cheios++}
+  if(cheios<a.length/4*.03)continue;q.putImageData(d,0,0);const [x0,y0,x1,y1]=slotDe(id,k);g.clearRect(x0,y0,x1-x0,y1-y0);
+  if(k==='farol'){try{const fu=await imgPeca('fundo_farol_'+id);g.drawImage(fu,x0,y0,x1-x0,y1-y0)}catch(e){}}
+  g.drawImage(c,x0,y0,x1-x0,y1-y0)}}
 function escolherPeca(k,pid){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo)return;const id=v.busId,f=G.pintura2[id]||(G.pintura2[id]={});(f.pc||(f.pc={}))[k]=pid||null;salvarPintura2();delete EXT[id+'det'];v.detNovo=true;aplicarPintura(v).then(renderBusSel)}
 function textoLetreiro(txt){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo)return;const id=v.busId,f=G.pintura2[id]||(G.pintura2[id]={});f.txt=txt.trim();salvarPintura2();delete EXT[id+'det'];aplicarPintura(v)}
 const salvarPintura2=()=>{try{localStorage.setItem('sb_pintura2',JSON.stringify(G.pintura2))}catch(e){}};
@@ -1047,9 +1063,10 @@ async function extraTex(id,t){if(EXT[id+t])return EXT[id+t];const b=await IDB.ge
 function lantCfgV(v,def){const c=lantCfg(def);if(!c||!v||!v.detSk)return c;const ps=(c.pecas||[c]).filter(p=>LDES[p.des]);if(!ps.length)return c;
  const y0=Math.min(...ps.map(p=>p.y)),y1=Math.max(...ps.map(p=>p.y+p.h)),w=Math.max(...ps.map(p=>p.w!=null?p.w:p.h*LDES[p.des].p));
  return{des:'sk_'+def.id,x:ps.reduce((a,p)=>a+p.x,0)/ps.length,z:ps[0].z,y:y0,h:y1-y0,w,ang:ps[0].ang,esp:ps[0].esp}}
-async function aplicarExtras(v){const C=v.corpo,id=v.busId;if(!C)return;const f=((v===BUS||v===BUS2)&&DETR[id]&&G.pintura2[id])||{},U=C.U;
+async function aplicarExtras(v){const C=v.corpo,id=v.busId;if(!C)return;const ok=(v===BUS||v===BUS2)&&DETR[id],f=(ok&&G.pintura2[id])||{},U=C.U;if(!ok&&U.uDet.value===0&&U.uVid.value===0)return;
  try{if(f.vid){const t=await extraTex(id,'vid');U.vidMap.value=t||TEX1;U.uVid.value=t?1:0}else U.uVid.value=0;
-  const P=temDet(f)?await prepDet(id):null;if(v.busId!==id)return;
+  const sig=JSON.stringify(f)+(skinOn(id)?'|s'+(G.skinRev||0):'');if(EXT[id+'detsig']!==sig){delete EXT[id+'det'];EXT[id+'detsig']=sig}
+  const P=temDet(f,id)?await prepDet(id):null;if(v.busId!==id)return;
   if(P){const R=DETR[id];U.detMap.value=P.det;U.luzMap.value=P.luz;U.drlMap.value=P.drl||TEX1;U.temDRL=!!P.drl;U.uFr.value.set(...R.fr.map(x=>x/2048));U.uLt.value.set(...R.lt.map(x=>x/2048));U.uDet.value=1}else U.uDet.value=0;
   const S=v.setGLB;if(S&&S.calMat){const cal=P&&P.cal;S.calMat.map=cal||TEX1;S.calMat.needsUpdate=true;for(const d of S.calotas||[])d.visible=!!cal}
   const sk=!!(P&&P.lant);if(!!v.detSk!==sk){v.detSk=sk;refazLant(v)}else if(sk&&v.detNovo){refazLant(v)}v.detNovo=false}
