@@ -1269,16 +1269,18 @@ function telaPrimeiro(){const el=$('auth'),ops=Object.values(NET.cat).filter(c=>
 /* ---- começar na partida: o jogador só tem o veículo ativo no mapa ---- */
 function netAtivo(){const P=NET.perfil,r=NET.meus.find(x=>x.id===P.veiculo_ativo)||NET.meus.find(x=>busDef(x.modelo));return r&&busDef(r.modelo)?r:null}
 function netComecar(){const r=netAtivo();if(!r)return;const def=busDef(r.modelo),v=busOf(def.tipo);
- if(v!==G.active){Object.assign(v,{x:G.active.x,z:G.active.z,h:G.active.h,speed:0,vx:0,vz:0})}
+ {const S=SHOP[0],T=TOW[0];Object.assign(v,{x:S.x+(T.x-S.x)*.35,z:S.z+(T.z-S.z)*.35,h:T.h,speed:0,vx:0,vz:0})}
  for(const o of PV)if(o!==v){o.g.visible=false;o.x=o.z=-1e5;if(o.trailer){const t=o.trailer;o.trailer=null;removeTrailer(t)}}
  v.g.visible=true;Object.assign(v,{fuel:r.combustivel,eng:r.motor,tires:r.pneus,brakes:r.freios,body:r.lataria});G.active=v;escolherOnibus(r.modelo);
  clearInterval(NET.tPos);NET.tPos=setInterval(()=>netPos(),5000);netPos()}
 /* traz o veículo escolhido para onde o jogador está (os outros ficam guardados) */
 function netTrazer(v){if(!NET.user)return true;const c=G.mode==='drive'?G.active:null;if(c===v)return true;
  if(c&&Math.abs(c.speed)>.8){toast('Pare o veículo antes de trocar');return false}
- const ref=c||P;if(c&&c.trailer){const t=c.trailer;c.trailer=null;removeTrailer(t)}
- Object.assign(v,{x:ref.x,z:ref.z,h:ref.h,speed:0,vx:0,vz:0,hb:true});
- for(const o of PV){o.g.visible=o===v;if(o!==v)o.x=o.z=-1e5}return true}
+ const ref=c||P,rx=ref.x,rz=ref.z,rh=ref.h||0;
+ for(const o of PV)if(o.trailer&&!(G.job&&G.job.trailer===o.trailer)){const t=o.trailer;o.trailer=null;t.attached=null;removeTrailer(t)}else if(o.trailer){o.trailer.attached=null;o.trailer=null}
+ Object.assign(v,{x:rx,z:rz,h:rh,speed:0,vx:0,vz:0,steer:0,hb:true});
+ for(const o of PV){o.g.visible=o===v;if(o!==v){o.x=o.z=-1e5;o.speed=0;o.vx=o.vz=0}}
+ if(c){c.hb=true;G.active=v;v.hb=false}return true}
 const netPosRef=()=>G.mode==='drive'&&G.active?G.active:P;
 const netNaGaragem=()=>{const o=netPosRef();return SHOP.some(s=>dist(o,s)<40)};
 async function netPos(){if(!NET.user||!G.started)return;const o=netPosRef(),m=G.mode==='drive'&&G.active?G.active.busId:null;
@@ -1315,7 +1317,7 @@ async function netComprar(c){const adm=ehAdm();if(!adm&&!netNaGaragem()){toast('
  await netRecarregar();toast(adm?c.nome+' na sua garagem para teste':'Comprado: '+c.nome+'!',2500);renderBusSel();
  if(adm&&busDef(c.id)){const r=NET.meus.find(x=>x.modelo===c.id);if(r)netTrocar(r)}}
 async function netTrocar(r){if(G.carregando)return;const def=busDef(r.modelo);if(!def)return;
- if(G.job&&G.job.kind===(def.tipo==='truck'?'truck':'bus')&&G.active&&G.active.busId!==r.modelo){toast('Termine ou cancele o trabalho antes de trocar');return}
+ {const j=G.job,c=G.active;if(j&&c&&c.busId!==r.modelo&&((j.kind==='bus'&&j.bus===c&&j.stage!=='toBay')||(j.kind==='truck'&&c===TRUCK&&j.trailer&&c.trailer===j.trailer))){toast('Termine ou cancele o trabalho antes de trocar');return}}
  await netPos();const {error}=await NET.sb.rpc('trocar_veiculo',{p_veiculo:r.id});if(error){toast(netErro(error),3500);return}
  NET.perfil.veiculo_ativo=r.id;const v=busOf(def.tipo);if(v!==G.active)Object.assign(v,{fuel:r.combustivel,eng:r.motor,tires:r.pneus,brakes:r.freios,body:r.lataria});escolherOnibus(r.modelo)}
 /* ---- ajustes do administrador (valem para todos) ---- */
