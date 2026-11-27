@@ -648,7 +648,7 @@ function abrirMapa(on){const e=$('wmap');const v=on===undefined?!e.classList.con
 
 /* ---------- brilho das luzes ---------- */
 const GLOWT=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.22,'rgba(255,255,255,.6)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
-function haloMats(){const m=c=>new THREE.SpriteMaterial({map:GLOWT,color:c,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending});return{head:m(0xfff0c8),tail:m(0xff2414),il:m(0xffa200),ir:m(0xffa200)}}
+function haloMats(){const m=c=>new THREE.SpriteMaterial({map:GLOWT,color:c,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending});return{head:m(0xfff0c8),alto:m(0xeef2ff),tail:m(0xff2414),re:m(0xffffff),il:m(0xffa200),ir:m(0xffa200)}}
 function halo(arr,p,mat,x,y,z,s){const sp=new THREE.Sprite(mat);sp.position.set(x,y,z);sp.scale.set(s,s,s);sp.visible=false;p.add(sp);arr.push(sp);return sp}
 function lampHalos(arr,p,hm,L){for(const [k,x,y,z,s] of L)halo(arr,p,hm[k],x,y,z,s)}
 const IN_BACK=new THREE.MeshLambertMaterial({color:0x3a3f47,side:THREE.BackSide});
@@ -905,9 +905,7 @@ function applyGLB(v,M,def){const PR={...def.prof};{const F=farolCfg(def.id);if(F
     const d=new THREE.Mesh(WHEELG,DARK);d.scale.set(.04,r*.62,r*.62);d.position.x=n.t[0]<0?bb.max.x:bb.min.x;sp.add(d)}}
   else if(n.name.startsWith('porta'))G2.doors.push({piv,axis:'y',ang:n.name.endsWith('_a')?-1.3:n.name.endsWith('_b')?1.3:1.25,grp:'main',cur:0,tgt:0});}
  if(PR.rodas&&RODA)montarRodas(root,G2,PR);
- const L=PR.lamps,MM={head:v.mHead,tail:v.mBrake,il:v.mIL,ir:v.mIR},SZ={head:[.45*PR.farTam,.16*PR.farTam,1.3*PR.farTam],tail:[.14,.6,1.1],il:[.14,.12,.7],ir:[.14,.12,.7]};
- for(const k in L)for(const p of L[k]){if(!PR.soHalo&&def.tipo==='truck'){const e=new THREE.Mesh(BOX1,MM[k]);e.scale.set(SZ[k][0],SZ[k][1],.06);e.position.set(p[0],p[1],p[2]);root.add(e);G2.glows.push(e)}
-  lampHalos(G2.halos,root,v.hm,[[k,p[0],p[1],p[2]+Math.sign(p[2])*.1,SZ[k][2]]])}
+ montarLuzes(root,G2,v.hm,def);
  {const lc=lantCfgV(v,def);if(lc){try{G2.lant=montarLant(root,lc,def.id)}catch(e){console.warn('lanterna',e)}}}
  if(PR.interior!=='none'){const ig=new THREE.Group();ig.position.z=PR.intZ||0;root.add(ig);interior(ig,PR.interior)}
  {const sus=new THREE.Group();const keep=new Set(G2.wheels.map(w=>w.parent));for(const ch of root.children.slice())if(!keep.has(ch)){root.remove(ch);sus.add(ch)}root.add(sus);root.userData.susp=sus;aplicarSusp(v,def)}
@@ -1032,7 +1030,7 @@ const DETR={urbano:{c:182.6,fa:[48,1040,102,1085],pf:[156,1095,210,1116],pt:[530
  rodoviario_2e:{c:185,fa:[30,1265,106,1330],pf:[155,1353,207,1371],pt:[547,1284,590,1301],lt:[110,1063,260,1085],fr:[8,959,362,1423]},
  rodoviario_3e:{c:183.8,fa:[30,1250,101,1320],pf:[152,1340,205,1358],pt:[535,1258,590,1276],lt:[110,1047,258,1069],fr:[8,948,359,1406]}};
 const SLOT={farol:[60,140,760,440],placa:[60,560,760,790],lanterna:[880,140,1180,1340],calota:[1320,140,1920,740],letreiro:[60,1440,1440,1640]};
-G.pintura2=(()=>{try{return JSON.parse(localStorage.getItem('sb_pintura2')||'{}')||{}}catch(e){return{}}})();
+G.pintura2=(()=>{try{return JSON.parse(localStorage.getItem('sb_pintura2')||'{}')||{}}catch(e){return{}}})();for(const k in G.pintura2){const pc=G.pintura2[k]&&G.pintura2[k].pc;if(pc){delete pc.farol;delete pc.lanterna}}
 /* peças prontas (imagens em modelos/pecas): p = ônibus em que servem (sem p = todos) */
 const PECAS={farol:[{id:'farol_urbano_1',n:'LED duplo',p:['urbano']},{id:'farol_rod2e_1',n:'Projetor com LED',p:['rodoviario_2e']},{id:'farol_rod3e_1',n:'Projetor com LED',p:['rodoviario_3e']}],
  lanterna:[{id:'lanterna_urbano_1',n:'LED vertical',p:['urbano']},{id:'lanterna_rod2e_1',n:'LEDs em X',p:['rodoviario_2e','rodoviario_3e']}],
@@ -1131,7 +1129,7 @@ function htmlPintura(){const v=G.mode==='drive'?G.active:null;
   <div class="opts" style="margin-top:6px"><button class="btn" data-p="modelo">⬇ Baixar molde da carroceria</button><button class="btn" data-p="carregar">📷 Carregar skin</button></div>${DETR[id]?htmlExtras(id):''}${htmlSusp(id)}`}
 const MVID={};function mascaraVidro(id){return MVID[id]||(MVID[id]=new Promise((res,rej)=>new THREE.TextureLoader().load(PASTA_ONIBUS+'skins/vidro_'+id+'.png',t=>{t.flipY=false;t.needsUpdate=true;res(t)},undefined,()=>{delete MVID[id];rej(new Error('vidro_'+id))})))}
 function htmlExtras(id){const f=G.pintura2[id]||{},ex=(t,n,d)=>`<div class="bsT" style="margin-top:10px">${n}${f[t]?' · <span style="color:#5fd38d">ativo</span>':''}</div><p class="note" style="margin:2px 0 4px">${d}</p><div class="opts"><button class="btn" data-p="m_${t}">⬇ Baixar molde</button><button class="btn" data-p="c_${t}">📷 Carregar</button>${f[t]?`<button class="btn" data-p="r_${t}">✖ Tirar</button>`:''}</div>`;
- const pc=f.pc||{},sel=Object.keys(PECAS).map(k=>{const L=PECAS[k].filter(p=>!p.p||p.p.includes(id));return `<label class="pcL">${PNOME[k]}<select data-pc="${k}"><option value="">Original</option>${L.map(p=>`<option value="${p.id}"${pc[k]===p.id?' selected':''}>${p.n}</option>`).join('')}</select></label>`}).join('');
+ const pc=f.pc||{},sel=Object.keys(PECAS).filter(k=>k!=='farol'&&k!=='lanterna').map(k=>{const L=PECAS[k].filter(p=>!p.p||p.p.includes(id));return `<label class="pcL">${PNOME[k]}<select data-pc="${k}"><option value="">Original</option>${L.map(p=>`<option value="${p.id}"${pc[k]===p.id?' selected':''}>${p.n}</option>`).join('')}</select></label>`}).join('');
  return ex('vid','Vidros','Escurecer, faixa, adesivo e logo nos vidros.')+`<div class="bsT" style="margin-top:10px">Peças prontas</div><div class="pcG">${sel}<label class="pcL" style="grid-column:1/-1">Texto do letreiro<input data-txt maxlength="28" placeholder="ex.: 101 · CENTRO" value="${(f.txt||'').replace(/"/g,'&quot;')}"></label></div>`
   +ex('det','Desenho próprio (molde de detalhes)','O molde já vem com as peças escolhidas acima. Pinte por cima; verde = fica como está.')}
 
@@ -1144,7 +1142,7 @@ G.lantArq={};G.lantLocal={};G.lantPrev=null;
 try{G.lantLocal=JSON.parse(localStorage.getItem('sb_lant_aj')||'{}')||{}}catch(e){G.lantLocal={}}
 /* ver: versão do modelo; ajuste feito para o modelo antigo não vale no novo */
 const lantOk=(c,def)=>c&&(c.ver||1)===(def.prof.lantVer||1);
-const lantCfg=def=>(G.lantPrev&&G.lantPrev.id===def.id?G.lantPrev.cfg:null)||(lantOk(G.lantLocal[def.id],def)?G.lantLocal[def.id]:null)||(lantOk(G.lantArq[def.id],def)?G.lantArq[def.id]:null)||def.prof.lant||null;
+const lantCfg=def=>null&&(G.lantPrev&&G.lantPrev.id===def.id?G.lantPrev.cfg:null)||(lantOk(G.lantLocal[def.id],def)?G.lantLocal[def.id]:null)||(lantOk(G.lantArq[def.id],def)?G.lantArq[def.id]:null)||def.prof.lant||null;
 function refazLant(v){if(!v||!v.glbRoot||!v.busId)return;const def=busDef(v.busId),cfg=lantCfgV(v,def);
  if(v.lant&&v.lant.g){v.glbRoot.remove(v.lant.g);v.lant.g.traverse(m=>{if(m.isMesh)m.geometry.dispose()})}
  v.lant=null;if(cfg){try{v.lant=montarLant(v.glbRoot.userData.susp||v.glbRoot,cfg,def.id)}catch(e){console.warn('lanterna',e)}}if(v.setGLB)v.setGLB.lant=v.lant}
@@ -1202,9 +1200,9 @@ function ligarAjLant(){const A=G.aj,C=A.cfg;
    for(const P of alvoAjLant()){if(A.lado==='ambos'){P[campo]=+((+P[campo]||0)+passo).toFixed(3);for(const L of Object.values(P.lados||{}))if(L[campo]!==undefined)L[campo]=+(L[campo]+passo).toFixed(3)}
     else{P.lados=P.lados||{};const L=P.lados[A.lado]=P.lados[A.lado]||{};L[campo]=+((L[campo]!==undefined?L[campo]:+P[campo]||0)+passo).toFixed(3)}}
    aplicarAjLant()}})}
-if(new URLSearchParams(location.search).has('ajuste')){const b=document.createElement('button');b.id='ajLantBtn';b.textContent='🚌 Lanternas';b.onclick=e=>{e.stopPropagation();abrirAjLant()};
+if(new URLSearchParams(location.search).has('ajuste')){const b=document.createElement('button');b.id='ajLantBtn';b.textContent='💡 Luzes';b.onclick=e=>{e.stopPropagation();abrirLuzes()};
  b.addEventListener('pointerdown',e=>e.stopPropagation());document.body.appendChild(b);
- const f=document.createElement('button');f.id='ajFarBtn';f.textContent='💡 Faróis';f.onclick=e=>{e.stopPropagation();abrirAjFarol()};f.addEventListener('pointerdown',e=>e.stopPropagation());document.body.appendChild(f)}
+ const f=document.createElement('span');f.id='ajFarBtn';f.style.display='none';f.textContent='💡 Faróis';f.onclick=e=>{e.stopPropagation();abrirAjFarol()};f.addEventListener('pointerdown',e=>e.stopPropagation());document.body.appendChild(f)}
 
 /* ===================== online (Supabase): contas, dinheiro, garagem, administrador =====================
    Liga sozinho quando banco/config.js tem a url e a chave do projeto. Sem isso o jogo roda local, como antes. */
@@ -1327,7 +1325,7 @@ async function netTrocar(r){if(G.carregando)return;const def=busDef(r.modelo);if
 /* ---- ajustes do administrador (valem para todos) ---- */
 G.farolArq={};G.farolLocal=(()=>{try{return JSON.parse(localStorage.getItem('sb_farol_aj')||'{}')}catch(e){return{}}})();
 async function netAjustes(){if(!NET.sb)return;const {data,error}=await NET.sb.from('ajustes').select('*');if(error||!data)return;
- for(const a of data){if(a.tipo==='lanterna'){G.lantArq[a.modelo]=a.dados;if(!G.lantLocal[a.modelo])refazLantId(a.modelo)}else if(a.tipo==='farol'){G.farolArq[a.modelo]=a.dados;if(!G.farolLocal[a.modelo])reaplicarModelo(a.modelo)}else if(a.tipo==='suspensao'){G.suspArq[a.modelo]=a.dados;aplicarSuspId(a.modelo)}}}
+ for(const a of data){if(a.tipo==='lanterna'){G.lantArq[a.modelo]=a.dados;if(!G.lantLocal[a.modelo])refazLantId(a.modelo)}else if(a.tipo==='farol'&&a.dados&&a.dados.pontos){G.luzArq[a.modelo]=a.dados;if(!G.luzLocal[a.modelo])reaplicarModelo(a.modelo)}else if(a.tipo==='farol'){G.farolArq[a.modelo]=a.dados;if(!G.farolLocal[a.modelo])reaplicarModelo(a.modelo)}else if(a.tipo==='suspensao'){G.suspArq[a.modelo]=a.dados;aplicarSuspId(a.modelo)}}}
 async function netSalvarAjuste(modelo,tipo,dados){if(!NET.user||!ehAdm())return false;
  const {error}=await NET.sb.from('ajustes').upsert({modelo,tipo,dados,atualizado_em:new Date().toISOString(),atualizado_por:NET.user.id});if(error){toast('Não salvei no servidor: '+netErro(error),4000);return false}return true}
 /* painel do administrador */
@@ -1336,7 +1334,7 @@ function abrirAdm(){if(!ehAdm())return;if(G.menu)toggleMenu(false);let el=$('adm
 function desenharAdm(){const el=$('adm'),todos=[...FROTA.map(b=>({id:b.id,tipo:CAT_TIPO[b.tipo],nome:b.nome})),...Object.keys(CARR_TIPOS).map(k=>({id:'carreta_'+k,tipo:'carreta',nome:'Carreta '+CARR_TIPOS[k].n}))];
  const st={beta:'🧪 Beta (só você)',publico:'✅ Público',oculto:'🚫 Fora da loja'};
  let h=`<div class="card"><div class="row"><h2 style="font-size:22px">🛠 Administrador</h2><button class="btn" data-a="x">Fechar</button></div>
-  <h4>Ajustes que valem para todos</h4><div class="row" style="justify-content:flex-start;flex-wrap:wrap"><button class="btn" data-a="lant">🔴 Lanternas traseiras</button><button class="btn" data-a="farol">💡 Faróis dianteiros</button></div>
+  <h4>Ajustes que valem para todos</h4><div class="row" style="justify-content:flex-start;flex-wrap:wrap"><button class="btn" data-a="luzes">💡 Luzes (faróis, lanternas, ré e setas)</button></div>
   <div id="admSu"></div><div id="admSk"></div>
   <h4>Veículos</h4><p class="note" style="margin:0 0 6px">Veículo novo entra como <b>Beta</b>: só você vê e testa. Aprovou? Mude para <b>Público</b>, defina o preço e salve.</p>`;
  for(const t of ['onibus','caminhao','carreta']){h+=`<div class="bsT">${{onibus:'🚌 Ônibus',caminhao:'🚛 Caminhões',carreta:'🔗 Carretas'}[t]}</div>`;
@@ -1345,14 +1343,74 @@ function desenharAdm(){const el=$('adm'),todos=[...FROTA.map(b=>({id:b.id,tipo:C
  el.innerHTML=h+'</div>';desenharAdmSkins($('admSk'));desenharAdmSusp($('admSu'));
  el.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{const a=b.dataset.a,row=b.closest('.admV');
   if(a==='x'){el.className='';return}
-  if(a==='lant'){el.className='';abrirAjLant();return}
-  if(a==='farol'){el.className='';abrirAjFarol();return}
+  if(a==='luzes'){el.className='';abrirLuzes();return}
   const id=row.dataset.id,v=todos.find(x=>x.id===id);
   if(a==='salvar'){const d={id,tipo:v.tipo,nome:(NET.cat[id]||v).nome,status:row.querySelector('[data-k=status]').value,preco:Math.max(0,Math.round(+row.querySelector('[data-k=preco]').value||0)),atualizado_em:new Date().toISOString()};
    if(d.status==='publico'&&!d.preco&&!confirm('Preço zero: o veículo fica de graça na loja. Continuar?'))return;
    const {error}=await NET.sb.from('veiculos_catalogo').upsert(d);if(error){toast(netErro(error),3500);return}NET.cat[id]=d;toast('Salvo: '+d.nome+' · '+st[d.status]+(d.status==='publico'?' · '+brl(d.preco):''),2500);desenharAdm();return}
   if(a==='testar'){if(!NET.cat[id]){const {error}=await NET.sb.from('veiculos_catalogo').upsert({id,tipo:v.tipo,nome:v.nome,status:'beta',preco:0});if(error){toast(netErro(error));return}await netRecarregar()}
    el.className='';const r=NET.meus.find(x=>x.modelo===id);if(r)netTrocar(r);else netComprar(NET.cat[id])}})}
+/* ---------- luzes: pontos de brilho configuráveis (substituem as lanternas montadas) ---------- */
+const TIPOS_LUZ={farol:'Farol baixo',alto:'Farol alto',lanterna:'Lanterna/freio',re:'Ré',seta:'Seta'};
+G.luzArq={};G.luzLocal=(()=>{try{return JSON.parse(localStorage.getItem('sb_luzes')||'{}')}catch(e){return{}}})();
+function luzesPadrao(def){const P=def.prof,L=P.lamps||{},o=[],r=v=>Math.round(v*1000)/1000;
+ let head=(L.head||[]).filter(p=>p[0]>0);const F=farolCfg(def.id);if(F&&F.head)head=[F.head];
+ let tail=(L.tail||[]).filter(p=>p[0]>0);if(!tail.length&&P.lant){const c=P.lant.pecas?P.lant.pecas[0]:P.lant;if(c&&c.x!==undefined)tail=[[Math.abs(c.x),r((c.y||.9)+(c.h||1)/2),c.z]]}
+ const il=(L.il||[]).map(p=>[Math.abs(p[0]),p[1],p[2]]);if(!tail.length){const rr=il.find(p=>p[2]<0);if(rr)tail=[[rr[0],r(rr[1]+.25),rr[2]]]}
+ for(const p of head)o.push({t:'farol',x:p[0],y:p[1],z:p[2],w:.85,h:.85});
+ if(head[0])o.push({t:'alto',x:r(Math.max(.3,head[0][0]-.28)),y:head[0][1],z:head[0][2],w:.75,h:.75});
+ for(const p of tail)o.push({t:'lanterna',x:p[0],y:p[1],z:p[2],w:.42,h:.8});
+ if(tail[0])o.push({t:'re',x:r(Math.max(.3,tail[0][0]-.22)),y:r(tail[0][1]-.15),z:tail[0][2],w:.32,h:.32});
+ for(const p of il)o.push({t:'seta',x:p[0],y:p[1],z:p[2],w:.42,h:.42});
+ return {v:2,pontos:o}}
+const luzesCfg=id=>(G.luzPrev&&G.luzPrev.id===id?G.luzPrev.cfg:null)||G.luzLocal[id]||G.luzArq[id]||luzesPadrao(busDef(id));
+function montarLuzes(root,G2,hm,def){for(const p of luzesCfg(def.id).pontos){for(const sg of (p.esp===false?[1]:[1,-1])){const x=p.x*sg;
+ const k=p.t==='farol'?'head':p.t==='alto'?'alto':p.t==='lanterna'?'tail':p.t==='re'?'re':(x>0?'il':'ir');if(!hm[k])continue;
+ const sp=halo(G2.halos,root,hm[k],x,p.y,p.z+(p.z>0?.05:-.05),1);sp.scale.set(p.w,p.h,1);sp.userData.b=[p.w,p.h]}}}
+/* painel de luzes (administrador, ou ?ajuste no modo local) */
+function abrirLuzes(){if(G.ajL)return;if(G.menu)toggleMenu(false);const el=document.createElement('div');el.id='ajLant';document.body.appendChild(el);
+ for(const ev of ['pointerdown','pointerup','touchstart','click'])el.addEventListener(ev,e=>e.stopPropagation(),{passive:true});
+ G.ajL={el,id:null,cfg:null,sel:0,passo:1,t0:G.time,vista:'frente',teste:{luz:1,freio:false,re:false,seta:false}};G.time=21;G.cam=0;document.body.classList.add('aj');
+ trocarLuzes(G.mode==='drive'&&G.active&&G.active.busId||FROTA[0].id)}
+function trocarLuzes(id){const A=G.ajL,def=busDef(id);A.id=id;A.cfg=null;A.sel=0;G.luzPrev=null;desenharLuzes();escolherOnibus(id);clearInterval(A.tm);
+ A.tm=setInterval(()=>{const v=busOf(def.tipo);if(!G.ajL||G.ajL.id!==id){clearInterval(A.tm);return}
+  if(v.busId===id&&G.mode==='drive'&&G.active===v){clearInterval(A.tm);A.v=v;v.hb=true;v.speed=0;A.cfg=JSON.parse(JSON.stringify(luzesCfg(id)));visaoLuzes();desenharLuzes()}},200)}
+function visaoLuzes(){const A=G.ajL;CAM.yaw=A.vista==='frente'?Math.PI-.4:.4;CAM.pitch=-.05;CAM.zoom=.6}
+function aplicarLuzes(){const A=G.ajL;desenharLuzes();clearTimeout(A.tRef);A.tRef=setTimeout(()=>{if(G.ajL!==A)return;G.luzPrev={id:A.id,cfg:A.cfg};reaplicarModelo(A.id)},180)}
+function fecharLuzes(){const A=G.ajL;if(!A)return;clearInterval(A.tm);G.luzPrev=null;if(A.id)reaplicarModelo(A.id);A.el.remove();G.time=A.t0;G.ajL=null;CAM.idle=9;CAM.yaw=0;document.body.classList.remove('aj')}
+const CAMPOS_LUZ=[['x','←→ Lado',.02],['y','Altura',.02],['z','Frente/trás',.02],['w','Largura',.04],['h','Alt. do brilho',.04]];
+function desenharLuzes(){const A=G.ajL;if(!A)return;const C=A.cfg,bt=(id,t,cor)=>`<button data-u="${id}"${cor?` style="background:${cor}"`:''}>${t}</button>`;
+ let h=`<b>💡 Luzes</b><select data-u="modelo">${FROTA.map(b=>`<option value="${b.id}"${b.id===A.id?' selected':''}>${b.nome}</option>`).join('')}</select>`;
+ if(!C){A.el.innerHTML=h+' <span>carregando…</span>'+bt('fechar','✖');ligarLuzes();return}
+ h+=`<span class="aj">${C.pontos.map((p,i)=>bt('s:'+i,(i+1)+'. '+TIPOS_LUZ[p.t],i===A.sel?'#2c5d8f':'')).join('')}</span>`;
+ const p=C.pontos[A.sel];
+ if(p){h+=`<select data-u="tipo">${Object.entries(TIPOS_LUZ).map(([k,n])=>`<option value="${k}"${k===p.t?' selected':''}>${n}</option>`).join('')}</select>`;
+  for(const [k,t] of CAMPOS_LUZ)h+=`<span class="aj">${t} ${bt('-:'+k,'−')}<i>${(+p[k]).toFixed(2)}</i>${bt('+:'+k,'+')}</span>`;
+  h+=bt('esp',p.esp===false?'Só um lado':'↔ Os dois lados',p.esp===false?'':'#7d5ba6')+bt('del','🗑 Tirar')}
+ h+=`<span class="aj">Novo: ${Object.keys(TIPOS_LUZ).map(k=>bt('n:'+k,'+ '+TIPOS_LUZ[k])).join('')}</span>`;
+ const T=A.teste;h+=`<span class="aj">${bt('tl',['Faróis desligados','Farol baixo','Farol alto'][T.luz],T.luz?'#8a7a10':'')}${bt('tf','Freio',T.freio?'#c0392b':'')}${bt('tr','Ré',T.re?'#888':'')}${bt('ts','Setas',T.seta?'#c77a10':'')}</span>`;
+ h+=bt('vista',A.vista==='frente'?'Ver traseira':'Ver frente')+bt('passo',A.passo>1?'Passo: grosso':'Passo: fino',A.passo>1?'#8a5a10':'')+bt('salvar','💾 Salvar','#1f7a3a')+bt('padrao','Padrão')+bt('fechar','✖');
+ A.el.innerHTML=h;ligarLuzes()}
+function ligarLuzes(){const A=G.ajL;A.el.querySelectorAll('[data-u]').forEach(e=>{const k=e.dataset.u;
+ if(e.tagName==='SELECT'){e.onchange=()=>{if(k==='modelo')trocarLuzes(e.value);else{A.cfg.pontos[A.sel].t=e.value;aplicarLuzes()}};return}
+ e.onclick=async()=>{const C=A.cfg;
+  if(k==='fechar'){fecharLuzes();return}
+  if(k==='passo'){A.passo=A.passo>1?1:5;desenharLuzes();return}
+  if(!C)return;const T=A.teste;
+  if(k==='tl'){T.luz=(T.luz+1)%3;desenharLuzes();return}if(k==='tf'){T.freio=!T.freio;desenharLuzes();return}if(k==='tr'){T.re=!T.re;desenharLuzes();return}if(k==='ts'){T.seta=!T.seta;desenharLuzes();return}
+  if(k==='vista'){A.vista=A.vista==='frente'?'tras':'frente';visaoLuzes();desenharLuzes();return}
+  if(k.startsWith('s:')){A.sel=+k.slice(2);desenharLuzes();return}
+  if(k==='esp'){const p=C.pontos[A.sel];p.esp=p.esp===false?true:false;aplicarLuzes();return}
+  if(k==='del'){C.pontos.splice(A.sel,1);A.sel=Math.max(0,A.sel-1);aplicarLuzes();return}
+  if(k.startsWith('n:')){const t=k.slice(2),v=A.v,fr=t==='farol'||t==='alto'||(t==='seta'&&A.vista==='frente'),base=C.pontos.find(q=>(q.z>0)===fr);
+   C.pontos.push(base?{t,x:base.x,y:base.y,z:base.z,w:t==='lanterna'?.42:.5,h:t==='lanterna'?.8:.5}:{t,x:.9,y:1,z:fr?v.hl+v.cz:-(v.hl-v.cz),w:.5,h:.5});A.sel=C.pontos.length-1;aplicarLuzes();return}
+  if(k==='padrao'){A.cfg=luzesPadrao(busDef(A.id));A.sel=0;delete G.luzLocal[A.id];aplicarLuzes();return}
+  if(k==='salvar'){const d={v:2,pontos:C.pontos.map(p=>{const o={t:p.t};for(const f of ['x','y','z','w','h'])o[f]=Math.round(p[f]*1000)/1000;if(p.esp===false)o.esp=false;return o})};
+   const srv=await netSalvarAjuste(A.id,'farol',d);if(srv){G.luzArq[A.id]=d;delete G.luzLocal[A.id]}else G.luzLocal[A.id]=d;
+   try{localStorage.setItem('sb_luzes',JSON.stringify(G.luzLocal))}catch(e){}G.luzPrev=null;reaplicarModelo(A.id);toast(srv?'💾 Luzes salvas para todos os jogadores':'💾 Salvo neste aparelho',3500);return}
+  const [sn,campo]=k.split(':'),st=CAMPOS_LUZ.find(c=>c[0]===campo)[2]*(sn==='+'?1:-1)*(A.passo||1),p=C.pontos[A.sel];
+  p[campo]=+(p[campo]+st).toFixed(3);if(campo==='w'||campo==='h')p[campo]=Math.max(.06,p[campo]);if(campo==='x')p.x=Math.max(0,p.x);aplicarLuzes()}})}
+
 /* ---------- suspensão: dianteira e traseira, limite do administrador ---------- */
 G.suspArq={};
 const SUSP_PADRAO={rodoviario_4e:{f:.08,r:.08,lim:.12}};
@@ -1430,7 +1488,7 @@ function netPintura(){const v=G.mode==='drive'?G.active:null;if(!v||!v.corpo||!v
  let h=`<div class="bsT">Skins do ${busDef(id).nome}</div>`;
  if(!L.length)h+='<p class="note" style="margin:2px 0 6px">Ainda não há skins para este veículo.</p>';
  h+='<div class="skG">'+L.map(s=>{const tem=temSkin(s),on=s.id===usando;return `<button class="skC${on?' on':''}" data-sk="${s.id}"><img src="${s.url}" loading="lazy" alt=""><span>${s.nome}${s.status==='beta'?' 🧪':''}</span><b>${on?'✓ usando':tem?'usar':brl(s.preco)}</b></button>`}).join('')+'</div>';
- if(DETR[id]){const f=G.pintura2[id]||{},pc=f.pc||{},sel=Object.keys(PECAS).map(k=>{const P=PECAS[k].filter(p=>!p.p||p.p.includes(id));return `<label class="pcL">${PNOME[k]}<select data-pc="${k}"><option value="">Original</option>${P.map(p=>`<option value="${p.id}"${pc[k]===p.id?' selected':''}>${p.n}</option>`).join('')}</select></label>`}).join('');
+ if(DETR[id]){const f=G.pintura2[id]||{},pc=f.pc||{},sel=Object.keys(PECAS).filter(k=>k!=='farol'&&k!=='lanterna').map(k=>{const P=PECAS[k].filter(p=>!p.p||p.p.includes(id));return `<label class="pcL">${PNOME[k]}<select data-pc="${k}"><option value="">Original</option>${P.map(p=>`<option value="${p.id}"${pc[k]===p.id?' selected':''}>${p.n}</option>`).join('')}</select></label>`}).join('');
   h+=`<div class="bsT" style="margin-top:10px">Peças</div><div class="pcG">${sel}<label class="pcL" style="grid-column:1/-1">Texto do letreiro<input data-txt maxlength="28" placeholder="ex.: 101 · CENTRO" value="${(f.txt||'').replace(/"/g,'&quot;')}"></label></div>`}
  return h+htmlSusp(id)}
 function ligarSkins(el){el.querySelectorAll('[data-sk]').forEach(b=>b.onclick=async()=>{const s=NET.skins[b.dataset.sk],v=G.active,r=NET.meus.find(x=>x.modelo===v.busId);if(!s||!r)return;
@@ -1789,7 +1847,7 @@ function env(dt,F){if(!G.aj)G.time=(G.time+dt/60)%24;G.wNext-=dt/60;if(G.wNext<=
 /* ---------- câmera ---------- */
 const camLook=new THREE.Vector3(),camWant=new THREE.Vector3();
 const CAM={yaw:0,pitch:0,zoom:1,idle:9,pts:new Map(),pd:0};
-function camUpdate(dt){let o,dd,hh,top;CAM.idle+=dt;if(G.aj||G.ajF)CAM.idle=-99;
+function camUpdate(dt){let o,dd,hh,top;CAM.idle+=dt;if(G.aj||G.ajF||G.ajL)CAM.idle=-99;
  if(CAM.idle>2.5&&!CAM.pts.size){const k=1-Math.exp(-dt*2.2);CAM.yaw=angN(CAM.yaw)*(1-k);CAM.pitch*=1-k}
  const baseF=innerWidth<innerHeight?75:60,ck=G.mode==='drive'&&G.cam===1;const wf=ck?clamp(baseF/CAM.zoom,30,85):baseF;if(Math.abs(camera.fov-wf)>.01){camera.fov=wf;camera.updateProjectionMatrix()}
  if(G.mode==='drive'){const v=G.active;o=v;dd=v.camD+(v.trailer?8:0);hh=v.camH+(v.trailer?2.5:0);top=v.top;
@@ -1826,7 +1884,9 @@ function sync(o,dt){o.g.position.set(o.x,0,o.z);o.g.rotation.y=o.h;facho(o);
  if(o.mHead){o.mHead.emissiveIntensity=o.lights?1:0;o.mBrake.emissiveIntensity=o.brk?1:(o.lights?.35:0);o.mIL.emissiveIntensity=o.indL&&G.blink?1:0;o.mIR.emissiveIntensity=o.indR&&G.blink?1:0;
   if(o.glows)for(const e of o.glows)e.visible=e.material.emissiveIntensity>0;
   {const hm=o.hm;hm.head.opacity=o.lights?(o.lights===2?1:.7):0;hm.tail.opacity=o.brk?1:(o.lights?.38:0);hm.il.opacity=o.indL&&G.blink?.95:0;hm.ir.opacity=o.indR&&G.blink?.95:0;
-   for(const s of o.halos)if(s.material===hm.head)s.scale.setScalar(o.lights===2?1.9:1.3);
+   {const A=G.ajL&&G.ajL.v===o?G.ajL.teste:null;if(A){hm.head.opacity=A.luz?(A.luz===2?1:.7):0;hm.tail.opacity=A.freio?1:(A.luz?.38:0);hm.il.opacity=hm.ir.opacity=A.seta&&G.blink?.95:0}
+    if(hm.alto)hm.alto.opacity=(A?A.luz===2:o.lights===2)?1:0;if(hm.re)hm.re.opacity=(A?A.re:o.on&&(o.gear<0||(G.auto&&o.sel==='R')))?.9:0}
+   for(const s of o.halos){const b=s.userData.b;if(b){if(s.material===hm.head){const k=hm.head.opacity>.9?1.2:1;s.scale.set(b[0]*k,b[1]*k,1)}}else if(s.material===hm.head)s.scale.setScalar(o.lights===2?1.9:1.3)}
    if(o.trailer){const th=o.trailer.hm;th.tail.opacity=hm.tail.opacity;th.il.opacity=hm.il.opacity;th.ir.opacity=hm.ir.opacity;const t2=o.trailer.reboque;if(t2){const h2=t2.hm;h2.tail.opacity=hm.tail.opacity;h2.il.opacity=hm.il.opacity;h2.ir.opacity=hm.ir.opacity;t2.mBrake.emissiveIntensity=o.mBrake.emissiveIntensity}}}
   if(o.spots)for(const s of o.spots){s.intensity=o.lights===2?3.4:o.lights?2.2:0;s.distance=o.lights===2?150:85;s.angle=o.lights===2?.36:.48}if(o.sw)o.sw.rotation.z=-o.steer*4;if(o.needles){o.needles[0].rotation.z=2.2-Math.min(1,Math.abs(o.speed)*3.6/120)*4.4;o.needles[1].rotation.z=2.2-Math.min(1,o.rpm/3000)*4.4}}
  if(o.mBrake&&o.trailer)o.trailer.mBrake.emissiveIntensity=o.mBrake.emissiveIntensity;

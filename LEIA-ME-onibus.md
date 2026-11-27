@@ -198,3 +198,8 @@ Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
   Rode `banco/atualizacao_4.sql` (libera esse ajuste no banco). O G7 DD já sai 8 cm mais alto de fábrica.
 - **Som**: voltou o som antigo do motor. Novo: parado (freio, freio de mão ou neutro), pisar no acelerador faz o motor roncar e o giro cai ao soltar. O som de tambor continua só no freio.
 - **G7 DD**: o brilho do farol foi para fora do farol (estava dentro do buraco da peça) e ficou menor.
+
+## Luzes novas (27/11)
+- As lanternas montadas saíram. Cada veículo tem **pontos de brilho**: farol baixo (bola branca), farol alto, lanterna/freio, ré e seta.
+- ☰ → 🛠 Administrador → **💡 Luzes** (ou `?ajuste` no modo local): escolha o ponto, mude tipo, lado, altura, frente/trás, largura e altura do brilho; "Os dois lados" espelha. "Novo" acrescenta quantos pontos quiser. Teste farol baixo/alto, freio, ré e setas; "Ver traseira/frente" gira a câmera. 💾 Salvar vale para todos.
+- Peças farol e lanterna saíram da escolha do jogador: a skin traz tudo (farol, lanterna, placa, calota e letreiro, quando o molde tem esses quadros).
