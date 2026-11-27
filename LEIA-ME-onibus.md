@@ -203,3 +203,9 @@ Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
 - As lanternas montadas saíram. Cada veículo tem **pontos de brilho**: farol baixo (bola branca), farol alto, lanterna/freio, ré e seta.
 - ☰ → 🛠 Administrador → **💡 Luzes** (ou `?ajuste` no modo local): escolha o ponto, mude tipo, lado, altura, frente/trás, largura e altura do brilho; "Os dois lados" espelha. "Novo" acrescenta quantos pontos quiser. Teste farol baixo/alto, freio, ré e setas; "Ver traseira/frente" gira a câmera. 💾 Salvar vale para todos.
 - Peças farol e lanterna saíram da escolha do jogador: a skin traz tudo (farol, lanterna, placa, calota e letreiro, quando o molde tem esses quadros).
+
+## Cabine e entrada (27/11)
+- Com a porta aberta aparece a entrada: degraus com borda amarela, corrimão e mureta (ônibus antigos e 360/380/Urbano). Nos G7, DD e Tourismo aparece o interior do próprio modelo.
+- Atrás do motorista há uma divisória com porta: na primeira pessoa não se veem as poltronas.
+- Primeira pessoa: a câmera fica presa à cabine; por dentro a lataria não tapa mais a visão (só o cenário passa pelos vidros); colunas e moldura do para-brisa próprias; menos tranco.
+- Caminhões: cabine com assoalho, fundo com cortina da cama, portas por dentro e teto.

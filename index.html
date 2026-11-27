@@ -908,6 +908,7 @@ function applyGLB(v,M,def){const PR={...def.prof};{const F=farolCfg(def.id);if(F
  montarLuzes(root,G2,v.hm,def);
  {const lc=lantCfgV(v,def);if(lc){try{G2.lant=montarLant(root,lc,def.id)}catch(e){console.warn('lanterna',e)}}}
  if(PR.interior!=='none'){const ig=new THREE.Group();ig.position.z=PR.intZ||0;root.add(ig);interior(ig,PR.interior)}
+ if(!G2.intMesh.length)try{cabine(root,def,G2)}catch(e){console.warn('cabine',e)}
  {const sus=new THREE.Group();const keep=new Set(G2.wheels.map(w=>w.parent));for(const ch of root.children.slice())if(!keep.has(ch)){root.remove(ch);sus.add(ch)}root.add(sus);root.userData.susp=sus;aplicarSusp(v,def)}
  v.setGLB=G2;if(!v.setProc){v.setProc={glows:null,cockOff:[0,0,0],lant:null,dentro:null,corpo:null};for(const k of PKEYS)if(v.setProc[k]===undefined)v.setProc[k]=v[k]}
  {const cs=[];root.traverse(o=>{if(o.isMesh&&o.geometry.attributes.skinuv)cs.push(o)});
@@ -916,7 +917,7 @@ function applyGLB(v,M,def){const PR={...def.prof};{const F=farolCfg(def.id);if(F
 function useModel(v,glb){if(!v.glbRoot)return;const set=glb?v.setGLB:v.setProc,old=glb?v.setProc:v.setGLB;
  set.doors.forEach(d=>{const o=old.doors.filter(x=>x.grp===d.grp)[0];if(o){d.tgt=o.tgt;d.cur=o.cur}});
  v.glbRoot.visible=glb;v.procParts.forEach(c=>c.visible=!glb);for(const s of old.halos)s.visible=false;
- for(const k of PKEYS)if(set[k]!==undefined)v[k]=set[k];if(v.cock){v.cock.position.fromArray(set.cockOff||[0,0,0]);v.cock.visible=!(set.intMesh&&set.intMesh.length)}
+ for(const k of PKEYS)if(set[k]!==undefined)v[k]=set[k];if(v.cock){v.cock.position.fromArray(set.cockOff||[0,0,0]);if(glb&&v.busId){v.cock.position.y-=.08;v.cock.position.z+=.22}v.cock.visible=!(set.intMesh&&set.intMesh.length)}
  if(v.gear>v.gears.length)v.gear=v.gears.length}
 G.model=ler('rb_model','glb');
 const MODELS={};
@@ -1411,6 +1412,40 @@ function ligarLuzes(){const A=G.ajL;A.el.querySelectorAll('[data-u]').forEach(e=
   const [sn,campo]=k.split(':'),st=CAMPOS_LUZ.find(c=>c[0]===campo)[2]*(sn==='+'?1:-1)*(A.passo||1),p=C.pontos[A.sel];
   p[campo]=+(p[campo]+st).toFixed(3);if(campo==='w'||campo==='h')p[campo]=Math.max(.06,p[campo]);if(campo==='x')p.x=Math.max(0,p.x);aplicarLuzes()}})}
 
+/* ---------- cabine por dentro (veículos sem interior próprio): entrada com degraus, divisória com porta atrás do motorista ---------- */
+const CABM={deg:new THREE.MeshLambertMaterial({color:0x6a7079}),bor:new THREE.MeshLambertMaterial({color:0xe0b020}),piso:new THREE.MeshLambertMaterial({color:0x3a3d42}),
+ par:new THREE.MeshLambertMaterial({color:0xd6d9dd}),div:new THREE.MeshLambertMaterial({color:0xa7adb5}),porta:new THREE.MeshLambertMaterial({color:0x5f6670}),vid:new THREE.MeshLambertMaterial({color:0x1d242c}),
+ metal:new THREE.MeshLambertMaterial({color:0xcfd2d6}),teto:new THREE.MeshLambertMaterial({color:0xd8d6d0}),cort:new THREE.MeshLambertMaterial({color:0x34405a}),couro:new THREE.MeshLambertMaterial({color:0x2a2c30})};
+function cabine(root,def,G2){const P=def.prof,g=new THREE.Group();g.name='cabine';root.add(g);
+ const cx=(w,h,d,m,x,y,z)=>{const e=new THREE.Mesh(BOX1,m);e.scale.set(w,h,d);e.position.set(x,y,z);e.receiveShadow=true;g.add(e);return e};
+ const hw=(P.hw||1.25)-.06,top=P.top||3.5,seat=P.seat||[.6,2,5],F=(P.hl||6)+(P.cz||0);
+ /* moldura do para-brisa e painel (por dentro a lataria some, então a cabine tem colunas próprias) */
+ {const fl0=def.tipo==='truck'?Math.max(1.2,seat[1]-1.15):Math.max(.75,seat[1]-1.2),zf=Math.min(F-.3,seat[2]+(def.tipo==='truck'?1.15:1.05)),yb=fl0+.95,yt=Math.min(top-.25,seat[1]+.75);
+  for(const sg of [1,-1]){const c=cx(.09,yt-yb,.1,CABM.couro,sg*(hw-.03),(yt+yb)/2,zf);c.rotation.x=-.18}
+  cx(2*hw,.14,.16,CABM.couro,0,yt+.04,zf-.06);
+  for(const sg of [1,-1])cx(.1,yt-yb,.1,CABM.couro,sg*(hw-.03),(yt+yb)/2,seat[2]-.65)}
+ if(def.tipo==='truck'){const fl=Math.max(1.2,seat[1]-1.15),zb=seat[2]-.75,zf=Math.min(F-.35,seat[2]+1.1),zm=(zb+zf)/2;
+  cx(2*hw,.06,zf-zb,CABM.piso,0,fl,zm);                                   // assoalho
+  cx(2*hw,top-fl-.15,.06,CABM.cort,0,(top+fl)/2,zb);                      // fundo com a cortina da cama
+  for(const sg of [1,-1])cx(.05,.75,zf-zb-.2,CABM.couro,sg*hw,fl+.4,zm);  // portas por dentro (até a janela)
+  cx(2*hw,.05,zf-zb,CABM.teto,0,top-.12,zm);
+  const bc=cx(.5,.55,.5,CABM.couro,seat[0],fl+.3,seat[2]-.1),en=cx(.5,.7,.1,CABM.couro,seat[0],fl+.9,seat[2]-.38);return}
+ const fl=Math.max(.75,seat[1]-1.2),dz=(P.door&&P.door[1])||F-1,z0=dz-.55,z1=dz+.55,xd=-hw,xi=-.25;
+ // degraus da entrada (do chão até a cabine)
+ const n=3,h0=.38,dh=(fl-h0)/n;for(let i=0;i<n;i++){const y=h0+dh*i,w=(xi-xd)-i*.16,x=xd+((xi-xd)-w)/2+w/2+i*.16;
+  cx(w-.0,dh,z1-z0,CABM.deg,xd+i*.16+(w)/2,y-dh/2+dh,dz);cx(.04,.025,z1-z0,CABM.bor,xd+i*.16+.02,y+dh+.012,dz)}
+ cx(xi-xd,.05,z1-z0,CABM.deg,(xd+xi)/2,h0-.02,dz);
+ cx(.06,fl+.9-h0,z1-z0,CABM.par,xi,(fl+.9+h0)/2,dz);                      // mureta entre a escada e o motorista
+ cx((hw-xd)*.0+(.02),1.2,.04,CABM.metal,xd+.12,fl+.6,z0+.08).scale.set(.04,1.3,.04); // corrimão
+ cx(.04,1.3,.04,CABM.metal,xi-.05,fl+.65,z1-.08);
+ // assoalho e teto da cabine, lateral do motorista
+ const zp=Math.min(seat[2]-.7,z0-.05),zf=F-.45,zm=(zp+zf)/2;
+ cx(hw-xi,.06,zf-zp,CABM.piso,(hw+xi)/2,fl,zm);
+ cx(2*hw,.05,zf-zp,CABM.teto,0,top-.3,zm);
+ cx(.05,.95,zf-zp-.3,CABM.par,hw,fl+.48,zm);
+ // divisória com porta atrás do motorista (esconde as poltronas)
+ const hp=top-.3-fl,yp=fl+hp/2;cx(2*hw,hp,.06,CABM.div,0,yp,zp);
+ const pt=cx(.75,Math.min(1.95,hp-.05),.04,CABM.porta,-.05,fl+Math.min(1.95,hp-.05)/2,zp+.035);cx(.42,.5,.02,CABM.vid,-.05,fl+1.45,zp+.06);cx(.04,.18,.06,CABM.metal,.25,fl+1,zp+.07)}
 /* ---------- suspensão: dianteira e traseira, limite do administrador ---------- */
 G.suspArq={};
 const SUSP_PADRAO={rodoviario_4e:{f:.08,r:.08,lim:.12}};
@@ -1851,7 +1886,10 @@ function camUpdate(dt){let o,dd,hh,top;CAM.idle+=dt;if(G.aj||G.ajF||G.ajL)CAM.id
  if(CAM.idle>2.5&&!CAM.pts.size){const k=1-Math.exp(-dt*2.2);CAM.yaw=angN(CAM.yaw)*(1-k);CAM.pitch*=1-k}
  const baseF=innerWidth<innerHeight?75:60,ck=G.mode==='drive'&&G.cam===1;const wf=ck?clamp(baseF/CAM.zoom,30,85):baseF;if(Math.abs(camera.fov-wf)>.01){camera.fov=wf;camera.updateProjectionMatrix()}
  if(G.mode==='drive'){const v=G.active;o=v;dd=v.camD+(v.trailer?8:0);hh=v.camH+(v.trailer?2.5:0);top=v.top;
-  if(ck){const s=toW(v,v.seat[0],v.seat[2]),f=fwd(v.h+clamp(CAM.yaw,-2.8,2.8)),py=clamp(CAM.pitch,-.8,.8);camera.position.set(s.x,v.seat[1],s.z);camera.lookAt(s.x+f.x*10,v.seat[1]-.7-py*9,s.z+f.z*10);shake(dt);return}
+  if(ck){const yw=clamp(CAM.yaw,-2.8,2.8),py=clamp(CAM.pitch,-.8,.8),ref=v.g;ref.updateWorldMatrix(true,false);
+   /* câmera presa à cabine: anda, inclina e balança junto com o ônibus; só o cenário passa pelas janelas */
+   const pos=CKP.set(v.seat[0],v.seat[1],v.seat[2]).applyMatrix4(ref.matrixWorld),dir=CKD.set(Math.sin(yw),-.07-py*.9,Math.cos(yw)).transformDirection(ref.matrixWorld);
+   camera.position.copy(pos);camera.lookAt(pos.x+dir.x*10,pos.y+dir.y*10,pos.z+dir.z*10);if(G.shake>.01){camera.position.y+=(Math.random()-.5)*G.shake*.08;G.shake*=Math.exp(-dt*6)}return}
   if(G.cam===2){dd*=1.7;hh*=3}}
  else{o=P;dd=5.2;hh=2.6;top=1.8}
  const D=Math.hypot(dd,hh)*CAM.zoom,el=clamp(Math.atan2(hh,dd)+CAM.pitch,.03,1.45),f=fwd(o.h+CAM.yaw),fo=fwd(o.h),ahead=4*Math.min(1,CAM.zoom);
@@ -1865,6 +1903,7 @@ function camUpdate(dt){let o,dd,hh,top;CAM.idle+=dt;if(G.aj||G.ajF||G.ajL)CAM.id
   p.x=e.clientX;p.y=e.clientY;if(CAM.pts.size===2){const d=pd();if(CAM.pd>0&&d>0)CAM.zoom=clamp(CAM.zoom*CAM.pd/d,.3,2.4);CAM.pd=d}});
  const pe=e=>{CAM.pts.delete(e.pointerId);CAM.pd=CAM.pts.size===2?pd():0};cv.addEventListener('pointerup',pe);cv.addEventListener('pointercancel',pe);
  cv.addEventListener('wheel',e=>{e.preventDefault();CAM.idle=0;CAM.zoom=clamp(CAM.zoom*(e.deltaY>0?1.1:.9),.3,2.4)},{passive:false})}
+const CKP=new THREE.Vector3(),CKD=new THREE.Vector3();
 function shake(dt){if(G.shake>.01){camera.position.x+=(Math.random()-.5)*G.shake*.6;camera.position.y+=(Math.random()-.5)*G.shake*.4;G.shake*=Math.exp(-dt*6)}}
 
 /* ---------- sincronizar ---------- */
@@ -1891,7 +1930,8 @@ function sync(o,dt){o.g.position.set(o.x,0,o.z);o.g.rotation.y=o.h;facho(o);
   if(o.spots)for(const s of o.spots){s.intensity=o.lights===2?3.4:o.lights?2.2:0;s.distance=o.lights===2?150:85;s.angle=o.lights===2?.36:.48}if(o.sw)o.sw.rotation.z=-o.steer*4;if(o.needles){o.needles[0].rotation.z=2.2-Math.min(1,Math.abs(o.speed)*3.6/120)*4.4;o.needles[1].rotation.z=2.2-Math.min(1,o.rpm/3000)*4.4}}
  if(o.mBrake&&o.trailer)o.trailer.mBrake.emissiveIntensity=o.mBrake.emissiveIntensity;
  if(o.dentro){const ck=G.cam===1&&G.mode==='drive'&&G.active===o;for(const m of o.dentro)m.visible=!ck}
- if(o.intMesh&&o.intMesh.length){const ck=G.cam===1&&G.mode==='drive'&&G.active===o;for(const m of o.intMesh)m.visible=ck}
+ if(o.corpo&&o.corpo.mat){const ck=G.cam===1&&G.mode==='drive'&&G.active===o,M=o.corpo.mat;if(M.userData.lado0===undefined)M.userData.lado0=M.side;const sd=ck?THREE.FrontSide:M.userData.lado0;if(M.side!==sd){M.side=sd;M.needsUpdate=true}}
+ if(o.intMesh&&o.intMesh.length){const ck=(G.cam===1&&G.mode==='drive'&&G.active===o)||o.doors.some(d=>d.cur>.04);for(const m of o.intMesh)m.visible=ck}
  if(o.lant){const L=o.lant,S=G.aj&&G.aj.v===o?G.aj.teste:null,led=S?(S.freio?1:S.ligado?.5:0):o.brk?1:o.lights?.5:0,re=S?(S.re?1:0):o.on&&o.gear<0?1:0,e=(S?S.alerta:(o.indL||o.haz))&&G.blink?1:0,d=(S?S.alerta:(o.indR||o.haz))&&G.blink?1:0;
   for(const m of L.led)m.opacity=led;for(const m of L.re)m.opacity=re;for(const m of L.E)m.opacity=e;for(const m of L.D)m.opacity=d}}
 
