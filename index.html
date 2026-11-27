@@ -87,6 +87,8 @@ button{font-family:Rajdhani,"Arial Narrow",Arial,sans-serif}
 .bar i{display:block;height:100%;width:100%;background:var(--ok);transition:width .2s}.bar i.lo{background:var(--bad)}.bar i.md{background:var(--acc)}
 #menu,#start{position:fixed;inset:0;z-index:5;display:none;place-items:center;background:rgba(5,7,10,.55);padding:12px}
 #menu.on,#start.on{display:grid}
+#adm{position:fixed;inset:0;z-index:7;display:none;place-items:center;background:rgba(5,7,10,.72);padding:12px}#adm.on{display:grid}.admV{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:8px 10px;margin-bottom:6px;border:1px solid var(--line);border-radius:9px;background:#1a2027}.admV b{flex:1 1 160px}.admV select,.admV input{font:inherit;font-size:14px;padding:6px 7px;border-radius:8px;border:1px solid var(--line);background:#12161b;color:var(--ink)}.admV input{width:100px}.admV .btn{padding:7px 10px}
+.gTabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:4px 0 8px}.gTabs button{font:inherit;font-weight:700;padding:10px 4px;border-radius:10px;border:1px solid var(--line);background:#1a2027;color:var(--ink)}.gTabs button.on{background:var(--acc,#ffb020);color:#111;border-color:transparent}
 .pcG{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-top:4px}.pcL{display:flex;flex-direction:column;font-size:12px;color:#aab;gap:3px}.pcL select,.pcL input{font:inherit;font-size:14px;padding:7px 8px;border-radius:8px;border:1px solid var(--line);background:#1a2027;color:var(--ink)}
 #wmap{position:fixed;inset:0;z-index:6;display:none;place-items:center;background:rgba(5,7,10,.82);padding:10px}#wmap.on{display:grid}#wmap canvas{max-width:100%;max-height:calc(100vh - 70px);border-radius:12px;border:1px solid var(--line)}#wmx{margin-top:8px}
 .card{background:#12161b;border:1px solid var(--line);border-radius:14px;width:min(640px,100%);max-height:calc(100vh - 24px);overflow:auto;padding:16px 18px 18px;touch-action:pan-y}
@@ -97,9 +99,10 @@ button{font-family:Rajdhani,"Arial Narrow",Arial,sans-serif}
 .job:hover,.job:focus-visible{border-color:var(--acc);outline:none}
 .job b{color:var(--acc);white-space:nowrap;font-size:16px}
 #ajLant{position:fixed;left:50%;transform:translateX(-50%);top:4px;z-index:80;background:rgba(18,22,28,.93);color:#eee;font:12px system-ui,sans-serif;padding:6px 8px;border-radius:10px;max-width:96vw;max-height:42vh;overflow:auto;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;justify-content:center;touch-action:manipulation}
-body.aj #ajLantBtn,body.aj #pedrow,body.aj #wheel{visibility:hidden}
+body.aj #ajLantBtn,body.aj #ajFarBtn,body.aj #pedrow,body.aj #wheel{visibility:hidden}
 #ajLant button{padding:4px 8px;border:0;border-radius:6px;background:#2d3540;color:#fff;font:inherit;min-height:30px;cursor:pointer}#ajLant select{font:inherit;padding:3px;border-radius:6px}
 #ajLant .aj{white-space:nowrap}#ajLant i{display:inline-block;min-width:36px;text-align:center;font-style:normal;font-weight:700}
+#ajFarBtn{position:fixed;left:8px;top:53%;z-index:70;padding:8px 10px;border-radius:9px;border:1px solid #ffb020;background:#1a2027;color:#fff;font:600 13px system-ui,sans-serif}
 #ajLantBtn{position:fixed;left:8px;top:45%;z-index:70;padding:8px 10px;border-radius:9px;border:1px solid #ffb020;background:#1a2027;color:#fff;font:600 13px system-ui,sans-serif}
 .job.sel{border-color:var(--acc);background:#232b20}.bsT{font-size:12px;color:#9aa3ad;margin:8px 0 4px;text-transform:uppercase;letter-spacing:.04em}.job small{display:block;color:#9aa3ad;font-size:13px}
 .opts{display:flex;flex-wrap:wrap;gap:6px}
@@ -167,6 +170,7 @@ body.aj #ajLantBtn,body.aj #pedrow,body.aj #wheel{visibility:hidden}
     <button class="btn" id="oSound">Som: ligado</button>
     <button class="btn" id="oInstall" style="display:none">📲 Instalar no celular</button>
     <button class="btn" id="oMapa">🗺️ Mapa do mundo</button>
+    <button class="btn" id="oAdm" style="display:none;background:#5a3f7d">🛠 Administrador</button>
     <button class="btn" id="oTow">Chamar guincho (R$ 300)</button>
     <button class="btn" id="oCancel">Cancelar trabalho</button>
   </div>
@@ -176,13 +180,15 @@ body.aj #ajLantBtn,body.aj #pedrow,body.aj #wheel{visibility:hidden}
 
 <div id="start" class="on"><div class="card">
   <h2>Rota Brasil</h2>
-  <p class="lead">Simulador de caminhão e ônibus. A capital é ligada por rodovias a 6 cidades, cada uma com sua rodoviária, posto e pontos de carga. Faça fretes e linhas urbanas ou rodoviárias, desça do veículo, abra portas e bagageiro, abasteça e cuide da manutenção. O dia vira noite e às vezes chove.</p>
+  <p class="lead">Simulador de caminhão e ônibus. A capital é ligada por rodovias a 6 cidades, cada uma com sua rodoviária, posto e pontos de carga. Faça fretes e linhas urbanas ou rodoviárias, desça do veículo, abra as portas, abasteça e cuide da manutenção. O dia vira noite e às vezes chove.</p>
   <h4>Como jogar</h4><div class="keys" id="keys2"></div>
-  <div class="row" style="margin-top:16px"><span class="note">Versão de teste 0.8 · seu dinheiro fica salvo neste navegador<br>Ônibus urbano: "Caio Apache Vip IV" por lael.eugenio, CC-BY-4.0</span><button class="btn pri" id="play">Jogar</button></div>
+  <div id="auth" style="display:none"></div>
+  <div class="row" style="margin-top:16px"><span class="note" id="verNota">Versão de teste 0.8 · seu dinheiro fica salvo neste navegador<br>Ônibus urbano: "Caio Apache Vip IV" por lael.eugenio, CC-BY-4.0</span><button class="btn pri" id="play">Jogar</button></div>
 </div></div>
 <div id="wmap"><canvas id="wmc"></canvas><button class="btn" id="wmx">Fechar mapa</button></div>
 <div id="rot">Gire o celular para jogar na horizontal ↻</div>
 
+<script src="banco/config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 {
@@ -240,9 +246,6 @@ const ground=new THREE.Mesh(new THREE.PlaneGeometry(1400,1400),mat(0x5d7a3e));gr
 const ROADM=new THREE.MeshLambertMaterial({color:0x3a3d42}),LOTM=new THREE.MeshLambertMaterial({color:0x4a4d52}),WALKM=mat(0x9c9a93);
 const RD=[-240,-120,0,120,240],RW=14,RL=494;
 for(const r of RD){flat(RL,RW,ROADM,0,.02,r);flat(RL,RW,ROADM,r,.022,0,Math.PI/2)}
-{const dp=[];for(const r of RD)for(let p=-244;p<=244;p+=8){if(RD.some(q=>Math.abs(p-q)<9))continue;dp.push([p,r,0],[r,p,1])}
- const dm=new THREE.InstancedMesh(new THREE.PlaneGeometry(3,.22),mat(0xf2e9c9),dp.length),o=new THREE.Object3D();
- dp.forEach((d,i)=>{o.position.set(d[0],.03,d[1]);o.rotation.set(-Math.PI/2,0,d[2]?Math.PI/2:0);o.updateMatrix();dm.setMatrixAt(i,o.matrix)});scene.add(dm)}
 
 function winTex(lit){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.fillStyle=lit?'#000':'#fff';g.fillRect(0,0,256,256);
  for(let i=0;i<4;i++)for(let j=0;j<4;j++){if(lit){if(rnd()<.45){g.fillStyle=rnd()<.5?'#ffd27a':'#ffe9b8';g.fillRect(i*64+12,j*64+12,40,34)}}else{g.fillStyle='#55657a';g.fillRect(i*64+12,j*64+12,40,34)}}
@@ -532,6 +535,27 @@ function cidade(c){const g=new THREE.Group();scene.add(g);c.g=g;const B=MBk(),BW
  const pos=T==='litoral'?[['N',-90],['N',90],['S',-90],['S',90]]:[[opo,-80],[opo,80],[lat[0],0],[lat[1],0]];
  pos.forEach(([L,off],k)=>{const d=lados[L],ox=d[0]?c.x+d[0]*(c.H+2):c.x+off,oz=d[1]?c.z+d[1]*(c.H+2):c.z+off;lotCarga(c,{x:ox,z:oz,h:Math.atan2(-d[0],-d[1])},c.cargas[k])})}
 CIT.forEach(cidade);
+/* marcações de pista: faixa central amarela (tracejada e dupla perto do cruzamento), bordas brancas, faixa de pedestre e linha de parada */
+const MARKM=offM(new THREE.MeshLambertMaterial({vertexColors:true}),-4);
+function marcarGrade(cx,cz,pos,a,b,W,par){const B=MBk(),Y=0xe8b82a,Wt=0xf1efe6,hw=W/2;
+ const q=(x,z,sx,sz,c)=>mbAdd(B,UPL,x,0,z,0,c,sx,1,sz);
+ for(const r of pos)for(const ax of [0,1]){
+  const P=(u,v,su,sv,c)=>ax?q(cx+r+v,cz+u,sv,su,c):q(cx+u,cz+r+v,su,sv,c); // u = ao longo da rua, v = transversal
+  const cut=[a-50,...pos,b+50];
+  for(let k=0;k<cut.length-1;k++){const s0=Math.max(a,cut[k]+(k?hw:0)),s1=Math.min(b,cut[k+1]-(k<cut.length-2?hw:0));if(s1-s0<2)continue;
+   // bordas
+   for(const sg of [-1,1])P((s0+s1)/2,sg*(hw-.45),s1-s0,.13,Wt);
+   // centro: dupla contínua nos 14 m perto de cada cruzamento, tracejada no meio
+   const c0=s0+(k?5.5:0),c1=s1-(k<cut.length-2?5.5:0);if(c1-c0<1)continue;const d0=c0+(k?14:0),d1=c1-(k<cut.length-2?14:0);
+   for(const sg of [-1,1]){if(d0>c0)P((c0+Math.min(d0,c1))/2,sg*.13,Math.min(d0,c1)-c0,.11,Y);if(c1>d1)P((Math.max(d1,c0)+c1)/2,sg*.13,c1-Math.max(d1,c0),.11,Y)}
+   for(let u=d0+2;u+3<=d1;u+=9)P(u+1.5,0,3,.14,Y)}
+  // faixa de pedestre e linha de parada nas chegadas de cada cruzamento
+  for(const c of pos){if(c<a||c>b)continue;for(const dir of [-1,1]){const u0=c+dir*(hw+1.2);if(u0<a+2||u0>b-2)continue;
+   for(let v=-hw+1;v<=hw-1;v+=.95)P(u0+dir*1.6,v,3,.48,Wt);
+   P(u0+dir*4.3,(ax?dir:-dir)*(hw/2),.42,hw-.6,Wt)}}}
+ const m=mbMesh(B,MARKM,par||scene,false);if(m){m.position.y=.034;m.receiveShadow=true}}
+marcarGrade(0,0,RD,-247,247,RW);
+for(const c of CIT){const pos=[];for(let i=0;i<=c.N;i++)pos.push((i-c.N/2)*CIDP);marcarGrade(c.x,c.z,pos,-c.H,c.H,CIDS,c.g)}
 /* postos de rodovia */
 for(const [ri,sv,ld] of [[0,560,1],[1,560,1],[2,420,-1],[5,420,1]]){const f=aoLado(RT[ri],sv,ld);posto(f,chunk(f.x,f.z).g,'POSTO '+RT[ri].n)}
 /* ---------- paisagem ---------- */
@@ -867,7 +891,7 @@ const ALVO={};function montarLant(root,cfg,id){const pecas=(cfg.pecas||[cfg]).fi
  return L}
 
 /* monta (ou troca) o ônibus 3D de um veículo */
-function applyGLB(v,M,def){const PR={...def.prof};
+function applyGLB(v,M,def){const PR={...def.prof};{const F=farolCfg(def.id);if(F&&F.head&&PR.lamps){const [x,y,z]=F.head;PR.lamps={...PR.lamps,head:[[x,y,z],[-x,y,z]]}}PR.farTam=F&&F.tam||1}
  if(v.glbRoot){v.g.remove(v.glbRoot);v.glbRoot=null}
  const root=new THREE.Group();v.g.add(root);v.glbRoot=root;v.busId=def.id;
  const G2={wheels:[],front:[],doors:[],glows:[],halos:[],dentro:[],lant:null,name:def.tipo==='coach'?'ônibus':def.tipo==='truck'?'caminhão':'ônibus urbano',eng5:PR.engate,engY:PR.engY,...def.fis};for(const k of PKEYS)if(PR[k]!==undefined)G2[k]=PR[k];
@@ -877,10 +901,9 @@ function applyGLB(v,M,def){const PR={...def.prof};
    if(PR.hubs){const g=n.prims[0].g;g.computeBoundingBox();const bb=g.boundingBox,r=(bb.max.y-bb.min.y)/2,ox=n.t[0]<0?bb.min.x-.005:bb.max.x+.005;
     const h=new THREE.Mesh(WHEELG,RIM);h.scale.set(.04,r*.62,r*.62);h.position.x=ox;sp.add(h);const k=new THREE.Mesh(BOX1,SPOKE);k.scale.set(.06,r*1.1,.1);k.position.x=ox;sp.add(k);
     const d=new THREE.Mesh(WHEELG,DARK);d.scale.set(.04,r*.62,r*.62);d.position.x=n.t[0]<0?bb.max.x:bb.min.x;sp.add(d)}}
-  else if(n.name.startsWith('porta'))G2.doors.push({piv,axis:'y',ang:n.name.endsWith('_a')?-1.3:n.name.endsWith('_b')?1.3:1.25,grp:'main',cur:0,tgt:0});
-  else if(n.name.startsWith('bagageiro'))G2.doors.push({piv,axis:'z',ang:-1.25,grp:'lug',cur:0,tgt:0})}
+  else if(n.name.startsWith('porta'))G2.doors.push({piv,axis:'y',ang:n.name.endsWith('_a')?-1.3:n.name.endsWith('_b')?1.3:1.25,grp:'main',cur:0,tgt:0});}
  if(PR.rodas&&RODA)montarRodas(root,G2,PR);
- const L=PR.lamps,MM={head:v.mHead,tail:v.mBrake,il:v.mIL,ir:v.mIR},SZ={head:[.45,.16,1.3],tail:[.14,.6,1.1],il:[.14,.12,.7],ir:[.14,.12,.7]};
+ const L=PR.lamps,MM={head:v.mHead,tail:v.mBrake,il:v.mIL,ir:v.mIR},SZ={head:[.45*PR.farTam,.16*PR.farTam,1.3*PR.farTam],tail:[.14,.6,1.1],il:[.14,.12,.7],ir:[.14,.12,.7]};
  for(const k in L)for(const p of L[k]){if(!PR.soHalo){const e=new THREE.Mesh(BOX1,MM[k]);e.scale.set(SZ[k][0],SZ[k][1],.06);e.position.set(p[0],p[1],p[2]);root.add(e);G2.glows.push(e)}
   lampHalos(G2.halos,root,v.hm,[[k,p[0],p[1],p[2]+Math.sign(p[2])*.1,SZ[k][2]]])}
  {const lc=lantCfgV(v,def);if(lc){try{G2.lant=montarLant(root,lc,def.id)}catch(e){console.warn('lanterna',e)}}}
@@ -905,7 +928,7 @@ function loadBusModel(){G.modelErr=null;syncModelBtn();
    applyGLB(busOf(t),M,def);if(t==='coach')for(const a of AI)applyGLB(a.v,M,def)})}))
  .then(()=>{syncModelBtn();renderBusSel()}).catch(e=>{G.modelErr=e.message||String(e);syncModelBtn();toast('Não consegui carregar o ônibus 3D: '+G.modelErr,5000)})}
 function aiModel(v){const id=G.busSel.coach;if(G.model==='glb'&&MODELS[id])applyGLB(v,MODELS[id],busDef(id))}
-function escolherOnibus(id){const def=busDef(id),t=def.tipo,v=busOf(t);
+function escolherOnibus(id){const def=busDef(id),t=def.tipo,v=busOf(t);if(!netTrazer(v))return;
  if(G.busSel[t]===id&&v.busId===id){switchTo(v);return}
  const j=G.job;if(j&&j.kind==='bus'&&j.bus===v&&j.stage!=='toBay'){toast('Termine a linha antes de trocar de ônibus');return}
  if(Math.abs(v.speed)>.8){toast('Pare o ônibus antes de trocar');return}
@@ -917,13 +940,29 @@ function escolherOnibus(id){const def=busDef(id),t=def.tipo,v=busOf(t);
    for(const o of [BUS,BUS2,TRUCK])if(o!==v&&o.glbRoot)useModel(o,true);
    renderBusSel();syncModelBtn();if(!(G.mode==='drive'&&G.active===v))switchTo(v);else toast('Agora você está no '+def.nome,1600)})
   .catch(e=>{G.carregando=null;renderBusSel();toast('Não consegui carregar '+def.nome+': '+(e.message||e),5000)})}
+function renderCarretas(el){const h=document.createElement('div');h.className='bsT';h.textContent='Carretas — engate uma para rodar livre';el.appendChild(h);
+ const j=G.job&&G.job.kind==='truck',atual=TRUCK.trailer;
+ for(const [k,T] of Object.entries(CARR_TIPOS)){const D={bau:'baú fechado, 2 eixos',grade3:'carga seca, 3 eixos',grade5:'grade alta, 5 eixos',bitrem:'2 carretas lonadas que dobram'}[k],on=atual&&atual.tipo===k,bt=document.createElement('button');bt.className='job'+(on?' sel':'');
+  bt.innerHTML=`<span>Carreta ${T.n}<small>${D}</small></span><b>${on?'✓':''}</b>`;bt.onclick=()=>engatarLivre(k);el.appendChild(bt)}
+ const p=document.createElement('p');p.className='note';p.textContent=j?'Você está num frete: a carreta é a do frete.':'A carreta aparece engatada no caminhão. Nos fretes, a carreta é escolhida pela carga.';el.appendChild(p)}
+function engatarLivre(k){if(G.job&&G.job.kind==='truck'){toast('Termine ou cancele o frete antes');return}const v=TRUCK;if(Math.abs(v.speed)>.3){toast('Pare o caminhão antes');return}
+ const go=()=>{if(v.trailer){const o=v.trailer;v.trailer=null;removeTrailer(o)}const t=novaCarreta(k,0xe9e4da),f=fwd(v.h),e=v.eng5!==undefined?v.eng5:-1.6;colocarCarreta(t,v.x+f.x*e,v.z+f.z*e,v.h);
+  if(collide(t,[v])||(t.reboque&&collide(t.reboque,[v,t]))){removeTrailer(t);toast('Sem espaço atrás do caminhão');return}
+  t.attached=v;v.trailer=t;t.legs.forEach(l=>l.visible=false);if(G.active!==v&&G.mode==='drive')switchTo(v);toast('Carreta '+CARR_TIPOS[k].n+' engatada');renderBusSel()};
+ if(k!=='bau'&&!CARR_OK){toast('Carregando carretas…',1500);carregarCarretas().then(go).catch(()=>toast('Não consegui carregar a carreta'))}else go()}
 function renderBusSel(){const el=$('busSel');if(!el)return;el.innerHTML='';
- for(const [t,tit] of [['truck','Caminhões (cavalos)'],['coach','Rodoviários'],['urban','Urbanos']]){const h=document.createElement('div');h.className='bsT';h.textContent=tit;el.appendChild(h);
+ const aba=G.abaGar||(G.active&&G.active.type==='truck'?'cam':'oni');
+ const tabs=document.createElement('div');tabs.className='gTabs';tabs.innerHTML=[['oni','🚌 Ônibus'],['cam','🚛 Caminhões'],['car','🔗 Carretas']].map(([k,n])=>`<button data-aba="${k}" class="${aba===k?'on':''}">${n}</button>`).join('');
+ tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>{G.abaGar=b.dataset.aba;renderBusSel()});el.appendChild(tabs);
+ if(aba==='car'){if(NET.user)netGaragem(el,'car');else renderCarretas(el);return}
+ if(NET.user)netGaragem(el,aba);
+ for(const [t,tit] of (NET.user?[]:aba==='cam'?[['truck','Cavalos mecânicos']]:[['coach','Rodoviários'],['urban','Urbanos']])){const h=document.createElement('div');h.className='bsT';h.textContent=tit;el.appendChild(h);
   for(const b of FROTA.filter(x=>x.tipo===t)){const on=G.busSel[t]===b.id,bt=document.createElement('button');bt.className='job'+(on?' sel':'');
    const vel=Math.round(b.fis.maxSpeed*3.6);
    bt.innerHTML=`<span>${b.nome}<small>${b.desc} · ${String(b.comp).replace('.',',')} m · ${b.peso} t · até ${vel} km/h</small></span><b>${G.carregando===b.id?'…':on?'✓':''}</b>`;
    bt.onclick=()=>escolherOnibus(b.id);el.appendChild(bt)}}
- const pd=document.createElement('div');pd.id='pinturaSec';pd.innerHTML=htmlPintura();el.insertBefore(pd,el.firstChild);
+ const pv=G.mode==='drive'?G.active:null,pOk=pv&&((aba==='cam')===(pv.type==='truck'));
+ const pd=document.createElement('div');pd.id='pinturaSec';pd.innerHTML=pOk?htmlPintura():`<p class="note">Para pintar, entre ${aba==='cam'?'num caminhão':'num ônibus'} desta lista.</p>`;if(NET.user)el.appendChild(pd);else el.insertBefore(pd,tabs.nextSibling);
  pd.querySelectorAll('select[data-pc]').forEach(s=>s.onchange=()=>escolherPeca(s.dataset.pc,s.value));{const i=pd.querySelector('input[data-txt]');if(i)i.onchange=()=>textoLetreiro(i.value)}
  pd.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const k=b.dataset.p,t=k.slice(2);if(k==='carregar')carregarSkin();else if(k==='modelo')baixarModelo();else if(k.startsWith('m_'))baixarModelo(t);else if(k.startsWith('c_'))carregarExtra(t);else if(k.startsWith('r_'))tirarExtra(t);else escolherPintura(k)})}
 function syncModelBtn(){const b=$('oModel');if(!b)return;const ok=MODELS[G.busSel.coach]&&MODELS[G.busSel.urban];
@@ -935,7 +974,7 @@ function matCorpo(base,U){const m=base.clone();
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec2 skinuv;varying vec2 vSk;varying vec3 vSkN;varying vec3 vSkV;')
    .replace('#include <project_vertex>','#include <project_vertex>\nvSk=skinuv;vec4 skW=modelMatrix*vec4(transformed,1.0);vSkV=cameraPosition-skW.xyz;vSkN=mat3(modelMatrix)*objectNormal;');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D skinMap;uniform float uSkin;uniform float uVidro;uniform sampler2D vidMask;uniform float uMask;uniform vec3 uCorpo;uniform vec3 uCorpo2;uniform vec3 uCorpo3;uniform vec3 uCorpo4;uniform sampler2D vidMap;uniform sampler2D detMap;uniform sampler2D luzMap;uniform float uVid;uniform float uDet;uniform vec4 uFr;uniform vec4 uLt;uniform float uFarol;uniform float uSetaE;uniform float uSetaD;uniform float uLetr;uniform sampler2D drlMap;uniform float uDRL;varying vec2 vSk;varying vec3 vSkN;varying vec3 vSkV;')
-   .replace('#include <map_fragment>','#include <map_fragment>\nfloat skLum=dot(diffuseColor.rgb,vec3(.299,.587,.114));float skVid=uVidro*(uMask>.5?texture2D(vidMask,vSk).r:(1.0-smoothstep(.06,.17,skLum)));\n'+
+   .replace('#include <map_fragment>','#include <map_fragment>\nfloat skLum=dot(diffuseColor.rgb,vec3(.299,.587,.114));float skVid=uVidro*(uMask>.5?texture2D(vidMask,vSk).r:(1.0-smoothstep(.06,.17,skLum)));if(uMask>.5){diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.045,.06,.075),smoothstep(.15,.6,skVid));skLum=dot(diffuseColor.rgb,vec3(.299,.587,.114));}\n'+
     'if(uSkin>.5){vec4 sk=texture2D(skinMap,vSk);float dk=uMask>.5?1.0-smoothstep(.07,.3,skLum):0.0;diffuseColor.rgb=mix(diffuseColor.rgb,mix(min(diffuseColor.rgb*sk.rgb*1.12,vec3(1.0)),sk.rgb,dk),sk.a*(1.0-skVid));'+
     'if(uMask>.5&&uVid<.5){float lS=dot(sk.rgb,vec3(.299,.587,.114)),dS=1.0-smoothstep(.3,.45,lS),stS=(1.0-dS)*smoothstep(.14,.28,min(distance(sk.rgb,uCorpo),min(distance(sk.rgb,uCorpo2),min(distance(sk.rgb,uCorpo3),distance(sk.rgb,uCorpo4)))));diffuseColor.rgb=mix(diffuseColor.rgb,sk.rgb,sk.a*skVid*(dS+stS));skVid*=1.0-sk.a*stS;}}'+
     'if(uVid>.5){vec4 vd=texture2D(vidMap,vSk);diffuseColor.rgb=mix(diffuseColor.rgb,vd.rgb,vd.a*skVid);skVid*=1.0-vd.a*smoothstep(.28,.5,dot(vd.rgb,vec3(.299,.587,.114)));}'+
@@ -947,7 +986,7 @@ function matCorpo(base,U){const m=base.clone();
     'if(uDet>.5){vec4 lu=texture2D(luzMap,vSk);bool fe=vSk.x>uFr.x&&vSk.x<uFr.z&&vSk.y>uFr.y&&vSk.y<uFr.w;vec3 em=fe?(vec3(1.,.97,.88)*lu.r*uFarol+vec3(1.,.55,.08)*(lu.g*uSetaE+lu.b*uSetaD)+vec3(.95,.97,1.)*texture2D(drlMap,vSk).r*uDRL):vec3(0.);'+
     'if(vSk.x>uLt.x&&vSk.x<uLt.z&&vSk.y>uLt.y&&vSk.y<uLt.w)em+=dtl.rgb*dtl.a*uLetr;outgoingLight+=em*1.5;}\n'+
     'gl_FragColor = vec4( outgoingLight, diffuseColor.a );')};
- m.customProgramCacheKey=()=>'corpoSB8';return m}
+ m.customProgramCacheKey=()=>'corpoSB9';return m}
 /* skins guardadas no aparelho (IndexedDB: a imagem é grande demais para o localStorage) */
 const IDB={p:null,abrir(){return this.p||(this.p=new Promise((res,rej)=>{const r=indexedDB.open('simulabr',1);r.onupgradeneeded=()=>r.result.createObjectStore('skins');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))},
  async get(k){const db=await this.abrir();return new Promise((res,rej)=>{const q=db.transaction('skins').objectStore('skins').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})},
@@ -1049,7 +1088,7 @@ const cheio=c=>{const d=c.getContext('2d',{willReadFrequently:true}).getImageDat
 function poe(g,src,r,esp){const w=r[2]-r[0],h=r[3]-r[1];g.save();if(esp){g.translate(r[0]+w,r[1]);g.scale(-1,1);g.drawImage(src,0,0,w,h)}else g.drawImage(src,r[0],r[1],w,h);g.restore()}
 async function prepDet(id){if(EXT[id+'det'])return EXT[id+'det'];const im=await montaDet(id);if(!im)return null;const R=DETR[id];
  const det=cnv(2048,2048),gd=det.getContext('2d'),luz=cnv(2048,2048),gl=luz.getContext('2d');gl.fillStyle='#000';gl.fillRect(0,0,2048,2048);gl.globalCompositeOperation='lighter';
- const fa=R.fa,fm=[2*R.c-fa[2],fa[1],2*R.c-fa[0],fa[3]],asp=(fa[2]-fa[0])/(fa[3]-fa[1]),F=quadro(im,'farol',Math.round(60*asp),60,slotDe(id,'farol'));
+ const fa=faDe(id),fm=[2*R.c-fa[2],fa[1],2*R.c-fa[0],fa[3]],asp=(fa[2]-fa[0])/(fa[3]-fa[1]),F=quadro(im,'farol',Math.round(60*asp),60,slotDe(id,'farol'));
  const drl=cnv(2048,2048),gq=drl.getContext('2d');gq.fillStyle='#000';gq.fillRect(0,0,2048,2048);gq.globalCompositeOperation='lighter';
  const pcf=((G.pintura2[id]||{}).pc||{}).farol,LP=pcf&&!(G.pintura2[id]||{}).det?await imgPeca(pcf+'_luz').catch(()=>null):null;
  if(cheio(F)){poe(gd,F,fa,false);poe(gd,F,fm,true);
@@ -1111,7 +1150,7 @@ fetch('modelos/lanternas/ajustes.json?v='+Date.now()).then(r=>r.ok?r.json():{}).
  for(const id in G.lantArq)if(!G.lantLocal[id])refazLantId(id)}).catch(()=>{});
 
 /* painel de ajuste (abre com ?ajuste no endereço do jogo) */
-function abrirAjLant(){if(G.aj)return;if(G.menu)toggleMenu();
+function abrirAjLant(){if(G.aj||G.ajF)return;if(G.menu)toggleMenu();
  const el=document.createElement('div');el.id='ajLant';document.body.appendChild(el);
  for(const ev of ['pointerdown','pointerup','touchstart','click'])el.addEventListener(ev,e=>e.stopPropagation(),{passive:true});
  G.aj={el,id:null,v:null,cfg:null,peca:-1,lado:'ambos',teste:{ligado:true},t0:G.time,passo:1};if(G.time<7||G.time>17)G.time=11;G.cam=0;document.body.classList.add('aj');
@@ -1152,7 +1191,7 @@ function ligarAjLant(){const A=G.aj,C=A.cfg;
    if(k==='padrao'){const def=busDef(A.id);A.cfg=JSON.parse(JSON.stringify(def.prof.lant||C));A.peca=-1;aplicarAjLant();return}
    if(k==='salvar'){const arred=o=>Object.fromEntries(Object.entries(o).map(([a,v])=>[a,typeof v==='number'?Math.round(v*1000)/1000:v&&typeof v==='object'?(Array.isArray(v)?v.map(arred):arred(v)):v]));
     G.lantLocal[A.id]={...arred(A.cfg),ver:busDef(A.id).prof.lantVer||1};try{localStorage.setItem('sb_lant_aj',JSON.stringify(G.lantLocal))}catch(e){}
-    G.lantPrev=null;refazLantId(A.id);toast('💾 Salvo neste aparelho. Para valer para todos: ⬇ Exportar e suba o arquivo.',4000);return}
+    G.lantPrev=null;refazLantId(A.id);const id0=A.id,d0=G.lantLocal[id0];netSalvarAjuste(id0,'lanterna',d0).then(ok=>{if(ok){G.lantArq[id0]=d0;delete G.lantLocal[id0];try{localStorage.setItem('sb_lant_aj',JSON.stringify(G.lantLocal))}catch(e){}toast('💾 Salvo para todos os jogadores',3500)}else toast('💾 Salvo neste aparelho. Para valer para todos: ⬇ Exportar e suba o arquivo.',4000)});return}
    if(k==='espelho'){for(const P of alvoAjLant()){if(A.lado==='ambos'){P.esp=!P.esp;for(const L of Object.values(P.lados||{}))delete L.esp}
      else{P.lados=P.lados||{};const L=P.lados[A.lado]=P.lados[A.lado]||{};L.esp=!(L.esp!==undefined?L.esp:P.esp)}}aplicarAjLant();return}
    if(k.startsWith('t:')){const n=k.slice(2);A.teste[n]=!A.teste[n];desenharAjLant();return}
@@ -1161,7 +1200,193 @@ function ligarAjLant(){const A=G.aj,C=A.cfg;
     else{P.lados=P.lados||{};const L=P.lados[A.lado]=P.lados[A.lado]||{};L[campo]=+((L[campo]!==undefined?L[campo]:+P[campo]||0)+passo).toFixed(3)}}
    aplicarAjLant()}})}
 if(new URLSearchParams(location.search).has('ajuste')){const b=document.createElement('button');b.id='ajLantBtn';b.textContent='🚌 Lanternas';b.onclick=e=>{e.stopPropagation();abrirAjLant()};
- b.addEventListener('pointerdown',e=>e.stopPropagation());document.body.appendChild(b)}
+ b.addEventListener('pointerdown',e=>e.stopPropagation());document.body.appendChild(b);
+ const f=document.createElement('button');f.id='ajFarBtn';f.textContent='💡 Faróis';f.onclick=e=>{e.stopPropagation();abrirAjFarol()};f.addEventListener('pointerdown',e=>e.stopPropagation());document.body.appendChild(f)}
+
+/* ===================== online (Supabase): contas, dinheiro, garagem, administrador =====================
+   Liga sozinho quando banco/config.js tem a url e a chave do projeto. Sem isso o jogo roda local, como antes. */
+const NET={cfg:window.SIMULA_SUPABASE||{},sb:null,user:null,perfil:null,cat:{},meus:[],pronto:false};
+NET.on=!!(NET.cfg.url&&NET.cfg.chave);
+const CAT_TIPO={coach:'onibus',urban:'onibus',truck:'caminhao'};
+const catId=m=>busDef(m)?m:'carreta_'+m;
+const netNome=m=>{const c=NET.cat[m];if(c)return c.nome;const d=busDef(m);if(d)return d.nome;const k=m.replace(/^carreta_/,'');return CARR_TIPOS[k]?'Carreta '+CARR_TIPOS[k].n:m};
+const ehAdm=()=>!!(NET.perfil&&NET.perfil.admin);
+const netErro=e=>{const m=(e&&(e.message||e.error_description))||String(e);
+ return /Invalid login/i.test(m)?'Email ou senha errados':/not confirmed/i.test(m)?'Confirme seu email antes (veja a caixa de entrada)':/already registered|already been registered/i.test(m)?'Esse email já tem conta':/at least 6|Password should/i.test(m)?'A senha precisa de pelo menos 6 caracteres':/rate limit|too many/i.test(m)?'Muitas tentativas. Espere um pouco e tente de novo':/Failed to fetch|NetworkError/i.test(m)?'Sem conexão com o servidor':/Database error saving new user/i.test(m)?'Esse nome de usuário já existe':m};
+function netLib(){return window.supabase?Promise.resolve():new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';s.onload=res;s.onerror=()=>rej(new Error('Não consegui carregar o Supabase'));document.head.appendChild(s)})}
+async function netIniciar(){if(!NET.on)return;$('play').style.display='none';$('auth').style.display='block';$('auth').innerHTML='<p class="note">Conectando…</p>';
+ try{await netLib();NET.sb=window.supabase.createClient(NET.cfg.url,NET.cfg.chave,{auth:{persistSession:true,detectSessionInUrl:true}})}
+ catch(e){$('auth').innerHTML=`<p class="note">${netErro(e)}. <button class="btn" onclick="location.reload()">Tentar de novo</button></p>`;return}
+ NET.sb.auth.onAuthStateChange((ev,s)=>{if(ev==='PASSWORD_RECOVERY')telaAuth('nova');else if(ev==='SIGNED_IN'&&s&&!NET.user&&!NET.recup)netEntrou(s.user)});
+ netAjustes();
+ if(/type=recovery/.test(location.hash)){NET.recup=true;telaAuth('nova');return}
+ const {data}=await NET.sb.auth.getSession();if(data&&data.session)netEntrou(data.session.user);else telaAuth('entrar')}
+/* ---- telas de conta ---- */
+function telaAuth(modo,msg){const el=$('auth');el.style.display='block';$('play').style.display='none';
+ const campo=(id,t,tp,ph)=>`<label class="pcL">${t}<input id="${id}" type="${tp}" placeholder="${ph||''}" autocomplete="${tp==='password'?(modo==='entrar'?'current-password':'new-password'):tp==='email'?'email':'username'}"></label>`;
+ const abas=modo==='entrar'||modo==='criar'?`<div class="gTabs" style="grid-template-columns:1fr 1fr"><button data-m="entrar" class="${modo==='entrar'?'on':''}">Entrar</button><button data-m="criar" class="${modo==='criar'?'on':''}">Criar conta</button></div>`:'';
+ let h=abas;
+ if(modo==='entrar')h+=campo('auE','Email','email')+campo('auS','Senha','password')+`<div class="row" style="margin-top:10px"><button class="btn" data-m="esqueci" style="background:none;border:none;color:var(--acc);padding:0">Esqueci a senha</button><button class="btn pri" id="auOk">Entrar</button></div>`;
+ else if(modo==='criar')h+=campo('auU','Nome de usuário (aparece para os outros)','text','3 a 20 letras, números, _ ou .')+campo('auE','Email','email')+campo('auS','Senha','password','pelo menos 6 caracteres')+campo('auS2','Repita a senha','password')+`<div class="row" style="margin-top:10px"><span></span><button class="btn pri" id="auOk">Criar conta</button></div>`;
+ else if(modo==='esqueci')h+=`<h4>Recuperar senha</h4><p class="note" style="margin:0 0 6px">Mandamos um link para o seu email. Ao abrir, você escolhe a senha nova.</p>`+campo('auE','Email','email')+`<div class="row" style="margin-top:10px"><button class="btn" data-m="entrar">Voltar</button><button class="btn pri" id="auOk">Enviar link</button></div>`;
+ else if(modo==='nova')h+=`<h4>Escolha a senha nova</h4>`+campo('auS','Senha nova','password','pelo menos 6 caracteres')+campo('auS2','Repita a senha','password')+`<div class="row" style="margin-top:10px"><span></span><button class="btn pri" id="auOk">Salvar senha</button></div>`;
+ h+=`<p class="note" id="auMsg" style="min-height:1.2em;color:${msg&&msg[0]==='✓'?'#5fd38d':'#ff8a7a'}">${msg||''}</p>`;
+ el.innerHTML=h;el.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>telaAuth(b.dataset.m));
+ const ok=$('auOk'),dizer=(t,bom)=>{const m=$('auMsg');m.textContent=t;m.style.color=bom?'#5fd38d':'#ff8a7a'};
+ el.querySelectorAll('input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')ok.click()}));
+ ok.onclick=async()=>{const v=id=>($(id)&&$(id).value||'').trim();ok.disabled=true;dizer('Aguarde…',true);
+  try{
+   if(modo==='entrar'){const {data,error}=await NET.sb.auth.signInWithPassword({email:v('auE'),password:$('auS').value});if(error)throw error;await netEntrou(data.user)}
+   else if(modo==='criar'){const u=v('auU');
+    if(!/^[A-Za-z0-9_.]{3,20}$/.test(u))throw new Error('Nome de usuário: 3 a 20 letras, números, _ ou . (sem espaço)');
+    if($('auS').value!==$('auS2').value)throw new Error('As senhas não são iguais');
+    const {data:livre,error:e1}=await NET.sb.rpc('usuario_livre',{p_usuario:u});if(e1)throw e1;if(!livre)throw new Error('Esse nome de usuário já existe');
+    const {data,error}=await NET.sb.auth.signUp({email:v('auE'),password:$('auS').value,options:{data:{usuario:u},emailRedirectTo:location.origin+location.pathname}});if(error)throw error;
+    if(data.session)await netEntrou(data.user);else telaAuth('entrar','✓ Conta criada! Abra o email de confirmação e depois entre aqui.')}
+   else if(modo==='esqueci'){const {error}=await NET.sb.auth.resetPasswordForEmail(v('auE'),{redirectTo:location.origin+location.pathname});if(error)throw error;dizer('✓ Link enviado. Veja seu email (e a caixa de spam).',true)}
+   else if(modo==='nova'){if($('auS').value!==$('auS2').value)throw new Error('As senhas não são iguais');const {error}=await NET.sb.auth.updateUser({password:$('auS').value});if(error)throw error;
+    NET.recup=false;history.replaceState(null,'',location.pathname+location.search);const {data}=await NET.sb.auth.getUser();await netEntrou(data.user);toast('Senha alterada',2500)}
+  }catch(e){dizer(netErro(e))}ok.disabled=false}}
+async function netEntrou(user){if(!user)return;NET.user=user;
+ try{await netRecarregar()}catch(e){NET.user=null;telaAuth('entrar','Não consegui abrir sua conta: '+netErro(e));return}
+ NET.pronto=true;telaConta()}
+async function netRecarregar(){const sb=NET.sb,uid=NET.user.id;
+ const [p,c,m]=await Promise.all([sb.from('perfis').select('*').eq('id',uid).single(),sb.from('veiculos_catalogo').select('*'),sb.from('veiculos_jogador').select('*').eq('dono',uid)]);
+ if(p.error)throw p.error;if(c.error)throw c.error;if(m.error)throw m.error;
+ NET.perfil=p.data;NET.cat={};for(const r of c.data)NET.cat[r.id]=r;NET.meus=m.data;G.money=+p.data.dinheiro;
+ $('oAdm').style.display=ehAdm()?'':'none'}
+function telaConta(){const el=$('auth'),P=NET.perfil;
+ el.innerHTML=`<div class="row" style="margin-top:10px"><span>Olá, <b>${P.usuario}</b>${P.admin?' <span style="background:#7d5ba6;border-radius:6px;padding:1px 6px;font-size:12px">ADMIN</span>':''}<br><small class="note">${brl(G.money)} · ${NET.meus.length?NET.meus.length+' veículo(s)':'escolha seu primeiro veículo ao jogar'}</small></span><button class="btn" id="auSair">Sair</button></div>`;
+ $('auSair').onclick=async()=>{await NET.sb.auth.signOut();location.reload()};$('play').style.display='';
+ const n=$('verNota');if(n)n.firstChild.textContent='Versão de teste 0.9 · sua conta fica salva no servidor'}
+/* primeiro veículo: escolhido no início, de graça */
+function telaPrimeiro(){const el=$('auth'),ops=Object.values(NET.cat).filter(c=>c.tipo!=='carreta'&&(c.status==='publico'||(ehAdm()&&c.status==='beta'))&&busDef(c.id));
+ el.innerHTML=`<h4>Escolha seu primeiro veículo (grátis)</h4><p class="note" style="margin:0 0 6px">Depois você compra outros e troca nas garagens (<b style="color:#ffb020">O</b> no mapa).</p>`+
+  ['onibus','caminhao'].map(t=>`<div class="bsT">${t==='onibus'?'🚌 Ônibus':'🚛 Caminhões'}</div>`+ops.filter(c=>c.tipo===t).map(c=>`<button class="job" data-v="${c.id}"><span>${c.nome}${c.status==='beta'?' 🧪':''}<small>${busDef(c.id).desc}</small></span><b>grátis</b></button>`).join('')).join('');
+ $('play').style.display='none';
+ el.querySelectorAll('[data-v]').forEach(b=>b.onclick=async()=>{b.disabled=true;const {error}=await NET.sb.rpc('primeiro_veiculo',{p_modelo:b.dataset.v});
+  if(error){toast(netErro(error),3500);b.disabled=false;return}await netRecarregar();startGame()})}
+/* ---- começar na partida: o jogador só tem o veículo ativo no mapa ---- */
+function netAtivo(){const P=NET.perfil,r=NET.meus.find(x=>x.id===P.veiculo_ativo)||NET.meus.find(x=>busDef(x.modelo));return r&&busDef(r.modelo)?r:null}
+function netComecar(){const r=netAtivo();if(!r)return;const def=busDef(r.modelo),v=busOf(def.tipo);
+ if(v!==G.active){Object.assign(v,{x:G.active.x,z:G.active.z,h:G.active.h,speed:0,vx:0,vz:0})}
+ for(const o of PV)if(o!==v){o.g.visible=false;o.x=o.z=-1e5;if(o.trailer){const t=o.trailer;o.trailer=null;removeTrailer(t)}}
+ v.g.visible=true;Object.assign(v,{fuel:r.combustivel,eng:r.motor,tires:r.pneus,brakes:r.freios,body:r.lataria});G.active=v;escolherOnibus(r.modelo);
+ clearInterval(NET.tPos);NET.tPos=setInterval(()=>netPos(),5000);netPos()}
+/* traz o veículo escolhido para onde o jogador está (os outros ficam guardados) */
+function netTrazer(v){if(!NET.user)return true;const c=G.mode==='drive'?G.active:null;if(c===v)return true;
+ if(c&&Math.abs(c.speed)>.8){toast('Pare o veículo antes de trocar');return false}
+ const ref=c||P;if(c&&c.trailer){const t=c.trailer;c.trailer=null;removeTrailer(t)}
+ Object.assign(v,{x:ref.x,z:ref.z,h:ref.h,speed:0,vx:0,vz:0,hb:true});
+ for(const o of PV){o.g.visible=o===v;if(o!==v)o.x=o.z=-1e5}return true}
+const netPosRef=()=>G.mode==='drive'&&G.active?G.active:P;
+const netNaGaragem=()=>{const o=netPosRef();return SHOP.some(s=>dist(o,s)<40)};
+async function netPos(){if(!NET.user||!G.started)return;const o=netPosRef(),m=G.mode==='drive'&&G.active?G.active.busId:null;
+ try{await NET.sb.from('posicoes').upsert({jogador:NET.user.id,x:+o.x.toFixed(1),z:+o.z.toFixed(1),h:+(o.h||0).toFixed(2),modelo:m,atualizado_em:new Date().toISOString()})}catch(e){}}
+/* ---- dinheiro no servidor ---- */
+async function netGasto(valor,motivo){if(!NET.user)return;const {data,error}=await NET.sb.rpc('gastar',{p_valor:Math.round(valor),p_motivo:motivo});
+ if(error){toast(netErro(error),3000);netDinheiro()}else G.money=+data}
+async function netGanho(j,valor){if(!NET.user)return;const tipo=j.kind==='truck'?'frete':'linha',d=j.kind==='truck'?j.cargo:j.line;
+ const {data,error}=await NET.sb.rpc('receber',{p_tipo:tipo,p_valor:Math.round(valor),p_desc:d||tipo});if(error){toast('Pagamento não registrado: '+netErro(error),3500);netDinheiro()}else G.money=+data}
+async function netDinheiro(){if(!NET.user)return;const {data}=await NET.sb.from('perfis').select('dinheiro').eq('id',NET.user.id).single();if(data)G.money=+data.dinheiro}
+function netEstado(){if(!NET.user||!G.active||!G.active.busId)return;clearTimeout(NET.tEst);NET.tEst=setTimeout(()=>{const v=G.active,r=NET.meus.find(x=>x.modelo===v.busId);if(!r)return;
+ const d={combustivel:+v.fuel.toFixed(1),motor:+v.eng.toFixed(1),pneus:+v.tires.toFixed(1),freios:+v.brakes.toFixed(1),lataria:+v.body.toFixed(1)};Object.assign(r,d);NET.sb.from('veiculos_jogador').update(d).eq('id',r.id).then(()=>{})},1500)}
+/* ---- garagem online: seus veículos e loja ---- */
+function netGaragem(el,aba){const tipo=aba==='cam'?'caminhao':aba==='car'?'carreta':'onibus',noG=netNaGaragem()||ehAdm();
+ const av=document.createElement('p');av.className='note';av.style.cssText='margin:2px 0 8px;color:'+(noG?'#5fd38d':'#ffb020');
+ av.textContent=ehAdm()?'Administrador: troca e testa em qualquer lugar.':noG?'Você está numa garagem: pode trocar e comprar.':'Para trocar ou comprar, vá até uma garagem (O laranja no mapa).';el.appendChild(av);
+ const meus=NET.meus.filter(r=>{const c=NET.cat[r.modelo];return c?c.tipo===tipo:(tipo==='carreta'?/^carreta_/.test(r.modelo):busDef(r.modelo)&&CAT_TIPO[busDef(r.modelo).tipo]===tipo)});
+ const tit=t=>{const h=document.createElement('div');h.className='bsT';h.textContent=t;el.appendChild(h)};
+ tit(tipo==='carreta'?'Suas carretas':'Seus veículos');
+ if(!meus.length){const p=document.createElement('p');p.className='note';p.textContent='Nenhum ainda.';el.appendChild(p)}
+ for(const r of meus){const k=r.modelo.replace(/^carreta_/,''),on=tipo==='carreta'?(TRUCK.trailer&&TRUCK.trailer.tipo===k):(G.active&&G.active.busId===r.modelo&&G.mode==='drive'),bt=document.createElement('button');bt.className='job'+(on?' sel':'');
+  const d=busDef(r.modelo);bt.innerHTML=`<span>${netNome(r.modelo)}<small>${d?d.desc+' · ':''}combustível ${Math.round(r.combustivel)}% · lataria ${Math.round(r.lataria)}%</small></span><b>${G.carregando===r.modelo?'…':on?'✓':noG?'usar':''}</b>`;
+  bt.onclick=()=>{if(!noG){toast('Vá até uma garagem para trocar');return}if(tipo==='carreta'){if(!G.active||G.active!==TRUCK){toast('Entre no seu caminhão para engatar');return}engatarLivre(k)}else netTrocar(r)};el.appendChild(bt)}
+ const loja=Object.values(NET.cat).filter(c=>c.tipo===tipo&&!NET.meus.some(r=>r.modelo===c.id)&&(c.status==='publico'||(ehAdm()&&c.status==='beta'))).sort((a,b)=>a.preco-b.preco);
+ if(loja.length)tit('Loja');
+ for(const c of loja){const bt=document.createElement('button');bt.className='job';const d=busDef(c.id),beta=c.status==='beta';
+  bt.innerHTML=`<span>${c.nome}${beta?' <span style="background:#7d5ba6;border-radius:6px;padding:0 5px;font-size:11px">BETA</span>':''}<small>${d?d.desc:'carreta'}</small></span><b>${beta&&ehAdm()?'testar':brl(c.preco)}</b>`;
+  bt.onclick=()=>netComprar(c);el.appendChild(bt)}
+ return tipo==='carreta'}
+async function netComprar(c){const adm=ehAdm();if(!adm&&!netNaGaragem()){toast('Vá até uma garagem para comprar');return}
+ if(!adm&&G.money<c.preco){toast('Dinheiro insuficiente ('+brl(c.preco)+')',2500);return}
+ if(!adm&&!confirm(`Comprar ${c.nome} por ${brl(c.preco)}?`))return;
+ await netPos();const {error}=await NET.sb.rpc('comprar_veiculo',{p_modelo:c.id});if(error){toast(netErro(error),3500);return}
+ await netRecarregar();toast(adm?c.nome+' na sua garagem para teste':'Comprado: '+c.nome+'!',2500);renderBusSel();
+ if(adm&&busDef(c.id)){const r=NET.meus.find(x=>x.modelo===c.id);if(r)netTrocar(r)}}
+async function netTrocar(r){if(G.carregando)return;const def=busDef(r.modelo);if(!def)return;
+ if(G.job&&G.job.kind===(def.tipo==='truck'?'truck':'bus')&&G.active&&G.active.busId!==r.modelo){toast('Termine ou cancele o trabalho antes de trocar');return}
+ await netPos();const {error}=await NET.sb.rpc('trocar_veiculo',{p_veiculo:r.id});if(error){toast(netErro(error),3500);return}
+ NET.perfil.veiculo_ativo=r.id;const v=busOf(def.tipo);if(v!==G.active)Object.assign(v,{fuel:r.combustivel,eng:r.motor,tires:r.pneus,brakes:r.freios,body:r.lataria});escolherOnibus(r.modelo)}
+/* ---- ajustes do administrador (valem para todos) ---- */
+G.farolArq={};G.farolLocal=(()=>{try{return JSON.parse(localStorage.getItem('sb_farol_aj')||'{}')}catch(e){return{}}})();
+async function netAjustes(){if(!NET.sb)return;const {data,error}=await NET.sb.from('ajustes').select('*');if(error||!data)return;
+ for(const a of data){if(a.tipo==='lanterna'){G.lantArq[a.modelo]=a.dados;if(!G.lantLocal[a.modelo])refazLantId(a.modelo)}else if(a.tipo==='farol'){G.farolArq[a.modelo]=a.dados;if(!G.farolLocal[a.modelo])reaplicarModelo(a.modelo)}}}
+async function netSalvarAjuste(modelo,tipo,dados){if(!NET.user||!ehAdm())return false;
+ const {error}=await NET.sb.from('ajustes').upsert({modelo,tipo,dados,atualizado_em:new Date().toISOString(),atualizado_por:NET.user.id});if(error){toast('Não salvei no servidor: '+netErro(error),4000);return false}return true}
+/* painel do administrador */
+function abrirAdm(){if(!ehAdm())return;if(G.menu)toggleMenu(false);let el=$('adm');if(!el){el=document.createElement('div');el.id='adm';document.body.appendChild(el);for(const ev of ['pointerdown','pointerup','touchstart','click','wheel'])el.addEventListener(ev,e=>e.stopPropagation(),{passive:true})}
+ el.className='on';desenharAdm()}
+function desenharAdm(){const el=$('adm'),todos=[...FROTA.map(b=>({id:b.id,tipo:CAT_TIPO[b.tipo],nome:b.nome})),...Object.keys(CARR_TIPOS).map(k=>({id:'carreta_'+k,tipo:'carreta',nome:'Carreta '+CARR_TIPOS[k].n}))];
+ const st={beta:'🧪 Beta (só você)',publico:'✅ Público',oculto:'🚫 Fora da loja'};
+ let h=`<div class="card"><div class="row"><h2 style="font-size:22px">🛠 Administrador</h2><button class="btn" data-a="x">Fechar</button></div>
+  <h4>Ajustes que valem para todos</h4><div class="row" style="justify-content:flex-start;flex-wrap:wrap"><button class="btn" data-a="lant">🔴 Lanternas traseiras</button><button class="btn" data-a="farol">💡 Faróis dianteiros</button></div>
+  <h4>Veículos</h4><p class="note" style="margin:0 0 6px">Veículo novo entra como <b>Beta</b>: só você vê e testa. Aprovou? Mude para <b>Público</b>, defina o preço e salve.</p>`;
+ for(const t of ['onibus','caminhao','carreta']){h+=`<div class="bsT">${{onibus:'🚌 Ônibus',caminhao:'🚛 Caminhões',carreta:'🔗 Carretas'}[t]}</div>`;
+  for(const v of todos.filter(x=>x.tipo===t)){const c=NET.cat[v.id]||{status:'beta',preco:0,novo:true};
+   h+=`<div class="admV" data-id="${v.id}"><b>${c.nome||v.nome}${c.novo?' <small class="note">(novo)</small>':''}</b><select data-k="status">${Object.entries(st).map(([k,n])=>`<option value="${k}"${k===c.status?' selected':''}>${n}</option>`).join('')}</select><label>R$ <input data-k="preco" type="number" min="0" step="1000" value="${c.preco}"></label><button class="btn" data-a="salvar">Salvar</button>${busDef(v.id)?`<button class="btn" data-a="testar">Testar</button>`:''}</div>`}}
+ el.innerHTML=h+'</div>';
+ el.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{const a=b.dataset.a,row=b.closest('.admV');
+  if(a==='x'){el.className='';return}
+  if(a==='lant'){el.className='';abrirAjLant();return}
+  if(a==='farol'){el.className='';abrirAjFarol();return}
+  const id=row.dataset.id,v=todos.find(x=>x.id===id);
+  if(a==='salvar'){const d={id,tipo:v.tipo,nome:(NET.cat[id]||v).nome,status:row.querySelector('[data-k=status]').value,preco:Math.max(0,Math.round(+row.querySelector('[data-k=preco]').value||0)),atualizado_em:new Date().toISOString()};
+   if(d.status==='publico'&&!d.preco&&!confirm('Preço zero: o veículo fica de graça na loja. Continuar?'))return;
+   const {error}=await NET.sb.from('veiculos_catalogo').upsert(d);if(error){toast(netErro(error),3500);return}NET.cat[id]=d;toast('Salvo: '+d.nome+' · '+st[d.status]+(d.status==='publico'?' · '+brl(d.preco):''),2500);desenharAdm();return}
+  if(a==='testar'){if(!NET.cat[id]){const {error}=await NET.sb.from('veiculos_catalogo').upsert({id,tipo:v.tipo,nome:v.nome,status:'beta',preco:0});if(error){toast(netErro(error));return}await netRecarregar()}
+   el.className='';const r=NET.meus.find(x=>x.modelo===id);if(r)netTrocar(r);else netComprar(NET.cat[id])}})}
+/* ---------- painel dos faróis dianteiros (administrador, ou ?ajuste no modo local) ---------- */
+const farolCfg=id=>(G.farolPrev&&G.farolPrev.id===id?G.farolPrev.cfg:null)||G.farolLocal[id]||G.farolArq[id]||null;
+const faDe=id=>{const f=farolCfg(id);return f&&f.fa||DETR[id].fa};
+function reaplicarModelo(id){const def=busDef(id),M=MODELS[id];if(!def||!M)return;delete EXT[id+'det'];
+ for(const v of [BUS,BUS2,TRUCK,...AI.map(a=>a.v)])if(v.busId===id&&v.glbRoot){const o={doors:v.doors.map(d=>d.cur)};applyGLB(v,M,def);v.doors.forEach((d,i)=>{d.cur=d.tgt=o.doors[i]||0});if(v.facho){v.g.remove(v.facho);v.facho=undefined}aplicarPintura(v)}}
+const CAMPOS_FAROL=[['x','Abertura',.02],['y','Altura',.02],['z','Frente',.02],['tam','Tamanho do brilho',.05]],CAMPOS_FA=[['fx','Desenho ←→',2],['fy','Desenho ↑↓',2],['fw','Largura',2],['fh','Altura',2]];
+function abrirAjFarol(){if(G.aj||G.ajF)return;if(G.menu)toggleMenu(false);const el=document.createElement('div');el.id='ajLant';document.body.appendChild(el);
+ for(const ev of ['pointerdown','pointerup','touchstart','click'])el.addEventListener(ev,e=>e.stopPropagation(),{passive:true});
+ G.ajF={el,id:null,cfg:null,passo:1,t0:G.time,luz:2};G.time=21;G.cam=0;document.body.classList.add('aj');
+ const a=G.mode==='drive'&&G.active&&G.active.busId;trocarAjFarol(a||FROTA[0].id)}
+function trocarAjFarol(id){const A=G.ajF,def=busDef(id);A.id=id;A.cfg=null;G.farolPrev=null;desenharAjFarol();escolherOnibus(id);clearInterval(A.tm);
+ A.tm=setInterval(()=>{const v=busOf(def.tipo);if(!G.ajF||G.ajF.id!==id){clearInterval(A.tm);return}
+  if(v.busId===id&&G.mode==='drive'&&G.active===v){clearInterval(A.tm);A.v=v;v.hb=true;v.speed=0;v.lights=A.luz;const f=farolCfg(id)||{},h=f.head||def.prof.lamps.head[0],fa=DETR[id]?(f.fa||DETR[id].fa):null;
+   A.cfg={head:[...h],tam:f.tam||1,fa:fa?[...fa]:null};CAM.yaw=Math.PI-.42;CAM.pitch=-.05;CAM.zoom=.62;desenharAjFarol()}},200)}
+function aplicarAjFarol(){const A=G.ajF;desenharAjFarol();clearTimeout(A.tRef);A.tRef=setTimeout(()=>{if(G.ajF!==A)return;G.farolPrev={id:A.id,cfg:A.cfg};reaplicarModelo(A.id);if(A.v)A.v.lights=A.luz},180)}
+function fecharAjFarol(){const A=G.ajF;if(!A)return;clearInterval(A.tm);G.farolPrev=null;if(A.id)reaplicarModelo(A.id);A.el.remove();G.time=A.t0;G.ajF=null;CAM.idle=9;CAM.yaw=0;document.body.classList.remove('aj')}
+function desenharAjFarol(){const A=G.ajF;if(!A)return;const C=A.cfg,bt=(id,t,cor)=>`<button data-f="${id}"${cor?` style="background:${cor}"`:''}>${t}</button>`;
+ let h=`<b>💡 Faróis</b><select data-f="modelo">${FROTA.filter(b=>b.prof.lamps).map(b=>`<option value="${b.id}"${b.id===A.id?' selected':''}>${b.nome}</option>`).join('')}</select>`;
+ if(!C){A.el.innerHTML=h+' <span>carregando…</span>'+bt('fechar','✖');ligarAjFarol();return}
+ const val={x:C.head[0],y:C.head[1],z:C.head[2],tam:C.tam};for(const [k,t] of CAMPOS_FAROL)h+=`<span class="aj">${t} ${bt('-:'+k,'−')}<i>${(+val[k]).toFixed(2)}</i>${bt('+:'+k,'+')}</span>`;
+ if(C.fa){const f={fx:C.fa[0],fy:C.fa[1],fw:C.fa[2]-C.fa[0],fh:C.fa[3]-C.fa[1]};for(const [k,t] of CAMPOS_FA)h+=`<span class="aj">${t} ${bt('-:'+k,'−')}<i>${Math.round(f[k])}</i>${bt('+:'+k,'+')}</span>`}
+ h+=bt('passo',A.passo>1?'Passo: grosso':'Passo: fino',A.passo>1?'#8a5a10':'')+bt('luz',A.luz===2?'Farol alto':'Farol baixo','#8a7a10')+bt('salvar','💾 Salvar','#1f7a3a')+bt('exportar','⬇ Exportar','#2c5d8f')+bt('padrao','Padrão')+bt('fechar','✖');
+ A.el.innerHTML=h;ligarAjFarol()}
+function ligarAjFarol(){const A=G.ajF;A.el.querySelectorAll('[data-f]').forEach(e=>{const k=e.dataset.f;
+ if(e.tagName==='SELECT'){e.onchange=()=>trocarAjFarol(e.value);return}
+ e.onclick=async()=>{const C=A.cfg;
+  if(k==='fechar'){fecharAjFarol();return}
+  if(k==='passo'){A.passo=A.passo>1?1:5;desenharAjFarol();return}
+  if(k==='exportar'){const t=JSON.stringify({...G.farolArq,...G.farolLocal},null,1),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'application/json'}));a.download='farois-ajustes.json';document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),1500);return}
+  if(!C)return;
+  if(k==='luz'){A.luz=A.luz===2?1:2;if(A.v)A.v.lights=A.luz;desenharAjFarol();return}
+  if(k==='padrao'){const def=busDef(A.id);A.cfg={head:[...def.prof.lamps.head[0]],tam:1,fa:DETR[A.id]?[...DETR[A.id].fa]:null};delete G.farolLocal[A.id];aplicarAjFarol();return}
+  if(k==='salvar'){const d={head:C.head.map(n=>Math.round(n*1000)/1000),tam:Math.round(C.tam*100)/100};if(C.fa)d.fa=C.fa.map(Math.round);
+   const srv=await netSalvarAjuste(A.id,'farol',d);if(srv){G.farolArq[A.id]=d;delete G.farolLocal[A.id]}else G.farolLocal[A.id]=d;
+   try{localStorage.setItem('sb_farol_aj',JSON.stringify(G.farolLocal))}catch(e){}G.farolPrev=null;reaplicarModelo(A.id);toast(srv?'💾 Salvo para todos os jogadores':'💾 Salvo neste aparelho (⬇ Exportar para guardar)',3500);return}
+  const [sn,campo]=k.split(':'),s=sn==='+'?1:-1,m=A.passo||1;
+  const st=(CAMPOS_FAROL.find(c=>c[0]===campo)||CAMPOS_FA.find(c=>c[0]===campo))[2]*s*m;
+  if(campo==='x')C.head[0]=+(C.head[0]+st).toFixed(3);else if(campo==='y')C.head[1]=+(C.head[1]+st).toFixed(3);else if(campo==='z')C.head[2]=+(C.head[2]+st).toFixed(3);
+  else if(campo==='tam')C.tam=Math.max(.2,+(C.tam+st).toFixed(2));
+  else{const f=C.fa;if(campo==='fx'){f[0]+=st;f[2]+=st}else if(campo==='fy'){f[1]+=st;f[3]+=st}else if(campo==='fw')f[2]=Math.max(f[0]+8,f[2]+st);else f[3]=Math.max(f[1]+8,f[3]+st)}
+  aplicarAjFarol()}})}
 
 /* pessoas */
 const PG={b:new THREE.BoxGeometry(.46,.62,.28),h:new THREE.SphereGeometry(.15,10,8),l:new THREE.BoxGeometry(.16,.78,.18)};PG.l.translate(0,-.39,0);
@@ -1277,7 +1502,7 @@ function walk(dt,I){const mv=TOUCH&&Math.abs(T.jy)>.12?-T.jy:((K.KeyW||K.ArrowUp
  P.g.position.set(P.x,0,P.z);P.g.rotation.y=P.h}
 const exitPt=v=>toW(v,v.exit[0],v.exit[1]);
 function nearVeh(r=3.6){let best=null,bd=r;for(const v of PV){const d=dist(P,exitPt(v));if(d<bd){bd=d;best=v}}return best}
-function nearTrunk(){if(BUS.hasLug!==false&&dist(P,toW(BUS,-2.1,-2.2))<3.6)return{o:BUS,g:'lug',n:'bagageiro'};for(const t of TR){if(t.semPorta)continue;if(dist(P,toW(t,0,-12.6))<3.6)return{o:t,g:'rear',n:'portas da carreta'}}return null}
+function nearTrunk(){if(false&&dist(P,toW(BUS,-2.1,-2.2))<3.6)return{o:BUS,g:'lug',n:'bagageiro'};for(const t of TR){if(t.semPorta)continue;if(dist(P,toW(t,0,-12.6))<3.6)return{o:t,g:'rear',n:'portas da carreta'}}return null}
 function switchTo(v){if(G.mode==='drive'){const c=G.active;if(c===v){toast('Você já está no '+v.name);return}if(Math.abs(c.speed)>.8){toast('Pare o veículo antes de trocar');return}c.hb=true;c.speed=0;c.vx=c.vz=0;G.horn=false}
  G.mode='drive';G.active=v;v.hb=false;P.g.visible=false;document.body.classList.remove('walk');CAM.yaw=CAM.pitch=0;$('gar').style.display='none';$('panel').classList.remove('on');$('bPanel').classList.remove('on');toast('Você está no '+v.name+(v.on?'':' · ligue o motor'),1800)}
 function enterVeh(v){G.mode='drive';G.active=v;document.body.classList.remove('walk');if(!v.on)setTimeout(()=>{if(G.active===v&&!v.on)toast('Ligue o motor '+key('I','⏻'),1800)},1300);v.hb=false;P.g.visible=false;if(v.type==='truck'&&v.doors[0]){const d=v.doors[0];d.tgt=1;setTimeout(()=>{d.tgt=0},800)}toast('Você entrou no '+v.name,1200)}
@@ -1299,8 +1524,8 @@ const inZone=(v,p,r)=>dist(v,p)<r;
 function costs(v){return{fuel:Math.round((100-v.fuel)*(v.type==='truck'?9:8)),fix:Math.round((100-v.eng)*14+(100-v.tires)*6+(100-v.brakes)*5+(100-v.body)*9)}}
 function doAction(){if(G.mode!=='drive'){toast('Entre em um veículo');return}const v=G.active;if(Math.abs(v.speed)>.4){toast('Pare o veículo primeiro');return}
  const c=costs(v);
- if(pertoDe(v,FUEL)){if(c.fuel<5){toast('Tanque já está cheio');return}if(G.money<c.fuel){toast('Dinheiro insuficiente');return}G.money-=c.fuel;v.fuel=100;toast('Tanque cheio! −'+brl(c.fuel));save();return}
- if(pertoDe(v,SHOP)){if(c.fix<5){toast('Veículo em perfeito estado');return}if(G.money<c.fix){toast('Dinheiro insuficiente ('+brl(c.fix)+')');return}G.money-=c.fix;Object.assign(v,{eng:100,tires:100,brakes:100,body:100});toast('Veículo revisado! −'+brl(c.fix));save();return}
+ if(pertoDe(v,FUEL)){if(c.fuel<5){toast('Tanque já está cheio');return}if(G.money<c.fuel){toast('Dinheiro insuficiente');return}G.money-=c.fuel;netGasto(c.fuel,'Combustível');v.fuel=100;toast('Tanque cheio! −'+brl(c.fuel));save();return}
+ if(pertoDe(v,SHOP)){if(c.fix<5){toast('Veículo em perfeito estado');return}if(G.money<c.fix){toast('Dinheiro insuficiente ('+brl(c.fix)+')');return}G.money-=c.fix;netGasto(c.fix,'Oficina');Object.assign(v,{eng:100,tires:100,brakes:100,body:100});toast('Veículo revisado! −'+brl(c.fix));save();return}
  toast('Vá até um posto (P) ou oficina (O) — veja no mapa')}
 function act(a,down){
  if(a==='horn'){G.horn=down&&G.mode==='drive';return}
@@ -1311,7 +1536,7 @@ function act(a,down){
  case 'mapa':abrirMapa();break;
  case 'enter':if(v)exitVeh();else{const n=nearVeh();n?enterVeh(n):toast('Chegue perto da porta de um veículo')}break;
  case 'doors':{const o=v||nearVeh(5);o?toggleDoors(o,'main'):toast('Chegue perto de um veículo')}break;
- case 'trunk':if(v){if(v.type==='bus')toggleDoors(v,'lug');else if(v.trailer){if(v.trailer.semPorta)toast('Essa carreta não tem portas: é só parar na área de descarga');else toggleDoors(v.trailer,'rear')}else toast('Sem carreta engatada')}else{const n=nearTrunk();n?toggleDoors(n.o,n.g):toast('Chegue perto do bagageiro ou da traseira da carreta')}break;
+ case 'trunk':if(v){if(v.type==='bus')toast('O bagageiro não abre');else if(v.trailer){if(v.trailer.semPorta)toast('Essa carreta não tem portas: é só parar na área de descarga');else toggleDoors(v.trailer,'rear')}else toast('Sem carreta engatada')}else{const n=nearTrunk();n?toggleDoors(n.o,n.g):toast('Chegue perto do bagageiro ou da traseira da carreta')}break;
  case 'hitch':v&&v.type==='truck'?hitch(v):toast('Entre no caminhão para engatar');break;
  case 'act':doAction();break;
  case 'lights':if(v){v.lights=(v.lights+1)%3;blip(700,.04);toast(['Farol desligado','Farol baixo','Farol alto'][v.lights],900)}break;
@@ -1381,7 +1606,7 @@ function genJobs(){G.jobs=[];const F=G.mode==='drive'?G.active:P,ORI=CP.map((p,i
   G.jobs.push({kind:'bus',tipo:'urb',s,k,d,pax,lug:false,line:'Linha '+(100+((Math.random()*80)|0)),pay:Math.round((pax*22+d*1.3)/10)*10})}
  for(let i=0;i<2;i++){const s=pickNear(STATIONS,F,o=>o.ctr);let t=s;while(t===s)t=(Math.random()*STATIONS.length)|0;
   const d=dist(STATIONS[s].ctr,STATIONS[t].ctr),pax=18+((Math.random()*24)|0),lug=Math.random()<.65;
-  G.jobs.push({kind:'bus',tipo:'rod',s,t,d,pax,lug,line:'Viagem '+(1000+((Math.random()*900)|0)),pay:Math.round((pax*26+d*1.05+(lug?200:0))/10)*10})}
+  G.jobs.push({kind:'bus',tipo:'rod',s,t,d,pax,lug:false,line:'Viagem '+(1000+((Math.random()*900)|0)),pay:Math.round((pax*26+d*1.05+(lug?200:0))/10)*10})}
  renderJobs()}
 const jobDest=j=>j.tipo==='rod'?STATIONS[j.t].n:'Ponto '+STOPS[j.k].n;
 function renderJobs(){const jt=$('jt'),jb=$('jb');jt.innerHTML='';jb.innerHTML='';
@@ -1405,7 +1630,7 @@ function cancelJob(){const j=G.job;if(!j){toast('Nenhum trabalho ativo');return}
  G.job=null;toast('Trabalho cancelado');if(G.jobs.length<4)genJobs()}
 function inBay(v,b){return inPose(v,bayPose(b))}
 let JUI={t:'',p:'',g:-1};const ui=(t,p,g=-1)=>{JUI={t,p,g}};
-function payOut(j,base,extra){const pay=Math.max(base*.3,Math.round(base-j.hits*30));G.money+=pay;G.job=null;save();toast(`${extra} +${brl(pay)}`,3500);blip(880,.1,.08);setTimeout(()=>blip(1320,.12,.08),120);if(G.jobs.length<4)genJobs()}
+function payOut(j,base,extra){const pay=Math.max(base*.3,Math.round(base-j.hits*30));G.money+=pay;netGanho(j,pay);G.job=null;save();toast(`${extra} +${brl(pay)}`,3500);blip(880,.1,.08);setTimeout(()=>blip(1320,.12,.08),120);if(G.jobs.length<4)genJobs()}
 const baiaOnde=(st,b)=>st.bays.findIndex(p=>inPose(b,p));
 function jobUpdate(dt){const j=G.job;
  if(!j){ui('Sem trabalho',`Escolha um frete ou linha em ${TOUCH?'☰ → Trabalhos':'[B]'}`);return}
@@ -1484,7 +1709,7 @@ function env(dt,F){if(!G.aj)G.time=(G.time+dt/60)%24;G.wNext-=dt/60;if(G.wNext<=
 /* ---------- câmera ---------- */
 const camLook=new THREE.Vector3(),camWant=new THREE.Vector3();
 const CAM={yaw:0,pitch:0,zoom:1,idle:9,pts:new Map(),pd:0};
-function camUpdate(dt){let o,dd,hh,top;CAM.idle+=dt;if(G.aj)CAM.idle=-99;
+function camUpdate(dt){let o,dd,hh,top;CAM.idle+=dt;if(G.aj||G.ajF)CAM.idle=-99;
  if(CAM.idle>2.5&&!CAM.pts.size){const k=1-Math.exp(-dt*2.2);CAM.yaw=angN(CAM.yaw)*(1-k);CAM.pitch*=1-k}
  const baseF=innerWidth<innerHeight?75:60,ck=G.mode==='drive'&&G.cam===1;const wf=ck?clamp(baseF/CAM.zoom,30,85):baseF;if(Math.abs(camera.fov-wf)>.01){camera.fov=wf;camera.updateProjectionMatrix()}
  if(G.mode==='drive'){const v=G.active;o=v;dd=v.camD+(v.trailer?8:0);hh=v.camH+(v.trailer?2.5:0);top=v.top;
@@ -1558,8 +1783,8 @@ const W={id:null,rot:0,a0:0};T.al=T.ar=0;
 document.body.classList.toggle('arr',G.steer==='arrows');
 
 /* ---------- menu e HUD ---------- */
-const KEYS=TOUCH?[['Volante','gire para virar'],['Centro','buzina'],['◀ ▶','setas'],['Farol','baixo, alto, desliga'],['▲ ▼','marchas: D, N e R (ré)'],['⏻','liga/desliga o motor'],['P','freio de mão'],['ACEL. / FREIO','pedais'],['☰','atalhos: portas, bagageiro, engatar, trabalhos'],['Botões no meio','ações do momento (abastecer, abrir porta…)'],['Joystick','andar a pé']]
- :[['W / S','acelerar / frear'],['A / D','virar'],['R / Q','marcha acima / abaixo (D, N, R)'],['I','liga/desliga o motor'],['Espaço','freio de mão'],['E','entrar/sair'],['F','portas'],['T','bagageiro / portas da carreta'],['J','engatar/soltar carreta'],['G','abastecer / consertar'],['L','farol: baixo, alto, desliga'],['Z / X','setas'],['H','buzina'],['C','câmera'],['P','limpador'],['M','câmbio auto/manual'],['O','atalhos'],['B','trabalhos e ajustes'],['Shift','correr a pé']];
+const KEYS=TOUCH?[['Volante','gire para virar'],['Centro','buzina'],['◀ ▶','setas'],['Farol','baixo, alto, desliga'],['▲ ▼','marchas: D, N e R (ré)'],['⏻','liga/desliga o motor'],['P','freio de mão'],['ACEL. / FREIO','pedais'],['☰','atalhos: portas, engatar, trabalhos'],['Botões no meio','ações do momento (abastecer, abrir porta…)'],['Joystick','andar a pé']]
+ :[['W / S','acelerar / frear'],['A / D','virar'],['R / Q','marcha acima / abaixo (D, N, R)'],['I','liga/desliga o motor'],['Espaço','freio de mão'],['E','entrar/sair'],['F','portas'],['T','portas da carreta'],['J','engatar/soltar carreta'],['G','abastecer / consertar'],['L','farol: baixo, alto, desliga'],['Z / X','setas'],['H','buzina'],['C','câmera'],['P','limpador'],['M','câmbio auto/manual'],['O','atalhos'],['B','trabalhos e ajustes'],['Shift','correr a pé']];
 for(const id of ['keys','keys2'])$(id).innerHTML=KEYS.map(k=>`<div><kbd>${k[0]}</kbd>${k[1]}</div>`).join('');
 function toggleMenu(f){G.menu=f===undefined?!G.menu:f;if(G.menu){$('panel').classList.remove('on');$('bPanel').classList.remove('on')}$('menu').classList.toggle('on',G.menu);if(G.menu){renderJobs();renderBusSel();T.acc=T.brk=0}}
 $('mclose').onclick=()=>toggleMenu(false);
@@ -1573,14 +1798,14 @@ $('oTime').onclick=()=>{G.time=(G.time+3)%24;toast('Agora são '+clock(),1200)};
 $('oGear').onclick=()=>setAuto(!G.auto);
 $('oSound').onclick=()=>{G.sound=!G.sound;if(master)master.gain.value=G.sound?.7:0;$('oSound').textContent='Som: '+(G.sound?'ligado':'desligado')};
 $('oTow').onclick=()=>{if(G.mode!=='drive'){toast('Entre em um veículo para chamar o guincho');return}if(G.money<300){toast('Dinheiro insuficiente');return}const v=G.active;
- G.money-=300;const T0=TOW.slice().sort((a,b)=>dist(a,v)-dist(b,v))[0];Object.assign(v,{x:T0.x,z:T0.z,h:T0.h,speed:0,vx:0,vz:0,fuel:Math.max(v.fuel,25),eng:Math.max(v.eng,30)});if(v.trailer){const f=fwd(v.h);placeTrailer(v.trailer,v.x-f.x*1.6,v.z-f.z*1.6,v.h)}toggleMenu(false);toast('Guincho levou você ao posto mais próximo. −R$ 300');save()};
+ G.money-=300;netGasto(300,'Guincho');const T0=TOW.slice().sort((a,b)=>dist(a,v)-dist(b,v))[0];Object.assign(v,{x:T0.x,z:T0.z,h:T0.h,speed:0,vx:0,vz:0,fuel:Math.max(v.fuel,25),eng:Math.max(v.eng,30)});if(v.trailer){const f=fwd(v.h);placeTrailer(v.trailer,v.x-f.x*1.6,v.z-f.z*1.6,v.h)}toggleMenu(false);toast('Guincho levou você ao posto mais próximo. −R$ 300');save()};
 $('oMapa').onclick=()=>abrirMapa(true);$('wmx').onclick=()=>abrirMapa(false);$('wmap').onclick=e=>{if(e.target.id==='wmap')abrirMapa(false)};
 $('oCancel').onclick=()=>{cancelJob();toggleMenu(false)};
-function startGame(){initAudio();G.started=true;$('start').classList.remove('on');toast(`Ligue o motor ${key('I','⏻')} e abra ${TOUCH?'☰':'[B]'} para escolher um trabalho`,3200)}
-$('play').onclick=startGame;
+function startGame(){if(NET.on&&!NET.pronto)return;if(NET.on&&!NET.meus.some(r=>busDef(r.modelo))){telaPrimeiro();return}initAudio();G.started=true;if(NET.user)netComecar();$('start').classList.remove('on');toast(`Ligue o motor ${key('I','⏻')} e abra ${TOUCH?'☰':'[B]'} para escolher um trabalho`,3200)}
+$('play').onclick=startGame;$('oAdm').onclick=()=>abrirAdm();netIniciar();
 let toastT=null;function toast(m,ms=2000){const e=$('toast');e.textContent=m;e.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>e.style.opacity=0,ms)}
 const clock=()=>{const h=Math.floor(G.time),m=Math.floor((G.time-h)*60);return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')};
-function save(){try{localStorage.setItem('rotabrasil',JSON.stringify({money:Math.round(G.money),v:PV.map(v=>({fuel:v.fuel,eng:v.eng,tires:v.tires,brakes:v.brakes,body:v.body}))}))}catch(e){}}
+function save(){netEstado();try{localStorage.setItem('rotabrasil',JSON.stringify({money:Math.round(G.money),v:PV.map(v=>({fuel:v.fuel,eng:v.eng,tires:v.tires,brakes:v.brakes,body:v.body}))}))}catch(e){}}
 setInterval(save,15000);
 const setBar=(id,v)=>{const e=$(id);e.style.width=clamp(v,0,100)+'%';e.className=v<25?'lo':v<50?'md':''};
 function prompts(){const out=[],add=(a,k,t)=>out.push(`<button data-a="${a}">${TOUCH?'':`<kbd>${k}</kbd>`}${t}</button>`);

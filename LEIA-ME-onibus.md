@@ -136,3 +136,26 @@ Peças prontas escolhidas no painel ficam por cima dos quadros da skin. Os molde
 A pintura da carroceria que "vaza" para o vidro (como acontece em skins feitas por IA) não vira mais adesivo: a cor parecida com a da carroceria fica como vidro. Adesivo só aparece onde a cor é diferente da carroceria.
 A máscara de vidro agora também pega a parte do para-brisa que fica na faixa do teto.
 Caminhões: a versão branca (_branco.jpg) e os moldes foram refeitos com o branco por igual, para a skin não sair manchada.
+
+## Contas online, garagem e administrador (versão 0.9)
+O jogo agora pode ter contas (Supabase). Enquanto `banco/config.js` estiver vazio, ele roda local como antes.
+
+Para ligar:
+1. Crie um projeto novo no Supabase (separado do Fator RP).
+2. SQL Editor → New query → cole todo o `banco/schema.sql` → Run.
+3. Authentication → URL Configuration: em **Site URL** e **Redirect URLs** coloque `https://simulabr.github.io/Simula-o-BR-/` (é para onde vão os links de confirmação de email e de recuperar senha).
+4. Project Settings → API: copie **Project URL** e a chave **anon public** para `banco/config.js` (dá para editar direto no GitHub).
+5. Abra o jogo, crie a sua conta e rode no SQL Editor (trocando o nome):
+   `update public.perfis set admin = true where usuario = 'SEU_USUARIO';`
+
+Como funciona:
+- Cadastro com email, senha e nome de usuário; "Esqueci a senha" manda um link por email.
+- No primeiro acesso o jogador escolhe um veículo grátis. Os outros são comprados com o dinheiro do jogo.
+- Comprar e trocar só nas garagens (as oficinas, **O** laranja no mapa). O jogador só tem o veículo ativo no mapa.
+- Dinheiro, veículos e estado (combustível, desgaste) ficam no servidor.
+- O bagageiro não abre mais.
+- ☰ → **🛠 Administrador** (só para a sua conta): lanternas traseiras e faróis dianteiros (salvam para todos) e a lista de veículos.
+  Veículo novo entra como **Beta**: só você vê e testa ("Testar"). Aprovado, mude para **Público**, coloque o preço e salve.
+- `?ajuste` no endereço continua funcionando no modo local (agora com o botão 💡 Faróis também).
+
+Importante: `banco/config.js` só vem neste pacote. Os próximos pacotes não trazem ele, para não apagar a sua chave.
