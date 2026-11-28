@@ -278,3 +278,9 @@ Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
 - **Barra da skin**: agora mostra e salva a skin que está de fato no ônibus. Antes, trocando pela garagem, ela continuava com o nome da skin anterior e podia salvar o ajuste na skin errada.
 - **Cabine nova do urbano** (`modelos/cabines/cabine_urbano.glb`): tablado do motorista com faixa amarela, painel largo e baixo, volante deitado, poltrona pneumática, botões de porta e de marcha, letreiro, divisória, catraca com validador e balaústres amarelos. Vale também para o Urbano clássico.
 - **Barra da cabine**: ganhou "Tamanho" (aumenta ou diminui a cabine inteira) e o botão "↔ Motorista", que ajusta a posição da câmera da 1ª pessoa (lado, altura, frente/trás) sem mexer na cabine. Funciona nos ônibus e nos caminhões.
+
+## Alerta, buzinas novas, freio e bagageiro (28/11)
+- **⚠ Alerta**: botão novo entre a seta esquerda e o farol (no computador, tecla K). Pisca as duas setas, as lanternas e as carretas, e aparece ⚠ ◀ ▶ no painel. Apertando de novo, desliga.
+- **Buzinas** (`sons/buzina_carro.wav` e `sons/buzina_forte.wav`): os ônibus urbanos usam a buzina parecida com a de carro; caminhões e rodoviários usam a buzina grande. Toque rápido dá uma buzinada curta; segurando, ela continua até soltar.
+- **Som de freio andando**: o freio automático que segura a velocidade no limite da marcha estava contando como pedal de freio. Agora o chiado e a luz de freio só acendem com o pedal ou com o freio de mão.
+- **Bagageiro**: botão removido. A tecla T continua abrindo as portas das carretas.
