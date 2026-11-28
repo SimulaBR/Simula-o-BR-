@@ -2,7 +2,7 @@
 //  - página e código (html, manifesto, ajustes): rede primeiro, para nunca prender uma versão velha; sem internet, a cópia;
 //  - arquivos pesados (ônibus, texturas, sons, a biblioteca 3D): sai na hora da cópia do aparelho e a cópia é
 //    atualizada por trás (quando um ônibus muda, a versão nova aparece na abertura seguinte).
-const CACHE = 'simulabr-v1', PESADOS = 'simulabr-arquivos-v1';
+const CACHE = 'simulabr-v2', PESADOS = 'simulabr-arquivos-v2';
 self.addEventListener('install', (e) => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html', './manifest.webmanifest']).catch(() => {}))); });
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE && k !== PESADOS).map((k) => caches.delete(k)))).then(() => self.clients.claim()));

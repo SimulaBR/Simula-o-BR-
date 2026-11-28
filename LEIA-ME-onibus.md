@@ -244,3 +244,13 @@ Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
 
 ## Cabine nova dos caminhões (28/11)
 - Todos os caminhões usam na 1ª pessoa a cabine do arquivo `truck_cabin.glb` que você mandou (painel, colunas, teto, retrovisores e para-brisa), com o volante do G7. Na 1ª pessoa a lataria do próprio caminhão some, então não tem mais barra atravessando, coluna falhada nem a visão tapada. Ajuste fino em 🛠 Administrador → Suspensão → "Cabine (1ª pessoa)".
+
+## Atualização sempre chega na hora (28/11)
+- Antes, ônibus, cabines e texturas novos só apareciam na segunda vez que o jogo abria (o celular usava a cópia guardada). Agora cada pacote leva um número de versão e o jogo baixa o arquivo novo na primeira abertura. A cada pacote novo eu troco esse número.
+
+## Lanternas de caminhão, carretas, alinhamento das skins (28/11)
+- **Erro das peças de lanterna**: ao mexer nos ajustes, a peça antiga não saía e ficava uma por baixo da outra. Corrigido.
+- **Lanternas de caminhão**: 5 desenhos novos (fumê com V, clássica 3 cores, trapézio A, trapézio B, L com moldura), com vermelho (lanterna/freio), âmbar (seta) e branco (ré) acendendo separado. O painel "🚌 Peças de lanterna traseira" agora vale para caminhões também: salve cada caminhão do mesmo jeito do ônibus.
+- **Carretas herdam a lanterna do caminhão** que está puxando (bitrem também). Trocou o caminhão, a lanterna da carreta troca sozinha. Acendem junto com as luzes do caminhão.
+- **Skins mais alinhadas**: as 21 skins de ônibus foram encaixadas de novo no molde, uma por uma, pelo desenho da lataria (as do G7 1200 estavam 2,3% largas demais).
+- **Alinhar a skin na mão**: 🛠 Administrador → Suspensão → "Alinhar a skin": ← →, ↑ ↓, largura e altura. Vale para todas as skins daquele modelo e o ônibus muda na hora.
