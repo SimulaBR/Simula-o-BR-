@@ -264,3 +264,7 @@ Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
 - **Cabine**: 🛠 Administrador → Suspensão → 🪑 Ajustar a cabine. Abre uma barra por cima do jogo com Altura, Frente/trás e Largura (passo fino = 1 cm, grosso = 5 cm). "👁 Ver de fora" mostra o ônibus pela frente com o para-brisa transparente (↻ Girar muda o ângulo); "👁 1ª pessoa" volta para dentro. 💾 Salvar vale para todos. Precisa estar dentro do veículo.
 - **Skin**: o alinhamento agora é salvo **para cada skin** (a barra mostra o nome da skin que está no ônibus). Troque a skin e ajuste a próxima. Se uma skin não tiver ajuste próprio, usa o geral do modelo.
 - O para-brisa do ônibus que você dirige ficou mais transparente.
+
+## Editor com todos os veículos e limpador por fora (28/11)
+- **Editores (lanternas, luzes)**: na conta de administrador a lista mostra todos os veículos de novo; trocar ali já carrega o veículo na hora, sem ir à garagem. Jogador comum continua só com o veículo dele.
+- **G7 1200**: os limpadores estavam um pouco atrás do para-brisa e, com o vidro transparente, pareciam estar dentro do ônibus. Foram para o lado de fora do vidro.

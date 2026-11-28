@@ -193,7 +193,7 @@ body.aj #ajLantBtn,body.aj #ajFarBtn,body.aj #pedrow,body.aj #wheel{visibility:h
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 {
-const VERSAO='2026-11-28h';
+const VERSAO='2026-11-28i';
 {const f0=window.fetch.bind(window),vv=u=>(typeof u==='string'&&/\.(glb|png|jpe?g|webp|json)$/i.test(u)&&!/^(https?:|data:|blob:)/.test(u))?u+(u.includes('?')?'&':'?')+'v='+VERSAO:u;
  window.fetch=(u,o)=>f0(vv(u),o);const L0=THREE.TextureLoader.prototype.load;THREE.TextureLoader.prototype.load=function(u,...r){return L0.call(this,vv(u),...r)}}
 const $=id=>document.getElementById(id);
@@ -1182,7 +1182,7 @@ function exportarLant(){const tudo={...G.lantArq,...G.lantLocal},txt=JSON.string
  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);toast('Baixado: lanternas-ajustes.json. Suba na raiz do repositório para valer para todos.',5000)}
 function desenharAjLant(){const A=G.aj;if(!A)return;const C=A.cfg;
  const bt=(id,t,cor)=>`<button data-l="${id}"${cor?` style="background:${cor}"`:''}>${t}</button>`;
- const ops=(NET.user?FROTA.filter(b=>b.id===A.id):FROTA).map(b=>`<option value="${b.id}"${b.id===A.id?' selected':''}>${b.nome}</option>`).join('');
+ const ops=(NET.user&&!ehAdm()?FROTA.filter(b=>b.id===A.id):FROTA).map(b=>`<option value="${b.id}"${b.id===A.id?' selected':''}>${b.nome}</option>`).join('');
  let h=`<b>🚌 Lanternas</b><select data-l="modelo">${ops}</select>`;
  if(!C){A.el.innerHTML=h+' <span>carregando o ônibus…</span>'+bt('fechar','✖');ligarAjLant();return}
  const soltas=Object.keys(LDES).filter(k=>LDES[k].c.length===3);
