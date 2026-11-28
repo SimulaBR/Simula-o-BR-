@@ -193,7 +193,7 @@ body.aj #ajLantBtn,body.aj #ajFarBtn,body.aj #pedrow,body.aj #wheel{visibility:h
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 {
-const VERSAO='2026-11-28g';
+const VERSAO='2026-11-28h';
 {const f0=window.fetch.bind(window),vv=u=>(typeof u==='string'&&/\.(glb|png|jpe?g|webp|json)$/i.test(u)&&!/^(https?:|data:|blob:)/.test(u))?u+(u.includes('?')?'&':'?')+'v='+VERSAO:u;
  window.fetch=(u,o)=>f0(vv(u),o);const L0=THREE.TextureLoader.prototype.load;THREE.TextureLoader.prototype.load=function(u,...r){return L0.call(this,vv(u),...r)}}
 const $=id=>document.getElementById(id);
@@ -1463,34 +1463,53 @@ function cabine(root,def,G2,semBanco){const P=def.prof,g=new THREE.Group();g.nam
  // divisória com porta atrás do motorista (esconde as poltronas)
  const hp=top-.3-fl,yp=fl+hp/2;cx(2*hw,hp,.06,CABM.div,0,yp,zp);
  const pt=cx(.75,Math.min(1.95,hp-.05),.04,CABM.porta,-.05,fl+Math.min(1.95,hp-.05)/2,zp+.035);cx(.42,.5,.02,CABM.vid,-.05,fl+1.45,zp+.06);cx(.04,.18,.06,CABM.metal,.25,fl+1,zp+.07)}
+/* barra de ajuste da cabine (administrador): mexe e vê na hora */
+function cabAoVivo(v,C){const g=v&&v.glbRoot&&v.glbRoot.getObjectByName('cabineG7');if(!g)return false;const u=g.userData;g.position.y=u.Y0+(+C.dy||0);g.position.z=u.Z0+(+C.dz||0);g.scale.x=+C.sw||1;
+ if(u.coach&&v.seat){v.seat[1]=g.position.y;v.seat[2]=g.position.z;if(v.setGLB&&v.setGLB.seat){v.setGLB.seat[1]=g.position.y;v.setGLB.seat[2]=g.position.z}}return true}
+function abrirAjCab(id){if(G.ajC)return;if(G.menu)toggleMenu(false);const v=G.active;if(!v||v.busId!==id||!v.glbRoot||!v.glbRoot.getObjectByName('cabineG7')){toast('Entre no veículo (ele precisa usar a cabine padrão)',3000);return}
+ const el=document.createElement('div');el.id='ajLant';document.body.appendChild(el);for(const ev of ['pointerdown','pointerup','touchstart','click'])el.addEventListener(ev,e=>e.stopPropagation(),{passive:true});
+ const A=G.ajC={el,id,v,cfg:{...cabCfg(id)},passo:1,t0:G.time,cam0:G.cam};if(G.time<7||G.time>17)G.time=12;G.cam=1;CAM.yaw=0;CAM.pitch=-.1;document.body.classList.add('aj');desenharAjCab()}
+function desenharAjCab(){const A=G.ajC;if(!A)return;const C=A.cfg,bt=(k,t,c)=>`<button data-k="${k}"${c?` style="background:${c}"`:''}>${t}</button>`;
+ const campo=(k,t,f)=>`<span class="aj">${t} ${bt('-:'+k,'−')}<i>${f(+C[k]||0)}</i>${bt('+:'+k,'+')}</span>`;
+ A.el.innerHTML=`<b>🪑 Cabine · ${busDef(A.id).nome}</b>`+campo('dy','Altura',v=>Math.round(v*100)+' cm')+campo('dz','Frente/trás',v=>Math.round(v*100)+' cm')+campo('sw','Largura',v=>Math.round((v||1)*100)+'%')+
+  bt('passo',A.passo>1?'Passo: grosso':'Passo: fino',A.passo>1?'#8a5a10':'')+bt('vista',G.cam===1?'👁 Ver de fora':'👁 1ª pessoa')+(G.cam===1?'':bt('girar','↻ Girar'))+bt('salvar','💾 Salvar','#1f7a3a')+bt('zerar','Zerar')+bt('fechar','✖');
+ A.el.querySelectorAll('[data-k]').forEach(b=>b.onclick=async()=>{const k=b.dataset.k;
+  if(k==='fechar'){fecharAjCab();return}if(k==='passo'){A.passo=A.passo>1?1:5;desenharAjCab();return}
+  if(k==='vista'){G.cam=G.cam===1?0:1;if(G.cam===0)A.ang=-.6;desenharAjCab();return}
+  if(k==='girar'){A.ang=(A.ang||0)+.6;return}
+  if(k==='zerar'){A.cfg={dz:0,dy:0,sw:1};cabAoVivo(A.v,A.cfg);desenharAjCab();return}
+  if(k==='salvar'){const s=Object.assign({},suspCfg(A.id),G.suspArq[A.id]||{});s.cab={...A.cfg};G.suspArq[A.id]=s;const ok=await netSalvarAjuste(A.id,'suspensao',s);toast(ok?'💾 Cabine salva para todos':'Não salvei no servidor',2500);return}
+  const [sg,c]=k.split(':'),d=(sg==='+'?1:-1)*A.passo;if(c==='sw')A.cfg.sw=Math.max(.6,Math.min(1.4,Math.round(((+A.cfg.sw||1)+d*.01)*100)/100));else A.cfg[c]=Math.round(((+A.cfg[c]||0)+d*.01)*100)/100;cabAoVivo(A.v,A.cfg);desenharAjCab()})}
+function fecharAjCab(){const A=G.ajC;if(!A)return;A.el.remove();G.time=A.t0;G.cam=A.cam0;G.ajC=null;CAM.idle=9;document.body.classList.remove('aj');reaplicarModelo(A.id)}
 /* barra de alinhamento da skin (administrador): mexe e vê o ônibus na hora */
 function abrirAjSkin(id){if(G.ajS)return;if(G.menu)toggleMenu(false);const v=G.active;if(!v||v.busId!==id){toast('Entre no veículo para alinhar a skin dele',3000);return}
  const el=document.createElement('div');el.id='ajLant';document.body.appendChild(el);for(const ev of ['pointerdown','pointerup','touchstart','click'])el.addEventListener(ev,e=>e.stopPropagation(),{passive:true});
- const A=G.ajS={el,id,cfg:{...skAj(id)},passo:2,t0:G.time};if(G.time<7||G.time>17)G.time=12;G.cam=0;CAM.yaw=1.2;CAM.pitch=-.05;CAM.zoom=.7;document.body.classList.add('aj');G.skPrev={id,cfg:A.cfg};desenharAjSkin()}
+ const A=G.ajS={el,id,k:skDe(id),cfg:{...skAj(id)},passo:2,t0:G.time};if(G.time<7||G.time>17)G.time=12;G.cam=0;CAM.yaw=1.2;CAM.pitch=-.05;CAM.zoom=.7;document.body.classList.add('aj');G.skPrev={id,k:A.k,cfg:A.cfg};desenharAjSkin()}
 function desenharAjSkin(){const A=G.ajS;if(!A)return;const C=A.cfg,bt=(k,t,c)=>`<button data-k="${k}"${c?` style="background:${c}"`:''}>${t}</button>`;
  const campo=(k,t,f)=>`<span class="aj">${t} ${bt('-:'+k,'−')}<i>${f(C[k])}</i>${bt('+:'+k,'+')}</span>`;
- A.el.innerHTML=`<b>🎨 Skin · ${busDef(A.id).nome}</b>`+campo('x','← →',v=>v.toFixed(0))+campo('y','↑ ↓',v=>v.toFixed(0))+campo('sx','Largura',v=>(v*100).toFixed(1)+'%')+campo('sy','Altura',v=>(v*100).toFixed(1)+'%')+
+ const nk=A.k&&NET.skins&&NET.skins[A.k]?NET.skins[A.k].nome:'skin padrão';A.el.innerHTML=`<b>🎨 ${busDef(A.id).nome} · ${nk}</b>`+campo('x','← →',v=>v.toFixed(0))+campo('y','↑ ↓',v=>v.toFixed(0))+campo('sx','Largura',v=>(v*100).toFixed(1)+'%')+campo('sy','Altura',v=>(v*100).toFixed(1)+'%')+
   bt('passo',A.passo>1?'Passo: grosso':'Passo: fino',A.passo>1?'#8a5a10':'')+bt('vista','↻ Girar')+bt('salvar','💾 Salvar','#1f7a3a')+bt('zerar','Zerar')+bt('fechar','✖');
  A.el.querySelectorAll('[data-k]').forEach(b=>b.onclick=async()=>{const k=b.dataset.k;
   if(k==='fechar'){fecharAjSkin();return}if(k==='passo'){A.passo=A.passo>1?1:4;desenharAjSkin();return}if(k==='vista'){CAM.yaw+=Math.PI/2;return}
-  if(k==='zerar'){A.cfg={x:0,y:0,sx:1,sy:1};G.skPrev={id:A.id,cfg:A.cfg};desenharAjSkin();return}
-  if(k==='salvar'){const s=Object.assign({},suspCfg(A.id),G.suspArq[A.id]||{});s.sk={...A.cfg};G.suspArq[A.id]=s;const ok=await netSalvarAjuste(A.id,'suspensao',s);toast(ok?'💾 Alinhamento salvo para todos':'Não salvei no servidor',2500);return}
-  const [sg,c]=k.split(':'),d=(sg==='+'?1:-1)*A.passo;if(c==='x'||c==='y')A.cfg[c]+=d;else A.cfg[c]=Math.max(.8,Math.min(1.2,Math.round((A.cfg[c]+d*.0025)*10000)/10000));G.skPrev={id:A.id,cfg:A.cfg};desenharAjSkin()})}
+  if(k==='zerar'){A.cfg={x:0,y:0,sx:1,sy:1};G.skPrev={id:A.id,k:A.k,cfg:A.cfg};desenharAjSkin();return}
+  if(k==='salvar'){const s=Object.assign({},suspCfg(A.id),G.suspArq[A.id]||{});if(A.k){s.skS={...(s.skS||{}),[A.k]:{...A.cfg}}}else s.sk={...A.cfg};G.suspArq[A.id]=s;const ok=await netSalvarAjuste(A.id,'suspensao',s);toast(ok?'💾 Alinhamento salvo para todos':'Não salvei no servidor',2500);return}
+  const [sg,c]=k.split(':'),d=(sg==='+'?1:-1)*A.passo;if(c==='x'||c==='y')A.cfg[c]+=d;else A.cfg[c]=Math.max(.8,Math.min(1.2,Math.round((A.cfg[c]+d*.0025)*10000)/10000));G.skPrev={id:A.id,k:A.k,cfg:A.cfg};desenharAjSkin()})}
 function fecharAjSkin(){const A=G.ajS;if(!A)return;A.el.remove();G.time=A.t0;G.ajS=null;G.skPrev=null;CAM.idle=9;document.body.classList.remove('aj')}
 /* ---------- cabine do G7 1200 (ônibus) e do FH16 (caminhões) para os veículos sem interior ---------- */
 const PORTA_COSTAS=new THREE.MeshStandardMaterial({color:0x8e9196,roughness:.55,metalness:.25,side:THREE.BackSide,polygonOffset:true,polygonOffsetFactor:2,polygonOffsetUnits:2});
 const CAB_INFO={coach:{arq:'modelos/cabines/cabine_onibus.glb',W:1.26,esp:.16,F0:-.73,B0:-1.86,zf:1.5},truck:{arq:'modelos/cabines/cabine_caminhao.glb',W:1.18,esp:.02,F0:null,zf:1.25,casco:true,Y:2.58}},CABS={},CAB_GEO={};
 async function getCab(t){const k=t==='truck'?'truck':'coach';if(CABS[k]!==undefined)return CABS[k];
  try{const r=await fetch(CAB_INFO[k].arq);if(!r.ok)throw new Error(r.status);CABS[k]=await parseGLB(await r.arrayBuffer())}catch(e){console.warn('cabine',k,e);CABS[k]=null}return CABS[k]}
-const skAj=id=>Object.assign({x:0,y:0,sx:1,sy:1},(G.skPrev&&G.skPrev.id===id?G.skPrev.cfg:null)||(G.suspArq[id]||{}).sk||{});
+const skDe=id=>(G.skAtiva&&G.skAtiva[id])||'';
+const skAj=id=>{const a=G.suspArq[id]||{},k=skDe(id);return Object.assign({x:0,y:0,sx:1,sy:1},(G.skPrev&&G.skPrev.id===id&&G.skPrev.k===k?G.skPrev.cfg:null)||(k&&a.skS&&a.skS[k])||a.sk||{})};
 const cabCfg=id=>Object.assign({dz:0,dy:0,sw:1},(G.cabPrev&&G.cabPrev.id===id?G.cabPrev.cfg:null)||(G.suspArq[id]||{}).cab||{});
 function cabineG7(root,def,G2){const k=def.tipo==='truck'?'truck':'coach',M=CABS[k];if(!M||!M.nodes.length)return false;
  const I=CAB_INFO[k],P=def.prof,seat=P.seat||[.6,2,5],hw=P.hw||1.25,F=(P.hl||6)+(P.cz||0),C=cabCfg(def.id);
- const sx=(hw-I.esp)/I.W*(+C.sw||1),Y=(I.casco?I.Y:seat[1])+(+C.dy||0);let Z=seat[2]+(+C.dz||0);if(I.casco)Z=F-I.zf+(+C.dz||0);else if(!C.dz&&Z+I.zf>F-.3)Z=F-.3-I.zf;
- const g=new THREE.Group();g.name='cabineG7';g.position.set(0,Y,Z);root.add(g);G2.seat=[+(seat[0]>0?.62*sx:seat[0]).toFixed(3),Y,Z];
- const key=k+'|'+sx.toFixed(3)+'|'+Y.toFixed(3);
+ const sx=(hw-I.esp)/I.W,Y0=(I.casco?I.Y:seat[1]),Y=Y0+(+C.dy||0);let Z0=seat[2];if(I.casco)Z0=F-I.zf;else if(Z0+I.zf>F-.3)Z0=F-.3-I.zf;const Z=Z0+(+C.dz||0);
+ const g=new THREE.Group();g.name='cabineG7';g.position.set(0,Y,Z);g.scale.x=+C.sw||1;g.userData={Y0,Z0,coach:!I.casco};root.add(g);G2.seat=[+(seat[0]>0?.62*sx:seat[0]).toFixed(3),Y,Z];
+ const key=k+'|'+sx.toFixed(3)+'|'+Y0.toFixed(3);
  for(const n of M.nodes)for(const [j,p] of n.prims.entries()){const kk=key+'|'+n.name+j;let geo=CAB_GEO[kk];
-  if(!geo){geo=p.g.clone();const a=geo.attributes.position,b0=.40-Y;
+  if(!geo){geo=p.g.clone();const a=geo.attributes.position,b0=.40-Y0;
    for(let i=0;i<a.count;i++){let x=a.getX(i)*sx,y=a.getY(i);
     if(I.F0!=null&&y<I.F0){const t=(y-I.B0)/(I.F0-I.B0);y=I.F0-b0>.08?b0+t*(I.F0-b0):Math.max(y,b0)}
     a.setXYZ(i,x+n.t[0]*sx,y+n.t[1],a.getZ(i)+n.t[2])}
@@ -1574,7 +1593,7 @@ const skinsDe=m=>Object.values(NET.skins).filter(s=>s.modelo===m&&(s.status==='p
 const skinPadrao=m=>Object.values(NET.skins).find(s=>s.modelo===m&&s.padrao)||null;
 const temSkin=s=>s&&(s.padrao||s.preco===0||NET.minhas.has(s.id)||ehAdm());
 async function blobSkin(s){let b=await IDB.get('of_'+s.id+'_'+(s.url||'').length).catch(()=>null);if(b)return b;const r=await fetch(s.url);if(!r.ok)throw new Error('imagem da skin');b=await r.blob();try{await IDB.set('of_'+s.id+'_'+(s.url||'').length,b)}catch(e){}return b}
-async function aplicarSkinOficial(v,s){if(!v||!v.busId)return;const id=v.busId,def=busDef(id);
+async function aplicarSkinOficial(v,s){if(!v||!v.busId)return;const id=v.busId,def=busDef(id);G.skAtiva=G.skAtiva||{};G.skAtiva[id]=s?String(s.id):'';
  if(!s){G.pintura[id]=def.prof.base||id.startsWith('rodoviario_0')?'branco':'original'}
  else{try{const b=await blobSkin(s);await IDB.set(id+'@'+(def.prof.lantVer||1),b);G.pintura[id]='skin'}catch(e){toast('Não consegui baixar a skin: '+netErro(e),3000);return}}
  delete SKINT[id];G.skinRev=(G.skinRev||0)+1;try{localStorage.setItem('sb_pintura',JSON.stringify(G.pintura))}catch(e){}await aplicarPintura(v)}
@@ -1600,14 +1619,10 @@ function netSalvarPecas(){if(!NET.user||!G.active)return;const r=NET.meus.find(x
 function desenharAdmSusp(el){const v=G.active,id=v&&v.busId;if(!id){el.innerHTML='';return}const c=suspCfg(id),cm=x=>Math.round(x*100);
  el.innerHTML=`<h4>Suspensão · ${busDef(id).nome}</h4><div class="admV"><label>Altura de fábrica dianteira <input data-q="f" type="number" step="1" value="${cm(c.f)}"> cm</label><label>traseira <input data-q="r" type="number" step="1" value="${cm(c.r)}"> cm</label><label>O jogador sobe/abaixa até ± <input data-q="lim" type="number" min="0" step="1" value="${cm(c.lim)}"> cm</label><button class="btn" data-q="ver">Ver</button><button class="btn" data-q="salvar">Salvar</button></div>`;
  const ler=()=>({f:(+el.querySelector('[data-q=f]').value||0)/100,r:(+el.querySelector('[data-q=r]').value||0)/100,lim:Math.max(0,(+el.querySelector('[data-q=lim]').value||0)/100)});
- el.querySelector('[data-q=ver]').onclick=()=>{const cb=(G.suspArq[id]||{}).cab,sk0=(G.suspArq[id]||{}).sk;G.suspArq[id]=ler();if(cb)G.suspArq[id].cab=cb;if(sk0)G.suspArq[id].sk=sk0;aplicarSuspId(id);toast('Aplicado no ônibus (feche o painel para ver)',2000)};
- el.querySelector('[data-q=salvar]').onclick=async()=>{const d=ler();const cb=(G.suspArq[id]||{}).cab,sk0=(G.suspArq[id]||{}).sk;if(cb)d.cab=cb;if(sk0)d.sk=sk0;G.suspArq[id]=d;aplicarSuspId(id);const ok=await netSalvarAjuste(id,'suspensao',d);toast(ok?'Suspensão salva para todos':'Não salvei no servidor',2500)}
- {const def=busDef(id),cb=cabCfg(id),d=document.createElement('div');d.innerHTML=`<h4 style="margin-top:14px">Cabine (1ª pessoa) · ${def.nome}</h4><div class="admV"><label>Frente/trás <input data-c="dz" type="number" step="1" value="${Math.round(cb.dz*100)}"> cm</label><label>Altura <input data-c="dy" type="number" step="1" value="${Math.round(cb.dy*100)}"> cm</label><label>Largura <input data-c="sw" type="number" step="1" value="${Math.round(cb.sw*100)}"> %</label><button class="btn" data-c="ver">Ver</button><button class="btn" data-c="salvar">Salvar</button><button class="btn" data-c="zerar">Zerar</button></div><p style="opacity:.75;font-size:12px;margin:4px 0">Vale para os veículos que usam a cabine do G7 1200 (ônibus) ou do FH16 (caminhões). Feche o painel e use a câmera de 1ª pessoa para conferir.</p>`;el.appendChild(d);
-  const lc=()=>({dz:(+d.querySelector('[data-c=dz]').value||0)/100,dy:(+d.querySelector('[data-c=dy]').value||0)/100,sw:Math.max(.5,Math.min(1.5,(+d.querySelector('[data-c=sw]').value||100)/100))});
-  const pega=()=>Object.assign({},suspCfg(id),G.suspArq[id]||{});
-  d.querySelector('[data-c=ver]').onclick=()=>{const s=pega();s.cab=lc();G.suspArq[id]=s;reaplicarModelo(id);toast('Cabine aplicada (feche o painel e veja em 1ª pessoa)',2200)};
-  d.querySelector('[data-c=zerar]').onclick=()=>{d.querySelector('[data-c=dz]').value=0;d.querySelector('[data-c=dy]').value=0;d.querySelector('[data-c=sw]').value=100};
-  d.querySelector('[data-c=salvar]').onclick=async()=>{const s=pega();s.cab=lc();G.suspArq[id]=s;reaplicarModelo(id);const ok=await netSalvarAjuste(id,'suspensao',s);toast(ok?'Cabine salva para todos':'Não salvei no servidor',2500)}}
+ el.querySelector('[data-q=ver]').onclick=()=>{const o0=G.suspArq[id]||{};G.suspArq[id]=ler();for(const q of ['cab','sk','skS'])if(o0[q])G.suspArq[id][q]=o0[q];aplicarSuspId(id);toast('Aplicado no ônibus (feche o painel para ver)',2000)};
+ el.querySelector('[data-q=salvar]').onclick=async()=>{const d=ler();const o0=G.suspArq[id]||{};for(const q of ['cab','sk','skS'])if(o0[q])d[q]=o0[q];G.suspArq[id]=d;aplicarSuspId(id);const ok=await netSalvarAjuste(id,'suspensao',d);toast(ok?'Suspensão salva para todos':'Não salvei no servidor',2500)}
+ {const d=document.createElement('div');d.innerHTML=`<h4 style="margin-top:14px">Cabine (1ª pessoa) · ${busDef(id).nome}</h4><p style="opacity:.75;font-size:12px;margin:4px 0">Abre uma barra por cima do jogo: você ajusta altura, frente/trás e largura vendo a cabine na hora (de dentro ou de fora).</p><button class="btn" data-c="abrir">🪑 Ajustar a cabine</button>`;el.appendChild(d);
+  d.querySelector('[data-c=abrir]').onclick=()=>{el.className='';abrirAjCab(id)}}
  {const e=document.createElement('div');e.innerHTML=`<h4 style="margin-top:14px">Alinhar a skin · ${busDef(id).nome}</h4><p style="opacity:.75;font-size:12px;margin:4px 0">Abre uma barra por cima do jogo: você mexe e vê o ônibus mudando na hora.</p><button class="btn" data-s="abrir">🎨 Alinhar a skin</button>`;el.appendChild(e);
   e.querySelector('[data-s=abrir]').onclick=()=>{el.className='';abrirAjSkin(id)}}}
 function desenharAdmSkins(el){G.admSk=G.admSk||(G.active&&G.active.busId)||FROTA.find(b=>b.prof.base).id;const ops=FROTA.map(b=>`<option value="${b.id}"${b.id===G.admSk?' selected':''}>${b.nome}</option>`).join('');G.admSk=G.admSk||(G.active&&G.active.busId)||FROTA.find(b=>b.prof.base).id;
@@ -1954,7 +1969,7 @@ function env(dt,F){if(!G.aj)G.time=(G.time+dt/60)%24;G.wNext-=dt/60;if(G.wNext<=
 /* ---------- câmera ---------- */
 const camLook=new THREE.Vector3(),camWant=new THREE.Vector3();
 const CAM={yaw:0,pitch:0,zoom:1,idle:9,pts:new Map(),pd:0};
-function camUpdate(dt){let o,dd,hh,top;CAM.idle+=dt;if(G.aj||G.ajF||G.ajL)CAM.idle=-99;
+function camUpdate(dt){let o,dd,hh,top;CAM.idle+=dt;if(G.aj||G.ajF||G.ajL||G.ajC||G.ajS)CAM.idle=-99;
  if(CAM.idle>2.5&&!CAM.pts.size){const k=1-Math.exp(-dt*2.2);CAM.yaw=angN(CAM.yaw)*(1-k);CAM.pitch*=1-k}
  const baseF=innerWidth<innerHeight?75:60,ck=G.mode==='drive'&&G.cam===1;const wf=ck?clamp(baseF/CAM.zoom,30,85):baseF;if(Math.abs(camera.fov-wf)>.01){camera.fov=wf;camera.updateProjectionMatrix()}
  if(G.mode==='drive'){const v=G.active;o=v;dd=v.camD+(v.trailer?8:0);hh=v.camH+(v.trailer?2.5:0);top=v.top;
@@ -2002,7 +2017,7 @@ function sync(o,dt){o.g.position.set(o.x,0,o.z);o.g.rotation.y=o.h;facho(o);
   if(o.spots)for(const s of o.spots){s.intensity=o.lights===2?3.4:o.lights?2.2:0;s.distance=o.lights===2?150:85;s.angle=o.lights===2?.36:.48}if(o.sw)o.sw.rotation.z=-o.steer*4;if(o.needles){o.needles[0].rotation.z=2.2-Math.min(1,Math.abs(o.speed)*3.6/120)*4.4;o.needles[1].rotation.z=2.2-Math.min(1,o.rpm/3000)*4.4}}
  if(o.mBrake&&o.trailer)o.trailer.mBrake.emissiveIntensity=o.mBrake.emissiveIntensity;
  if(o.dentro){const ck=G.cam===1&&G.mode==='drive'&&G.active===o;for(const m of o.dentro)m.visible=!ck}
- if(o.corpo&&o.corpo.U&&o.corpo.U.uTransp&&o.busId){const U=o.corpo.U,M=o.corpo.mat,bus=busDef(o.busId).tipo!=='truck',meu=bus&&G.mode==='drive'&&G.active===o&&!(G.cam===1);U.uTransp.value=meu?.62:0;o.vidT=meu;
+ if(o.corpo&&o.corpo.U&&o.corpo.U.uTransp&&o.busId){const U=o.corpo.U,M=o.corpo.mat,bus=busDef(o.busId).tipo!=='truck',meu=bus&&G.mode==='drive'&&G.active===o&&!(G.cam===1);U.uTransp.value=meu?.78:0;o.vidT=meu;
   if(M&&M.transparent!==meu){M.transparent=meu;M.depthWrite=true;M.needsUpdate=true}
   o.g.updateMatrixWorld();const P=busDef(o.busId).prof,F=(P.hl||6)+(P.cz||0),fz=bus?F-1.1:F-.6;U.uFp.value.set(0,0,fz).applyMatrix4(o.g.matrixWorld);U.uFd.value.set(0,0,1).transformDirection(o.g.matrixWorld)}
  if(o.corpo&&o.corpo.U&&o.corpo.U.uSkAj&&o.busId){const k=skAj(o.busId);o.corpo.U.uSkAj.value.set(-k.x/1000,-k.y/1000,1/k.sx,1/k.sy)}
@@ -2192,7 +2207,7 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
  const F=G.mode==='drive'?G.active:P,tgt=jobTarget();
  beacon.visible=!!tgt;if(tgt){beacon.position.x=tgt.x;beacon.position.z=tgt.z}
  arrow.visible=!!tgt&&(!tgt||dist(F,tgt)>14)&&G.cam!==1;if(arrow.visible){arrow.position.set(F.x,(G.mode==='drive'?F.top:2)+2.2+Math.sin(now/300)*.2,F.z);arrow.rotation.y=Math.atan2(tgt.x-F.x,tgt.z-F.z)}
- lodUpd(F,Math.max(dt,.016));env(G.started?dt:0,F);camUpdate(Math.max(dt,.016));audio();hud(F,tgt);
+ lodUpd(F,Math.max(dt,.016));env(G.started?dt:0,F);camUpdate(Math.max(dt,.016));if(G.ajC&&G.cam===0&&G.ajC.v){const v=G.ajC.v,P=busDef(v.busId).prof,F=(P.hl||6)+(P.cz||0),y=(v.seat||[0,2,0])[1],ang=G.ajC.ang||0;v.g.updateMatrixWorld(true);camera.position.copy(new THREE.Vector3(Math.sin(ang)*4.2,y+.5,F+Math.cos(ang)*4.2-1).applyMatrix4(v.g.matrixWorld));camera.lookAt(new THREE.Vector3(0,y-.3,F-1.2).applyMatrix4(v.g.matrixWorld))}audio();hud(F,tgt);
  renderer.render(scene,camera)}
 requestAnimationFrame(frame);
 }

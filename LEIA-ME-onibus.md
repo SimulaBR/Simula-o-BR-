@@ -259,3 +259,8 @@ Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
 - **Frente dos ônibus**: a limpeza da cabine (pacote anterior) estava apagando também a lataria da frente de alguns ônibus. Foi desligada; a frente voltou. A cabine continua sem o banco/painel antigo na frente da câmera.
 - **Para-brisa dianteiro transparente** no ônibus que você dirige: dá para ver a cabine (painel, volante, poltrona) por fora. Os ônibus dos outros ficam com um vidro um pouco mais claro, mas não transparente.
 - **Alinhar a skin**: agora abre uma barra por cima do jogo (igual à das lanternas). Você mexe ← →, ↑ ↓, largura e altura e vê o ônibus mudando na hora; "↻ Girar" muda o lado da câmera. Fica em 🛠 Administrador → Suspensão → 🎨 Alinhar a skin (precisa estar dentro do ônibus).
+
+## Ajuste da cabine e da skin vendo na hora (28/11, tarde)
+- **Cabine**: 🛠 Administrador → Suspensão → 🪑 Ajustar a cabine. Abre uma barra por cima do jogo com Altura, Frente/trás e Largura (passo fino = 1 cm, grosso = 5 cm). "👁 Ver de fora" mostra o ônibus pela frente com o para-brisa transparente (↻ Girar muda o ângulo); "👁 1ª pessoa" volta para dentro. 💾 Salvar vale para todos. Precisa estar dentro do veículo.
+- **Skin**: o alinhamento agora é salvo **para cada skin** (a barra mostra o nome da skin que está no ônibus). Troque a skin e ajuste a próxima. Se uma skin não tiver ajuste próprio, usa o geral do modelo.
+- O para-brisa do ônibus que você dirige ficou mais transparente.
