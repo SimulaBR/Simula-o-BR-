@@ -254,3 +254,8 @@ Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
 - **Carretas herdam a lanterna do caminhão** que está puxando (bitrem também). Trocou o caminhão, a lanterna da carreta troca sozinha. Acendem junto com as luzes do caminhão.
 - **Skins mais alinhadas**: as 21 skins de ônibus foram encaixadas de novo no molde, uma por uma, pelo desenho da lataria (as do G7 1200 estavam 2,3% largas demais).
 - **Alinhar a skin na mão**: 🛠 Administrador → Suspensão → "Alinhar a skin": ← →, ↑ ↓, largura e altura. Vale para todas as skins daquele modelo e o ônibus muda na hora.
+
+## Frente dos ônibus de volta, para-brisa transparente, barra da skin (28/11)
+- **Frente dos ônibus**: a limpeza da cabine (pacote anterior) estava apagando também a lataria da frente de alguns ônibus. Foi desligada; a frente voltou. A cabine continua sem o banco/painel antigo na frente da câmera.
+- **Para-brisa dianteiro transparente** no ônibus que você dirige: dá para ver a cabine (painel, volante, poltrona) por fora. Os ônibus dos outros ficam com um vidro um pouco mais claro, mas não transparente.
+- **Alinhar a skin**: agora abre uma barra por cima do jogo (igual à das lanternas). Você mexe ← →, ↑ ↓, largura e altura e vê o ônibus mudando na hora; "↻ Girar" muda o lado da câmera. Fica em 🛠 Administrador → Suspensão → 🎨 Alinhar a skin (precisa estar dentro do ônibus).

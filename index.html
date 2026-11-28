@@ -193,7 +193,7 @@ body.aj #ajLantBtn,body.aj #ajFarBtn,body.aj #pedrow,body.aj #wheel{visibility:h
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 {
-const VERSAO='2026-11-28e';
+const VERSAO='2026-11-28g';
 {const f0=window.fetch.bind(window),vv=u=>(typeof u==='string'&&/\.(glb|png|jpe?g|webp|json)$/i.test(u)&&!/^(https?:|data:|blob:)/.test(u))?u+(u.includes('?')?'&':'?')+'v='+VERSAO:u;
  window.fetch=(u,o)=>f0(vv(u),o);const L0=THREE.TextureLoader.prototype.load;THREE.TextureLoader.prototype.load=function(u,...r){return L0.call(this,vv(u),...r)}}
 const $=id=>document.getElementById(id);
@@ -924,7 +924,7 @@ function applyGLB(v,M,def){const PR={...def.prof};{const F=farolCfg(def.id);if(F
  {const sus=new THREE.Group();const keep=new Set(G2.wheels.map(w=>w.parent));for(const ch of root.children.slice())if(!keep.has(ch)){root.remove(ch);sus.add(ch)}root.add(sus);root.userData.susp=sus;aplicarSusp(v,def)}
  v.setGLB=G2;if(!v.setProc){v.setProc={glows:null,cockOff:[0,0,0],lant:null,dentro:null,corpo:null};for(const k of PKEYS)if(v.setProc[k]===undefined)v.setProc[k]=v[k]}
  {const cs=[];root.traverse(o=>{if(o.isMesh&&o.geometry.attributes.skinuv&&!o.userData.costas)cs.push(o)});
-  if(cs.length){const base=cs[0].material,U={uSkAj:{value:new THREE.Vector4(0,0,1,1)},skinMap:{value:TEX1},uSkin:{value:0},uVidro:{value:1},vidMask:{value:TEX1},uMask:{value:0},uCorpo:{value:new THREE.Color(1,1,1)},uCorpo2:{value:new THREE.Color(1,1,1)},uCorpo3:{value:new THREE.Color(1,1,1)},uCorpo4:{value:new THREE.Color(1,1,1)},vidMap:{value:TEX1},detMap:{value:TEX1},luzMap:{value:TEX1},uVid:{value:0},uDet:{value:0},uFr:{value:new THREE.Vector4()},uLt:{value:new THREE.Vector4()},uFarol:{value:0},uSetaE:{value:0},uSetaD:{value:0},uLetr:{value:0},drlMap:{value:TEX1},uDRL:{value:0}},mat=matCorpo(base,U);for(const o of cs)o.material=mat;G2.corpo={mat,orig:base.map,U};if(DETR[def.id]||def.prof.vidro)mascaraVidro(def.id).then(t=>{U.vidMask.value=t;U.uMask.value=1}).catch(()=>{})}else G2.corpo=null}
+  if(cs.length){const base=cs[0].material,U={uTransp:{value:0},uFp:{value:new THREE.Vector3(0,-999,0)},uFd:{value:new THREE.Vector3(0,0,1)},uSkAj:{value:new THREE.Vector4(0,0,1,1)},skinMap:{value:TEX1},uSkin:{value:0},uVidro:{value:1},vidMask:{value:TEX1},uMask:{value:0},uCorpo:{value:new THREE.Color(1,1,1)},uCorpo2:{value:new THREE.Color(1,1,1)},uCorpo3:{value:new THREE.Color(1,1,1)},uCorpo4:{value:new THREE.Color(1,1,1)},vidMap:{value:TEX1},detMap:{value:TEX1},luzMap:{value:TEX1},uVid:{value:0},uDet:{value:0},uFr:{value:new THREE.Vector4()},uLt:{value:new THREE.Vector4()},uFarol:{value:0},uSetaE:{value:0},uSetaD:{value:0},uLetr:{value:0},drlMap:{value:TEX1},uDRL:{value:0}},mat=matCorpo(base,U);for(const o of cs)o.material=mat;G2.corpo={mat,orig:base.map,U};if(DETR[def.id]||def.prof.vidro)mascaraVidro(def.id).then(t=>{U.vidMask.value=t;U.uMask.value=1}).catch(()=>{})}else G2.corpo=null}
  useModel(v,true);aplicarPintura(v)}
 function useModel(v,glb){if(!v.glbRoot)return;if(v.spots&&v.busId){const P=busDef(v.busId).prof,F=(P.hl||6)+(P.cz||0),hy=(P.lamps&&P.lamps.head&&P.lamps.head[0]?P.lamps.head[0][1]:1.05);for(const s of v.spots){s.position.z=F+.35;s.position.y=Math.max(.6,hy);s.target.position.z=F+26}}const set=glb?v.setGLB:v.setProc,old=glb?v.setProc:v.setGLB;
  set.doors.forEach(d=>{const o=old.doors.filter(x=>x.grp===d.grp)[0];if(o){d.tgt=o.tgt;d.cur=o.cur}});
@@ -985,9 +985,9 @@ function syncModelBtn(){const b=$('oModel');if(!b)return;const ok=MODELS[G.busSe
 const TEX1=(()=>{const t=new THREE.DataTexture(new Uint8Array([255,255,255,0]),1,1,THREE.RGBAFormat);t.needsUpdate=true;return t})();
 function matCorpo(base,U){const m=base.clone();
  m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,U);
-  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec2 skinuv;varying vec2 vSk;varying vec3 vSkN;varying vec3 vSkV;')
-   .replace('#include <project_vertex>','#include <project_vertex>\nvSk=skinuv;vec4 skW=modelMatrix*vec4(transformed,1.0);vSkV=cameraPosition-skW.xyz;vSkN=mat3(modelMatrix)*objectNormal;');
-  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D skinMap;uniform vec4 uSkAj;uniform float uSkin;uniform float uVidro;uniform sampler2D vidMask;uniform float uMask;uniform vec3 uCorpo;uniform vec3 uCorpo2;uniform vec3 uCorpo3;uniform vec3 uCorpo4;uniform sampler2D vidMap;uniform sampler2D detMap;uniform sampler2D luzMap;uniform float uVid;uniform float uDet;uniform vec4 uFr;uniform vec4 uLt;uniform float uFarol;uniform float uSetaE;uniform float uSetaD;uniform float uLetr;uniform sampler2D drlMap;uniform float uDRL;varying vec2 vSk;varying vec3 vSkN;varying vec3 vSkV;')
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec2 skinuv;varying vec2 vSk;varying vec3 vSkN;varying vec3 vSkV;varying vec3 vSkW;')
+   .replace('#include <project_vertex>','#include <project_vertex>\nvSk=skinuv;vec4 skW=modelMatrix*vec4(transformed,1.0);vSkV=cameraPosition-skW.xyz;vSkW=skW.xyz;vSkN=mat3(modelMatrix)*objectNormal;');
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D skinMap;uniform vec4 uSkAj;uniform float uSkin;uniform float uVidro;uniform sampler2D vidMask;uniform float uMask;uniform vec3 uCorpo;uniform vec3 uCorpo2;uniform vec3 uCorpo3;uniform vec3 uCorpo4;uniform sampler2D vidMap;uniform sampler2D detMap;uniform sampler2D luzMap;uniform float uVid;uniform float uDet;uniform vec4 uFr;uniform vec4 uLt;uniform float uFarol;uniform float uSetaE;uniform float uSetaD;uniform float uLetr;uniform sampler2D drlMap;uniform float uDRL;uniform float uTransp;uniform vec3 uFp;uniform vec3 uFd;varying vec2 vSk;varying vec3 vSkN;varying vec3 vSkV;varying vec3 vSkW;')
    .replace('#include <map_fragment>','#include <map_fragment>\nfloat skLum=dot(diffuseColor.rgb,vec3(.299,.587,.114));float skVid=uVidro*(uMask>.5?texture2D(vidMask,vSk).r:(1.0-smoothstep(.06,.17,skLum)));if(uMask>.5){diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.045,.06,.075),smoothstep(.15,.6,skVid));skLum=dot(diffuseColor.rgb,vec3(.299,.587,.114));}\n'+
     'if(uSkin>.5){vec4 sk=texture2D(skinMap,(vSk-0.5)*uSkAj.zw+0.5+uSkAj.xy);float dk=uMask>.5?1.0-smoothstep(.07,.3,skLum):0.0;diffuseColor.rgb=mix(diffuseColor.rgb,mix(min(diffuseColor.rgb*sk.rgb*1.12,vec3(1.0)),sk.rgb,dk),sk.a*(1.0-skVid));'+
     'if(uMask>.5&&uVid<.5){float lS=dot(sk.rgb,vec3(.299,.587,.114)),dS=1.0-smoothstep(.3,.45,lS),stS=(1.0-dS)*smoothstep(.14,.28,min(distance(sk.rgb,uCorpo),min(distance(sk.rgb,uCorpo2),min(distance(sk.rgb,uCorpo3),distance(sk.rgb,uCorpo4)))));diffuseColor.rgb=mix(diffuseColor.rgb,sk.rgb,sk.a*skVid*(dS+stS));skVid*=1.0-sk.a*stS;}}'+
@@ -999,8 +999,9 @@ function matCorpo(base,U){const m=base.clone();
     'float lz=clamp(dot(vLightFront,vec3(.333))*1.6,.12,1.);outgoingLight=mix(outgoingLight,outgoingLight*.55,skVid)+skVid*lz*(ceu*(.08+.5*fr)+vec3(br*.9));}\n'+
     'if(uDet>.5){vec4 lu=texture2D(luzMap,vSk);bool fe=vSk.x>uFr.x&&vSk.x<uFr.z&&vSk.y>uFr.y&&vSk.y<uFr.w;vec3 em=fe?(vec3(1.,.97,.88)*lu.r*uFarol+vec3(1.,.55,.08)*(lu.g*uSetaE+lu.b*uSetaD)+vec3(.95,.97,1.)*texture2D(drlMap,vSk).r*uDRL):vec3(0.);'+
     'if(vSk.x>uLt.x&&vSk.x<uLt.z&&vSk.y>uLt.y&&vSk.y<uLt.w)em+=dtl.rgb*dtl.a*uLetr;outgoingLight+=em*1.5;}\n'+
-    'gl_FragColor = vec4( outgoingLight, diffuseColor.a );')};
- m.customProgramCacheKey=()=>'corpoSB9';return m}
+    'float fvd=skVid*smoothstep(-.05,.12,dot(vSkW-uFp,uFd))*smoothstep(.15,.45,abs(dot(normalize(vSkN),uFd)));if(uTransp<.01)outgoingLight+=fvd*vec3(.035,.045,.055);\n'+
+    'gl_FragColor = vec4( outgoingLight, diffuseColor.a*(1.0-fvd*uTransp) );')};
+ m.customProgramCacheKey=()=>'corpoSB10';return m}
 /* skins guardadas no aparelho (IndexedDB: a imagem é grande demais para o localStorage) */
 const IDB={p:null,abrir(){return this.p||(this.p=new Promise((res,rej)=>{const r=indexedDB.open('simulabr',1);r.onupgradeneeded=()=>r.result.createObjectStore('skins');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))},
  async get(k){const db=await this.abrir();return new Promise((res,rej)=>{const q=db.transaction('skins').objectStore('skins').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})},
@@ -1462,6 +1463,20 @@ function cabine(root,def,G2,semBanco){const P=def.prof,g=new THREE.Group();g.nam
  // divisória com porta atrás do motorista (esconde as poltronas)
  const hp=top-.3-fl,yp=fl+hp/2;cx(2*hw,hp,.06,CABM.div,0,yp,zp);
  const pt=cx(.75,Math.min(1.95,hp-.05),.04,CABM.porta,-.05,fl+Math.min(1.95,hp-.05)/2,zp+.035);cx(.42,.5,.02,CABM.vid,-.05,fl+1.45,zp+.06);cx(.04,.18,.06,CABM.metal,.25,fl+1,zp+.07)}
+/* barra de alinhamento da skin (administrador): mexe e vê o ônibus na hora */
+function abrirAjSkin(id){if(G.ajS)return;if(G.menu)toggleMenu(false);const v=G.active;if(!v||v.busId!==id){toast('Entre no veículo para alinhar a skin dele',3000);return}
+ const el=document.createElement('div');el.id='ajLant';document.body.appendChild(el);for(const ev of ['pointerdown','pointerup','touchstart','click'])el.addEventListener(ev,e=>e.stopPropagation(),{passive:true});
+ const A=G.ajS={el,id,cfg:{...skAj(id)},passo:2,t0:G.time};if(G.time<7||G.time>17)G.time=12;G.cam=0;CAM.yaw=1.2;CAM.pitch=-.05;CAM.zoom=.7;document.body.classList.add('aj');G.skPrev={id,cfg:A.cfg};desenharAjSkin()}
+function desenharAjSkin(){const A=G.ajS;if(!A)return;const C=A.cfg,bt=(k,t,c)=>`<button data-k="${k}"${c?` style="background:${c}"`:''}>${t}</button>`;
+ const campo=(k,t,f)=>`<span class="aj">${t} ${bt('-:'+k,'−')}<i>${f(C[k])}</i>${bt('+:'+k,'+')}</span>`;
+ A.el.innerHTML=`<b>🎨 Skin · ${busDef(A.id).nome}</b>`+campo('x','← →',v=>v.toFixed(0))+campo('y','↑ ↓',v=>v.toFixed(0))+campo('sx','Largura',v=>(v*100).toFixed(1)+'%')+campo('sy','Altura',v=>(v*100).toFixed(1)+'%')+
+  bt('passo',A.passo>1?'Passo: grosso':'Passo: fino',A.passo>1?'#8a5a10':'')+bt('vista','↻ Girar')+bt('salvar','💾 Salvar','#1f7a3a')+bt('zerar','Zerar')+bt('fechar','✖');
+ A.el.querySelectorAll('[data-k]').forEach(b=>b.onclick=async()=>{const k=b.dataset.k;
+  if(k==='fechar'){fecharAjSkin();return}if(k==='passo'){A.passo=A.passo>1?1:4;desenharAjSkin();return}if(k==='vista'){CAM.yaw+=Math.PI/2;return}
+  if(k==='zerar'){A.cfg={x:0,y:0,sx:1,sy:1};G.skPrev={id:A.id,cfg:A.cfg};desenharAjSkin();return}
+  if(k==='salvar'){const s=Object.assign({},suspCfg(A.id),G.suspArq[A.id]||{});s.sk={...A.cfg};G.suspArq[A.id]=s;const ok=await netSalvarAjuste(A.id,'suspensao',s);toast(ok?'💾 Alinhamento salvo para todos':'Não salvei no servidor',2500);return}
+  const [sg,c]=k.split(':'),d=(sg==='+'?1:-1)*A.passo;if(c==='x'||c==='y')A.cfg[c]+=d;else A.cfg[c]=Math.max(.8,Math.min(1.2,Math.round((A.cfg[c]+d*.0025)*10000)/10000));G.skPrev={id:A.id,cfg:A.cfg};desenharAjSkin()})}
+function fecharAjSkin(){const A=G.ajS;if(!A)return;A.el.remove();G.time=A.t0;G.ajS=null;G.skPrev=null;CAM.idle=9;document.body.classList.remove('aj')}
 /* ---------- cabine do G7 1200 (ônibus) e do FH16 (caminhões) para os veículos sem interior ---------- */
 const PORTA_COSTAS=new THREE.MeshStandardMaterial({color:0x8e9196,roughness:.55,metalness:.25,side:THREE.BackSide,polygonOffset:true,polygonOffsetFactor:2,polygonOffsetUnits:2});
 const CAB_INFO={coach:{arq:'modelos/cabines/cabine_onibus.glb',W:1.26,esp:.16,F0:-.73,B0:-1.86,zf:1.5},truck:{arq:'modelos/cabines/cabine_caminhao.glb',W:1.18,esp:.02,F0:null,zf:1.25,casco:true,Y:2.58}},CABS={},CAB_GEO={};
@@ -1483,7 +1498,7 @@ function cabineG7(root,def,G2){const k=def.tipo==='truck'?'truck':'coach',M=CABS
   const m=new THREE.Mesh(geo,M.mats[p.mi]||M.mats[0]);m.visible=false;m.receiveShadow=true;g.add(m);G2.intMesh.push(m)}
  {const ig=root.getObjectByName('interiorProc');if(ig){root.updateMatrixWorld(true);const iv=new THREE.Matrix4().copy(root.matrixWorld).invert();for(const o of ig.children){if(o.isInstancedMesh)continue;if(ig.position.z+o.position.z>Z-.4){o.visible=false;continue}
   if(o.geometry&&o.geometry.type==='CylinderGeometry'){const b=new THREE.Box3().setFromObject(o).applyMatrix4(iv);if(b.max.z>Z-.4)o.visible=false}}}}
- if(k==='coach')try{limparCabine(root,def,g,G2,Y,Z,hw,F)}catch(e){console.warn('limparCabine',e)}
+ if(false)try{limparCabine(root,def,g,G2,Y,Z,hw,F)}catch(e){console.warn('limparCabine',e)}
  if(I.casco){const pula=new Set([g,...G2.wheels]);root.traverse(o=>{if(!o.isMesh)return;let p=o;while(p&&p!==root){if(pula.has(p))return;p=p.parent}G2.dentro.push(o)})}
  if(0)try{}catch(e){console.warn('limparCabine',e)}
  return true}
@@ -1593,12 +1608,8 @@ function desenharAdmSusp(el){const v=G.active,id=v&&v.busId;if(!id){el.innerHTML
   d.querySelector('[data-c=ver]').onclick=()=>{const s=pega();s.cab=lc();G.suspArq[id]=s;reaplicarModelo(id);toast('Cabine aplicada (feche o painel e veja em 1ª pessoa)',2200)};
   d.querySelector('[data-c=zerar]').onclick=()=>{d.querySelector('[data-c=dz]').value=0;d.querySelector('[data-c=dy]').value=0;d.querySelector('[data-c=sw]').value=100};
   d.querySelector('[data-c=salvar]').onclick=async()=>{const s=pega();s.cab=lc();G.suspArq[id]=s;reaplicarModelo(id);const ok=await netSalvarAjuste(id,'suspensao',s);toast(ok?'Cabine salva para todos':'Não salvei no servidor',2500)}}
- {const sk=skAj(id),e=document.createElement('div');e.innerHTML=`<h4 style="margin-top:14px">Alinhar a skin · ${busDef(id).nome}</h4><div class="admV"><label>← → <input data-s="x" type="number" step="1" value="${sk.x}"></label><label>↑ ↓ <input data-s="y" type="number" step="1" value="${sk.y}"></label><label>Largura <input data-s="sx" type="number" step="0.5" value="${(sk.sx*100).toFixed(1)}"> %</label><label>Altura <input data-s="sy" type="number" step="0.5" value="${(sk.sy*100).toFixed(1)}"> %</label><button class="btn" data-s="ver">Ver</button><button class="btn" data-s="salvar">Salvar</button><button class="btn" data-s="zerar">Zerar</button></div><p style="opacity:.75;font-size:12px;margin:4px 0">Move a pintura em cima do ônibus (1 = um pouquinho; experimente de 2 em 2). Vale para todas as skins deste modelo. Mude o valor e toque em Ver: o ônibus muda na hora.</p>`;el.appendChild(e);
-  const ls=()=>({x:+e.querySelector('[data-s=x]').value||0,y:+e.querySelector('[data-s=y]').value||0,sx:Math.max(.8,Math.min(1.2,(+e.querySelector('[data-s=sx]').value||100)/100)),sy:Math.max(.8,Math.min(1.2,(+e.querySelector('[data-s=sy]').value||100)/100))});
-  e.querySelectorAll('input').forEach(i=>i.oninput=()=>{G.skPrev={id,cfg:ls()}});
-  e.querySelector('[data-s=ver]').onclick=()=>{G.skPrev={id,cfg:ls()};toast('Feche o painel para ver o ônibus',1800)};
-  e.querySelector('[data-s=zerar]').onclick=()=>{e.querySelector('[data-s=x]').value=0;e.querySelector('[data-s=y]').value=0;e.querySelector('[data-s=sx]').value=100;e.querySelector('[data-s=sy]').value=100;G.skPrev={id,cfg:ls()}};
-  e.querySelector('[data-s=salvar]').onclick=async()=>{const s=Object.assign({},suspCfg(id),G.suspArq[id]||{});s.sk=ls();G.suspArq[id]=s;G.skPrev=null;const ok=await netSalvarAjuste(id,'suspensao',s);toast(ok?'Alinhamento salvo para todos':'Não salvei no servidor',2500)}}}
+ {const e=document.createElement('div');e.innerHTML=`<h4 style="margin-top:14px">Alinhar a skin · ${busDef(id).nome}</h4><p style="opacity:.75;font-size:12px;margin:4px 0">Abre uma barra por cima do jogo: você mexe e vê o ônibus mudando na hora.</p><button class="btn" data-s="abrir">🎨 Alinhar a skin</button>`;el.appendChild(e);
+  e.querySelector('[data-s=abrir]').onclick=()=>{el.className='';abrirAjSkin(id)}}}
 function desenharAdmSkins(el){G.admSk=G.admSk||(G.active&&G.active.busId)||FROTA.find(b=>b.prof.base).id;const ops=FROTA.map(b=>`<option value="${b.id}"${b.id===G.admSk?' selected':''}>${b.nome}</option>`).join('');G.admSk=G.admSk||(G.active&&G.active.busId)||FROTA.find(b=>b.prof.base).id;
  const L=Object.values(NET.skins).filter(s=>s.modelo===G.admSk).sort((a,b)=>b.id-a.id),st={beta:'🧪 Beta',publico:'✅ Pública',oculto:'🚫 Oculta'};
  let h=`<h4>Skins</h4><div class="row" style="justify-content:flex-start;flex-wrap:wrap;gap:6px"><select id="admSkM" class="admSel">${ops}</select><button class="btn" data-s="molde">⬇ Baixar molde</button><label class="btn" style="cursor:pointer">📤 Enviar skin<input id="admSkF" type="file" accept="image/png,image/jpeg" style="display:none"></label></div>
@@ -1991,9 +2002,12 @@ function sync(o,dt){o.g.position.set(o.x,0,o.z);o.g.rotation.y=o.h;facho(o);
   if(o.spots)for(const s of o.spots){s.intensity=o.lights===2?3.4:o.lights?2.2:0;s.distance=o.lights===2?150:85;s.angle=o.lights===2?.36:.48}if(o.sw)o.sw.rotation.z=-o.steer*4;if(o.needles){o.needles[0].rotation.z=2.2-Math.min(1,Math.abs(o.speed)*3.6/120)*4.4;o.needles[1].rotation.z=2.2-Math.min(1,o.rpm/3000)*4.4}}
  if(o.mBrake&&o.trailer)o.trailer.mBrake.emissiveIntensity=o.mBrake.emissiveIntensity;
  if(o.dentro){const ck=G.cam===1&&G.mode==='drive'&&G.active===o;for(const m of o.dentro)m.visible=!ck}
+ if(o.corpo&&o.corpo.U&&o.corpo.U.uTransp&&o.busId){const U=o.corpo.U,M=o.corpo.mat,bus=busDef(o.busId).tipo!=='truck',meu=bus&&G.mode==='drive'&&G.active===o&&!(G.cam===1);U.uTransp.value=meu?.62:0;o.vidT=meu;
+  if(M&&M.transparent!==meu){M.transparent=meu;M.depthWrite=true;M.needsUpdate=true}
+  o.g.updateMatrixWorld();const P=busDef(o.busId).prof,F=(P.hl||6)+(P.cz||0),fz=bus?F-1.1:F-.6;U.uFp.value.set(0,0,fz).applyMatrix4(o.g.matrixWorld);U.uFd.value.set(0,0,1).transformDirection(o.g.matrixWorld)}
  if(o.corpo&&o.corpo.U&&o.corpo.U.uSkAj&&o.busId){const k=skAj(o.busId);o.corpo.U.uSkAj.value.set(-k.x/1000,-k.y/1000,1/k.sx,1/k.sy)}
  if(o.corpo&&o.corpo.mat){const ck=G.cam===1&&G.mode==='drive'&&G.active===o,M=o.corpo.mat;if(M.userData.lado0===undefined)M.userData.lado0=M.side;const sd=ck?THREE.FrontSide:M.userData.lado0;if(M.side!==sd){M.side=sd;M.needsUpdate=true}}
- if(o.intMesh&&o.intMesh.length){const ck=(G.cam===1&&G.mode==='drive'&&G.active===o)||o.doors.some(d=>d.cur>.04);for(const m of o.intMesh)m.visible=ck}
+ if(o.intMesh&&o.intMesh.length){const ck=(G.cam===1&&G.mode==='drive'&&G.active===o)||o.vidT||o.doors.some(d=>d.cur>.04);for(const m of o.intMesh)m.visible=ck}
  if(o.modelo&&CARR_DADOS[o.modelo])lantCarreta(o);
  if(o.lant&&o.lant.led){const L=o.lant,q=o.modelo?cabecaDe(o)||o:o,S=G.aj&&G.aj.v===q?G.aj.teste:null,led=S?(S.freio?1:S.ligado?.5:0):q.brk?1:q.lights?.5:0,re=S?(S.re?1:0):q.on&&q.gear<0?1:0,e=(S?S.alerta:(q.indL||q.haz))&&G.blink?1:0,d=(S?S.alerta:(q.indR||q.haz))&&G.blink?1:0;
   for(const m of L.led)m.opacity=led;for(const m of L.re)m.opacity=re;for(const m of L.E)m.opacity=e;for(const m of L.D)m.opacity=d}}
