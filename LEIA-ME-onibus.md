@@ -236,3 +236,8 @@ Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
 - **Urbano**: usa a cabine do G7 1200 no lugar da antiga, e saiu a armação preta que aparecia na frente dele. A câmera da 1ª pessoa ficou mais alta para enxergar por cima do painel.
 - **Vidro com skin antiga** (New Road N10 e outros): o vidro que o jogador tinha enviado no sistema antigo de skins não é mais usado.
 - **Peças de lanterna traseira de volta**, para qualquer ônibus: ☰ → 🛠 Administrador → "🚌 Peças de lanterna traseira". Escolha o desenho, ajuste altura, tamanho, largura, lateral, fundo e quina, teste lanterna/freio/alerta/ré e toque em 💾 Salvar (vale para todos). "🚫 Sem lanterna" tira a peça daquele ônibus. Só aparece onde você equipar.
+
+## Correções de 28/11 (2ª rodada)
+- **G7 DD (1800)**: o buraco no alto da traseira foi fechado e no lugar dele ficou a faixa vermelha (luz de freio alta). As peças de cima da traseira, que estavam marcadas como "interior" e sumiam por fora, agora aparecem. O farol dianteiro passa a receber a skin, como a lataria (o desenho do molde é o mesmo).
+- **Peças de lanterna**: o erro de textura voltou porque o jogo ainda usava a peça "lanterna" das skins antigas que ficaram guardadas no celular. Agora só usa o desenho escolhido no painel.
+- **Cabine em 1ª pessoa** (urbano e todos os ônibus com a cabine do G7 1200): sumiram o banco/painel antigo que ficava na frente da câmera, os balaústres que atravessavam a cabine e o painel que vinha dentro da lataria do urbano. Conferido no urbano, clássicos 02 e Clássico, 3 eixos e nos caminhões azul e verde.
