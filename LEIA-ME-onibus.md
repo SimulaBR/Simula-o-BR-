@@ -241,3 +241,6 @@ Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
 - **G7 DD (1800)**: o buraco no alto da traseira foi fechado e no lugar dele ficou a faixa vermelha (luz de freio alta). As peças de cima da traseira, que estavam marcadas como "interior" e sumiam por fora, agora aparecem. O farol dianteiro passa a receber a skin, como a lataria (o desenho do molde é o mesmo).
 - **Peças de lanterna**: o erro de textura voltou porque o jogo ainda usava a peça "lanterna" das skins antigas que ficaram guardadas no celular. Agora só usa o desenho escolhido no painel.
 - **Cabine em 1ª pessoa** (urbano e todos os ônibus com a cabine do G7 1200): sumiram o banco/painel antigo que ficava na frente da câmera, os balaústres que atravessavam a cabine e o painel que vinha dentro da lataria do urbano. Conferido no urbano, clássicos 02 e Clássico, 3 eixos e nos caminhões azul e verde.
+
+## Cabine nova dos caminhões (28/11)
+- Todos os caminhões usam na 1ª pessoa a cabine do arquivo `truck_cabin.glb` que você mandou (painel, colunas, teto, retrovisores e para-brisa), com o volante do G7. Na 1ª pessoa a lataria do próprio caminhão some, então não tem mais barra atravessando, coluna falhada nem a visão tapada. Ajuste fino em 🛠 Administrador → Suspensão → "Cabine (1ª pessoa)".

@@ -908,8 +908,9 @@ function applyGLB(v,M,def){const PR={...def.prof};{const F=farolCfg(def.id);if(F
  montarLuzes(root,G2,v.hm,def);
  {const lc=lantCfgV(v,def);if(lc){try{G2.lant=montarLant(root,lc,def.id)}catch(e){console.warn('lanterna',e)}}}
  if(PR.interior!=='none'){const ig=new THREE.Group();ig.name='interiorProc';ig.position.z=PR.intZ||0;root.add(ig);interior(ig,PR.interior)}
+ if(def.tipo==='truck'&&G2.intMesh.length&&CABS.truck){for(const m of G2.intMesh)if(m.parent)m.parent.remove(m);G2.intMesh.length=0}
  if(def.tipo==='urban'&&G2.intMesh.length&&CABS.coach){for(const m of G2.intMesh)if(m.parent)m.parent.remove(m);G2.intMesh.length=0}
- if(!G2.intMesh.length){let ok=false;try{ok=cabineG7(root,def,G2)}catch(e){console.warn('cabineG7',e)}if((!ok&&def.tipo!=='urban')||def.tipo==='truck')try{cabine(root,def,G2,ok)}catch(e){console.warn('cabine',e)}}
+ if(!G2.intMesh.length){let ok=false;try{ok=cabineG7(root,def,G2)}catch(e){console.warn('cabineG7',e)}if(!ok&&def.tipo!=='urban')try{cabine(root,def,G2,ok)}catch(e){console.warn('cabine',e)}}
 
  {const sus=new THREE.Group();const keep=new Set(G2.wheels.map(w=>w.parent));for(const ch of root.children.slice())if(!keep.has(ch)){root.remove(ch);sus.add(ch)}root.add(sus);root.userData.susp=sus;aplicarSusp(v,def)}
  v.setGLB=G2;if(!v.setProc){v.setProc={glows:null,cockOff:[0,0,0],lant:null,dentro:null,corpo:null};for(const k of PKEYS)if(v.setProc[k]===undefined)v.setProc[k]=v[k]}
@@ -1454,13 +1455,13 @@ function cabine(root,def,G2,semBanco){const P=def.prof,g=new THREE.Group();g.nam
  const pt=cx(.75,Math.min(1.95,hp-.05),.04,CABM.porta,-.05,fl+Math.min(1.95,hp-.05)/2,zp+.035);cx(.42,.5,.02,CABM.vid,-.05,fl+1.45,zp+.06);cx(.04,.18,.06,CABM.metal,.25,fl+1,zp+.07)}
 /* ---------- cabine do G7 1200 (ônibus) e do FH16 (caminhões) para os veículos sem interior ---------- */
 const PORTA_COSTAS=new THREE.MeshStandardMaterial({color:0x8e9196,roughness:.55,metalness:.25,side:THREE.BackSide,polygonOffset:true,polygonOffsetFactor:2,polygonOffsetUnits:2});
-const CAB_INFO={coach:{arq:'modelos/cabines/cabine_onibus.glb',W:1.26,esp:.16,F0:-.73,B0:-1.86,zf:1.5},truck:{arq:'modelos/cabines/cabine_caminhao.glb',W:1.16,esp:.14,F0:null,zf:.85}},CABS={},CAB_GEO={};
+const CAB_INFO={coach:{arq:'modelos/cabines/cabine_onibus.glb',W:1.26,esp:.16,F0:-.73,B0:-1.86,zf:1.5},truck:{arq:'modelos/cabines/cabine_caminhao.glb',W:1.18,esp:.02,F0:null,zf:1.25,casco:true,Y:2.58}},CABS={},CAB_GEO={};
 async function getCab(t){const k=t==='truck'?'truck':'coach';if(CABS[k]!==undefined)return CABS[k];
  try{const r=await fetch(CAB_INFO[k].arq);if(!r.ok)throw new Error(r.status);CABS[k]=await parseGLB(await r.arrayBuffer())}catch(e){console.warn('cabine',k,e);CABS[k]=null}return CABS[k]}
 const cabCfg=id=>Object.assign({dz:0,dy:0,sw:1},(G.cabPrev&&G.cabPrev.id===id?G.cabPrev.cfg:null)||(G.suspArq[id]||{}).cab||{});
 function cabineG7(root,def,G2){const k=def.tipo==='truck'?'truck':'coach',M=CABS[k];if(!M||!M.nodes.length)return false;
  const I=CAB_INFO[k],P=def.prof,seat=P.seat||[.6,2,5],hw=P.hw||1.25,F=(P.hl||6)+(P.cz||0),C=cabCfg(def.id);
- const sx=(hw-I.esp)/I.W*(+C.sw||1),Y=seat[1]+(+C.dy||0);let Z=seat[2]+(+C.dz||0);if(!C.dz&&Z+I.zf>F-.3)Z=F-.3-I.zf;
+ const sx=(hw-I.esp)/I.W*(+C.sw||1),Y=(I.casco?I.Y:seat[1])+(+C.dy||0);let Z=seat[2]+(+C.dz||0);if(I.casco)Z=F-I.zf+(+C.dz||0);else if(!C.dz&&Z+I.zf>F-.3)Z=F-.3-I.zf;
  const g=new THREE.Group();g.name='cabineG7';g.position.set(0,Y,Z);root.add(g);G2.seat=[+(seat[0]>0?.62*sx:seat[0]).toFixed(3),Y,Z];
  const key=k+'|'+sx.toFixed(3)+'|'+Y.toFixed(3);
  for(const n of M.nodes)for(const [j,p] of n.prims.entries()){const kk=key+'|'+n.name+j;let geo=CAB_GEO[kk];
@@ -1473,6 +1474,8 @@ function cabineG7(root,def,G2){const k=def.tipo==='truck'?'truck':'coach',M=CABS
  {const ig=root.getObjectByName('interiorProc');if(ig){root.updateMatrixWorld(true);const iv=new THREE.Matrix4().copy(root.matrixWorld).invert();for(const o of ig.children){if(o.isInstancedMesh)continue;if(ig.position.z+o.position.z>Z-.4){o.visible=false;continue}
   if(o.geometry&&o.geometry.type==='CylinderGeometry'){const b=new THREE.Box3().setFromObject(o).applyMatrix4(iv);if(b.max.z>Z-.4)o.visible=false}}}}
  if(k==='coach')try{limparCabine(root,def,g,G2,Y,Z,hw,F)}catch(e){console.warn('limparCabine',e)}
+ if(I.casco){const pula=new Set([g,...G2.wheels]);root.traverse(o=>{if(!o.isMesh)return;let p=o;while(p&&p!==root){if(pula.has(p))return;p=p.parent}G2.dentro.push(o)})}
+ if(0)try{}catch(e){console.warn('limparCabine',e)}
  return true}
 const LIMPA={};function limparCabine(root,def,cab,G2,Y,Z,hw,F){const x0=hw-.14,z0=Z+.2,z1=F-.14,y0=.45,y1=Y+.15,inv=new THREE.Matrix4(),pr=new THREE.Vector3();root.updateMatrixWorld(true);inv.copy(root.matrixWorld).invert();
  const pula=new Set([cab,...G2.wheels.map(w=>w.m||w)]);root.traverse(o=>{if(!o.isMesh||o.userData.costas)return;let p=o;while(p&&p!==root){if(pula.has(p)||/^porta|^roda|^wheel|^interior/.test(p.name||''))return;p=p.parent}
