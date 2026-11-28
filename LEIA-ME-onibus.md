@@ -229,3 +229,10 @@ Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
 - **G7 1200**: a lanterna traseira agora recebe a skin, como o resto da lataria. As skins e o molde continuam valendo; nada muda no desenho. O brilho do freio, da ré e das setas continua pelos pontos do painel 💡 Luzes.
 - **G7 DD (1800)**: o rasgo na traseira foi fechado. Umas áreas escuras da traseira e das grelhas do motor eram tratadas como vidro, e dava para ver o céu e o lado de dentro através delas. Agora a traseira e as duas grelhas laterais são lataria.
 - Na primeira abertura depois de atualizar pode aparecer ainda o modelo antigo (o jogo guarda cópia no aparelho); na abertura seguinte vem o novo.
+
+## Correções de 28/11 (manhã)
+- **G7 1200**: o logo que aparecia espelhado nos vidros da lateral (a skin do lado de lá aparecia por dentro) foi corrigido. O desenho do molde não mudou; as skins continuam valendo.
+- **G7 DD (1800)**: fechado o vão no alto da traseira; a traseira não fica mais com "fantasma" de outra parte da skin. O brilho do farol ficou menor, só em cima do farol (rode `banco/atualizacao_6.sql` se você já tinha salvo as luzes desse ônibus). As faixas claras no para-brisa quando liga o farol sumiram: a luz do farol agora sai da frente do ônibus em todos os modelos.
+- **Urbano**: usa a cabine do G7 1200 no lugar da antiga, e saiu a armação preta que aparecia na frente dele. A câmera da 1ª pessoa ficou mais alta para enxergar por cima do painel.
+- **Vidro com skin antiga** (New Road N10 e outros): o vidro que o jogador tinha enviado no sistema antigo de skins não é mais usado.
+- **Peças de lanterna traseira de volta**, para qualquer ônibus: ☰ → 🛠 Administrador → "🚌 Peças de lanterna traseira". Escolha o desenho, ajuste altura, tamanho, largura, lateral, fundo e quina, teste lanterna/freio/alerta/ré e toque em 💾 Salvar (vale para todos). "🚫 Sem lanterna" tira a peça daquele ônibus. Só aparece onde você equipar.
