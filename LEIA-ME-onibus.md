@@ -268,3 +268,13 @@ Um som só para ônibus e caminhões, separado do áudio enviado (pasta `sons`):
 ## Editor com todos os veículos e limpador por fora (28/11)
 - **Editores (lanternas, luzes)**: na conta de administrador a lista mostra todos os veículos de novo; trocar ali já carrega o veículo na hora, sem ir à garagem. Jogador comum continua só com o veículo dele.
 - **G7 1200**: os limpadores estavam um pouco atrás do para-brisa e, com o vidro transparente, pareciam estar dentro do ônibus. Foram para o lado de fora do vidro.
+
+## Molde novo dos ônibus antigos, cabine do urbano, ajuste do motorista (28/11, noite)
+- **Molde novo** nos clássicos 01, 02, 03, 04, 05, 06 e 09, no 2 eixos, no 3 eixos e no urbano. É o mesmo sistema dos G7: uma faixa para cada lado, outra para a frente e a traseira e outra para o teto (`modelos/onibus/skins/modelo_<ônibus>.jpg`, o botão "⬇ Baixar molde" já entrega o novo). A skin cobre a lataria inteira, inclusive as capas do teto. Vidro agora é só janela lateral e para-brisa; o alto da traseira e o teto da frente voltaram a ser lataria e recebem a skin.
+- As 13 skins oficiais desses ônibus (2 eixos, 3 eixos, Clássico 03 e Clássico 09) foram convertidas sozinhas para o molde novo, com os mesmos nomes de arquivo. Não precisa mexer no banco de dados.
+- Skins carregadas do celular no molde antigo nesses ônibus precisam ser refeitas no molde novo.
+- O alinhamento manual de skin salvo antes nesses 10 ônibus foi zerado (era do molde antigo).
+- Os detalhes, os vidros personalizados e as peças (farol, lanterna, letreiro) do 2 eixos, 3 eixos e urbano continuam funcionando como antes.
+- **Barra da skin**: agora mostra e salva a skin que está de fato no ônibus. Antes, trocando pela garagem, ela continuava com o nome da skin anterior e podia salvar o ajuste na skin errada.
+- **Cabine nova do urbano** (`modelos/cabines/cabine_urbano.glb`): tablado do motorista com faixa amarela, painel largo e baixo, volante deitado, poltrona pneumática, botões de porta e de marcha, letreiro, divisória, catraca com validador e balaústres amarelos. Vale também para o Urbano clássico.
+- **Barra da cabine**: ganhou "Tamanho" (aumenta ou diminui a cabine inteira) e o botão "↔ Motorista", que ajusta a posição da câmera da 1ª pessoa (lado, altura, frente/trás) sem mexer na cabine. Funciona nos ônibus e nos caminhões.
